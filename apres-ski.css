@@ -151,3 +151,5 @@ body,.organizer-body{background:#e6f3fc url('assets/alpen-achtergrond.svg') cent
 .round-overview-tile .round-overview-body{width:100%;min-width:0}
 @media(max-width:750px){.round-overview-tile{--round-control-width:118px}}
 @media(max-width:520px){.round-overview-tile{--round-control-width:95px}}
+
+.round-podium-panel .quiz-podium{padding:0;border:0;background:none;box-shadow:none;margin:0}.round-podium-panel .podium-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}@media(max-width:750px){.round-podium-panel{padding:14px}.round-podium-panel .podium-list{grid-template-columns:1fr}}

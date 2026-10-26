@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {roundPodium} from '../scoreboard.mjs';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
@@ -6,8 +7,8 @@ const source=readFileSync(new URL('../organisator.js',import.meta.url),'utf8').r
 function setup(){
   const listeners={};
   const root={addEventListener:(name,fn)=>listeners[name]=fn,querySelector:()=>{throw new Error('Gebruik de teamregel, geen globale selector');}};
-  const context={document:{getElementById:id=>id==='organizer'?root:id==='sync-status'?null:{addEventListener(){}}},location:{search:'?tab=nakijken&ronde=1',hash:''},localStorage:{getItem(){return null;},removeItem(){}},window:{addEventListener(){}},URLSearchParams,Map,Date,Intl,setTimeout,clearTimeout,formatPoints:c=>String(c/100),roundPodium:()=>'',trophy:rank=>`<svg data-cup="${rank}"></svg>`};
-  vm.runInNewContext(source+`\nthis.harness={listeners:null,setState(value){state=value;},gradingView,teamScoresView,expandedTeamQuestions,setTeam(value){selectedTeam=value;tab='perteam';},roundCorrectTeams,teamsView,teamDrafts,bingoWinOrder,setTimingMode(value){bingoTimingMode=value;},questionStanding,questionCard,expandedQuestions,saveAnswer,answerDrafts,getAnswer,answerKey,setConfirmation(accepted){confirmAction=async()=>accepted;},setMutation(fn){mutation=fn;refresh=async()=>{};notice=()=>{};saveIndicator=()=>{};}};`,context);
+  const context={document:{getElementById:id=>id==='organizer'?root:id==='sync-status'?null:{addEventListener(){}}},location:{search:'?tab=nakijken&ronde=1',hash:''},localStorage:{getItem(){return null;},removeItem(){}},window:{addEventListener(){}},URLSearchParams,Map,Date,Intl,setTimeout,clearTimeout,formatPoints:c=>String(c/100),roundPodium,trophy:rank=>`<svg data-cup="${rank}"></svg>`};
+  vm.runInNewContext(source+`\nthis.harness={listeners:null,setState(value){state=value;},gradingView,teamScoresView,expandedTeamQuestions,setTeam(value){selectedTeam=value;tab='perteam';},teamsView,teamDrafts,bingoWinOrder,setTimingMode(value){bingoTimingMode=value;},questionStanding,questionCard,expandedQuestions,saveAnswer,answerDrafts,getAnswer,answerKey,setConfirmation(accepted){confirmAction=async()=>accepted;},setMutation(fn){mutation=fn;refresh=async()=>{};notice=()=>{};saveIndicator=()=>{};}};`,context);
   const harness=context.harness;
   harness.setState({rounds:[{id:'1',title:'Ronde',closed:false}],teams:[{id:'a',name:'Alpen',active:true},{id:'b',name:'Bergen',active:true}],questions:[{round_id:'1',id:'1',prompt:'Vraag een',correct:'Model',alternatives:[],max_cents:100}],answers:[]});
   return {...harness,listeners};
@@ -145,15 +146,15 @@ test('Bingo toont echte kaartvolgorde en gekoppelde teams, gescheiden van het vo
   assert.doesNotMatch(html,/geen afzonderlijke tweede winronde/);
 });
 
-test('Rondecontrole toont juiste teams eenmaal, zonder ranglijst, punten of onjuiste teams',()=>{
+test('Rondecontrole toont het podium op rondepunten met goud, zilver en brons',()=>{
   const app=setup();
-  const teams=[{id:'a',name:'Alpen',active:true},{id:'b',name:'Bergen',active:true},{id:'c',name:'Fout',active:true},{id:'d',name:'Deels',active:true},{id:'e',name:'Uitgesloten',active:false}];
-  const list=[{id:'1',max_cents:100},{id:'2',max_cents:200},{id:'3',max_cents:0}];
-  app.setState({teams,answers:[{team_id:'a',round_id:'1',question_id:'1',points_cents:100},{team_id:'a',round_id:'1',question_id:'2',points_cents:200},{team_id:'b',round_id:'1',question_id:'2',points_cents:200},{team_id:'c',round_id:'1',question_id:'1',points_cents:0},{team_id:'d',round_id:'1',question_id:'2',points_cents:100},{team_id:'e',round_id:'1',question_id:'1',points_cents:100}]});
-  const html=app.roundCorrectTeams(teams,list);
-  assert.equal((html.match(/<li>Alpen<\/li>/g)||[]).length,1);
-  assert.match(html,/<li>Bergen<\/li>/);
-  assert.doesNotMatch(html,/Fout|Deels|Uitgesloten|Top 3|data-cup|pt|plek/);
+  const teams=['Alpen','Bergen','Sneeuw','Uitgesloten'].map((name,i)=>({id:String(i),name,active:i!==3}));
+  app.setState({rounds:[{id:'1',title:'Club',sort_order:0,closed:false}],teams,questions:[{round_id:'1',id:'1',prompt:'Vraag',correct:'Model',alternatives:[],max_cents:300}],answers:teams.map((t,i)=>({team_id:t.id,round_id:'1',question_id:'1',points_cents:(4-i)*100}))});
+  const html=app.gradingView();
+  assert.match(html,/Top 3 · deze ronde/);assert.doesNotMatch(html,/Teams met juiste antwoorden/);
+  for(const kleur of ['gouden','zilveren','bronzen'])assert.match(html,new RegExp(kleur+' beker'));
+  const panel=html.split('round-podium-panel')[1].split('grading-summary')[0];
+  assert.match(panel,/Alpen/);assert.match(panel,/Bergen/);assert.match(panel,/Sneeuw/);assert.doesNotMatch(panel,/Uitgesloten/);
 });
 
 test('Scores per team toont alleen het gekozen team en telt ronde, totaal en bonus afzonderlijk',()=>{
