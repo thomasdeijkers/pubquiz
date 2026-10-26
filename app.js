@@ -1,4 +1,4 @@
-import {answerSheetPack} from './answer-sheets.mjs';
+import {answerSheetPack,tableCardSheet} from './answer-sheets.mjs';
 import {headerMenu} from './navigation.mjs';
 import {summarize,summarizeRound,formatPoints} from './scoring.mjs';
 import {podium,roundPodium,standingsTable,trophy} from './scoreboard.mjs';
@@ -94,15 +94,18 @@ function updateSlide() {
 }
 function renderTeamPack(){
   const params=new URLSearchParams(location.search);
+  const tentOnly=params.get('invulblad')==='tafelkaart';
   let team=(params.get('team') || '').slice(0,80);
   const bingo=[1,2,3].includes(Number(params.get('bingokaart')))?Number(params.get('bingokaart')):1;
-  document.body.className='print-pack';
-  document.title=`Invulbladen · ${team || 'Pubquiz'}`;
-  document.body.innerHTML=`<div class="pack-toolbar"><a class="pack-back" href="organisator.html?tab=teams">← Terug naar teams</a><label>Teamnaam<input id="pack-team" maxlength="80" value="${safe(team)}" placeholder="Vul de teamnaam in"></label><label>Bingokaart<select id="pack-bingo">${[1,2,3].map(id=>`<option value="${id}" ${id===bingo?'selected':''}>K${id}</option>`).join('')}</select></label><button class="button primary" id="print-pack">Print complete set (10 bladen) ↗</button><p>Een A4 per ronde, inclusief een bingokaart en het bonusblad. Pas hierboven eventueel de teamnaam of bingokaart aan. Print op 100% / werkelijke grootte.</p></div><main id="sheet-pack">${answerSheetPack(quiz,team,bingo)}</main>`;
+  document.body.className='print-pack'+(tentOnly?' table-card-only':'');
+  document.title=`${tentOnly?'Tafelkaart':'Invulbladen'} · ${team || 'Pubquiz'}`;
+  document.body.innerHTML=`<div class="pack-toolbar"><a class="pack-back" href="organisator.html?tab=teams">← Terug naar teams</a><label>Teamnaam<input id="pack-team" maxlength="80" value="${safe(team)}" placeholder="Vul de teamnaam in"></label><label ${tentOnly?'hidden':''}>Bingokaart<select id="pack-bingo">${[1,2,3].map(id=>`<option value="${id}" ${id===bingo?'selected':''}>K${id}</option>`).join('')}</select></label><button class="button primary" id="print-pack">${tentOnly?'Print tafelkaart (A5)':'Print complete set (11 pagina’s)'} ↗</button>${tentOnly?'':`<a class="button outline" id="open-table-card" href="?invulblad=tafelkaart&amp;team=${encodeURIComponent(team)}" target="_blank" rel="noopener">Alleen tafelkaart (A5) ↗</a>`}<p>${tentOnly?'Een A5-kaart van 148 × 210 mm, met de teamnaam aan beide zijden. Vouw op de stippellijn en zet hem als een tentje op tafel.':'Tien A4-invulbladen plus een A5-tafelkaart op een extra A4-knipvel. De knop Alleen tafelkaart opent de kaart op echt A5-formaat.'} Print op 100% / werkelijke grootte, enkelzijdig.</p></div><main id="sheet-pack">${tentOnly?tableCardSheet(team):answerSheetPack(quiz,team,bingo)}</main>`;
   byId('pack-team').addEventListener('input',event=>{
     team=event.target.value;
-    document.querySelectorAll('[data-sheet-team]').forEach(label=>{label.textContent=team || '________________________________________________';});
-    document.title=`Invulbladen · ${team || 'Pubquiz'}`;
+    document.querySelectorAll('[data-sheet-team]').forEach(label=>{label.textContent=team || (label.classList.contains('tent-team')?'Jullie teamnaam':'________________________________________________');
+      if(label.classList.contains('tent-team')){label.classList.toggle('tent-name-long',team.length>50);label.classList.toggle('tent-name-medium',team.length>30 && team.length<=50);}});
+    document.title=`${tentOnly?'Tafelkaart':'Invulbladen'} · ${team || 'Pubquiz'}`;
+    const cardLink=byId('open-table-card');if(cardLink)cardLink.href=`?invulblad=tafelkaart&team=${encodeURIComponent(team)}`;
   });
   byId('pack-bingo').addEventListener('change',event=>{
     const card=event.target.value,image=document.querySelector('[data-pack-bingo]');
@@ -118,7 +121,7 @@ function renderTeamPack(){
 }
 function renderSheet() {
   const id = new URLSearchParams(location.search).get('invulblad');
-  if(id==='alle')return renderTeamPack();
+  if(id==='alle' || id==='tafelkaart')return renderTeamPack();
   const bingoCard = quiz.rounds.find(round=>round.id===5).printables?.find(card=>card.id===id);
   if(bingoCard){
     document.title=bingoCard.title+' · Pubquiz';
