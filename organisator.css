@@ -19,3 +19,21 @@
 .team-answer-row.answer-correct textarea{background:#f2faed;border-color:#76a75d}
 @media(max-width:750px){.team-score-list .team-answer-row{grid-template-columns:1fr}.team-round-scores{grid-template-columns:repeat(3,1fr)}}
 .team-score-list .answer-card{display:block;min-width:0}.team-score-list .question-heading{display:flex;align-items:center;gap:12px}.team-score-list .question-prompt{min-width:0}.team-score-list .answer-body{min-width:0}
+
+.organizer-body .team-score-title{padding:12px 22px;margin-bottom:12px}
+.organizer-body .team-score-title h1{font-size:28px}
+.organizer-body .team-score-title p{margin:3px 0;font-size:11px}
+.organizer-body .team-score-title .eyebrow{display:none}
+.team-score-list{display:block;background:#fffefa;border:2px solid #194f84;border-radius:8px;padding:4px 12px;overflow:hidden}
+.team-score-list .team-score-entry{display:grid;grid-template-columns:28px minmax(180px,1fr) minmax(120px,230px) 160px;gap:10px;align-items:center;padding:7px 0;min-height:46px}
+.team-score-entry .question-number{font-size:18px;width:26px;height:26px;display:grid;place-items:center}
+.team-score-entry textarea{width:100%;min-width:0;min-height:30px;height:30px;padding:5px 8px;font-size:11px;resize:vertical}
+.team-score-prompt{min-width:0;font-size:12px;line-height:1.3}
+.team-score-prompt strong{display:block}.team-score-prompt span{display:block;color:#5d7180;font-size:10px;margin-top:2px}
+.team-score-entry .team-grade-buttons{display:flex;gap:5px}
+.team-score-entry .grade-button{flex:1;padding:6px;font-size:11px;min-height:32px}
+.team-round-scores{padding:10px;gap:5px;margin-bottom:12px}
+.team-round-score{padding:5px 8px;display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:10px}
+.team-round-score strong{font-size:12px}
+.header-score-link{white-space:nowrap}
+@media(max-width:750px){.team-score-list .team-score-entry{grid-template-columns:24px minmax(0,1fr) 120px;gap:6px}.team-score-entry textarea{display:none}.team-score-prompt{font-size:11px}.team-score-entry .grade-button{font-size:10px;padding:5px}.header-score-link{font-size:10px;padding:9px 8px}.org-header .actor-badge{display:none}.team-round-scores{grid-template-columns:repeat(5,1fr)}.team-round-score{display:grid;gap:2px;padding:4px}.topbar .header-actions{gap:7px}}

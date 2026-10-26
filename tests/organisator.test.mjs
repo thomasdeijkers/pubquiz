@@ -165,6 +165,6 @@ test('Scores per team toont alleen het gekozen team en telt ronde, totaal en bon
   assert.match(html,/<strong>1<\/strong><span>punten in deze ronde/);
   assert.match(html,/<strong>3<\/strong><span>totaal inclusief bonus/);
   assert.equal((html.match(/answer-correct/g)||[]).length,1);
-  assert.match(html,/class="team-extra-points" open/);
+  assert.equal((html.match(/class="team-answer-row team-score-entry/g)||[]).length,2);
 });
 
