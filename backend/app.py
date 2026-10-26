@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS quiz_questions (
 CREATE TABLE IF NOT EXISTS quiz_teams (
  id uuid PRIMARY KEY, name text NOT NULL, active boolean NOT NULL DEFAULT true,
  version integer NOT NULL DEFAULT 1);
+ALTER TABLE quiz_teams ADD COLUMN IF NOT EXISTS members text NOT NULL DEFAULT '';
 CREATE UNIQUE INDEX IF NOT EXISTS quiz_team_name ON quiz_teams(lower(name));
 CREATE TABLE IF NOT EXISTS quiz_answers (
  team_id uuid REFERENCES quiz_teams(id), round_id text, question_id text,
@@ -171,11 +172,12 @@ def mutate(cur, route, body):
     actor = text(body.get('actor', ''), 80, True)
     if route == '/teams/add':
         name = text(body.get('name'), 80, True)
+        members = text(body.get('members', ''), 2000)
         cur.execute('SELECT count(*) AS total FROM quiz_teams')
         if cur.fetchone()['total'] >= 250:
             raise Problem(400, 'Maximaal 250 teams mogelijk.')
         team_id = str(uuid.uuid4())
-        cur.execute('INSERT INTO quiz_teams(id,name) VALUES(%s,%s)', (team_id, name))
+        cur.execute('INSERT INTO quiz_teams(id,name,members) VALUES(%s,%s,%s)', (team_id, name, members))
         changed(cur, actor, 'Team toegevoegd', name)
         return {'id': team_id}
     if route == '/teams/update':
@@ -191,10 +193,11 @@ def mutate(cur, route, body):
         if item['version'] != version(body.get('version')):
             raise Problem(409, 'Dit team is zojuist gewijzigd door een andere organisator.')
         name = text(body.get('name', item['name']), 80, True)
+        members = text(body.get('members', item['members']), 2000)
         active = body.get('active', item['active'])
         if type(active) is not bool:
             raise Problem(400, 'Ongeldige teamstatus.')
-        cur.execute('UPDATE quiz_teams SET name=%s,active=%s,version=version+1 WHERE id=%s', (name, active, team_id))
+        cur.execute('UPDATE quiz_teams SET name=%s,members=%s,active=%s,version=version+1 WHERE id=%s', (name, members, active, team_id))
         changed(cur, actor, 'Team bijgewerkt', name)
         return {'ok': True}
     if route == '/answers/save':

@@ -38,6 +38,35 @@ class QuizTests(unittest.TestCase):
     def save(self,**kwargs):
         return self.call('/answers/save',team_id=self.tid,round_id='1',question_id='1',**kwargs)
 
+    def test_members_are_separate_and_preserved_by_older_team_updates(self):
+        added=self.call('/teams/add',name='Berggeiten',members=' Anna\nBram ')
+        self.call('/teams/update',id=self.tid,version=1,members='Claudine\nPim')
+        self.save(version=0,answer='Voorbeeld',points=1)
+        self.call('/teams/update',id=self.tid,version=2,name='Nieuwe teamnaam')
+        self.call('/teams/update',id=self.tid,version=3,active=False)
+        self.call('/teams/update',id=self.tid,version=4,active=True)
+        with app.connect() as db:
+            with db.cursor() as cur:
+                snapshot=app.state(cur)
+                public=app.standings_state(cur)
+        teams={str(row['id']):row for row in snapshot['teams']}
+        self.assertEqual(teams[self.tid]['members'],'Claudine\nPim')
+        self.assertEqual(teams[self.tid]['name'],'Nieuwe teamnaam')
+        self.assertEqual(teams[added['id']]['members'],'Anna\nBram')
+        self.assertEqual(snapshot['answers'][0]['points_cents'],100)
+        self.assertTrue(all('members' not in row for row in public['teams']))
+        self.call('/teams/update',id=self.tid,version=5,members='')
+        with self.assertRaises(app.Problem) as stale:
+            self.call('/teams/update',id=self.tid,version=5,members='Oude invoer')
+        self.assertEqual(stale.exception.status,409)
+
+    def test_members_reject_invalid_values_without_changing_team(self):
+        for value in [None,[], 'x'*2001]:
+            with self.subTest(value=type(value).__name__):
+                with self.assertRaises(app.Problem):
+                    self.call('/teams/update',id=self.tid,version=1,members=value)
+        self.call('/teams/update',id=self.tid,version=1,members='Geldig lid')
+
     def test_fractional_points_and_answer_change_invalidates_old_grade(self):
         first=self.save(version=0,answer='Een antwoord',points=0.5)
         self.assertEqual(first['points_cents'],50)
