@@ -62,3 +62,9 @@ De Spotify-volgorde met zestig nummers is op 26 oktober 2026 uit de playlist ove
 Bij **Instellingen → Puntentelling** kan iedere organisator een maximum per vraag instellen, of met één handeling hetzelfde maximum invullen voor alle onderdelen van een ronde. Iedere ronde wordt afzonderlijk opgeslagen. Je kunt twee decimalen gebruiken.
 
 Bij bestaande beoordelingen kies je tussen **Bestaande punten behouden** en **Punten naar verhouding herberekenen**. Herberekenen vereist een bevestiging, geldt voor alle reeds beoordeelde antwoorden op gewijzigde vragen (ook bij uitgesloten teams), en rondt af op twee decimalen. Openstaande antwoorden blijven open. Bij behoud mag geen bestaande beoordeling boven het nieuwe maximum komen. Beoordelingen van een vraag die eerder op nul punten stond kunnen niet evenredig worden herberekend; behoud die punten of wis de beoordelingen en kijk opnieuw na. Afgesloten rondes moeten eerst worden heropend. Het volledige verzoek voor een ronde wordt als één transactie verwerkt, met versiecontrole voor iedere vraag.
+
+## Live scorebord en nakijken
+
+Modelantwoorden zijn direct zichtbaar bij iedere vraag in Antwoorden & punten. Iedere rondekaart op de hoofdpagina toont de drie best gerangschikte teams voor alleen die ronde. Bij een gedeelde derde plaats staan alle betrokken teams op het podium. Nog niet nagekeken teams verschijnen pas op het podium zodra er een beoordeling is opgeslagen; ook nul punten is een beoordeling.
+
+Het openbare scorebord toont alle actieve teams met rondepunten en totaal, een keuze voor de laatste meegetelde ronde en een optionele bonus. Het wordt elke vijf seconden vernieuwd via `/standings`, dat uitsluitend rondes, teams en scores teruggeeft. Modelantwoorden, ingeleverde antwoorden en auditgegevens worden voor dit scorebord niet opgehaald. De top 3 in het beheer en op het projectiescherm gebruikt dezelfde telling. Openstaande beoordelingen en gelijke standen blijven herkenbaar.

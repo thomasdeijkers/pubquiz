@@ -1,3 +1,5 @@
+import {summarize} from './scoring.mjs';
+import {podium,roundPodium,standingsTable} from './scoreboard.mjs';
 'use strict';
 const byId = id => document.getElementById(id);
 let quiz;
@@ -12,7 +14,7 @@ async function init() {
     if (!response.ok) throw new Error('Inhoud niet beschikbaar');
     quiz = await response.json();
     if (new URLSearchParams(location.search).has('invulblad')) return renderSheet();
-    byId('round-grid').innerHTML = quiz.rounds.map(round => `<button class="round-card" data-round="${round.id}"><div class="card-top"><span class="round-number">${String(round.id).padStart(2,'0')}</span><span class="tag ${round.pending ? 'pending' : ''}">${safe(round.type)}</span></div><h3>${safe(round.title)}</h3><p class="card-description">${safe(round.description)}</p><div class="card-bottom"><span>${safe(round.summary)}</span><span aria-hidden="true">Open ronde ↗</span></div></button>`).join('');
+    byId('round-grid').innerHTML = quiz.rounds.map(round => `<article class="round-tile"><button class="round-card" data-round="${round.id}"><div class="card-top"><span class="round-number">${String(round.id).padStart(2,'0')}</span><span class="tag ${round.pending ? 'pending' : ''}">${safe(round.type)}</span></div><h3>${safe(round.title)}</h3><p class="card-description">${safe(round.description)}</p><div class="card-bottom"><span>${safe(round.summary)}</span><span aria-hidden="true">Open ronde ↗</span></div></button><div data-round-podium="${round.id}"><p class="score-loading">De top 3 wordt geladen…</p></div></article>`).join('');
     document.querySelectorAll('[data-round]').forEach(button => button.addEventListener('click', () => openRound(Number(button.dataset.round))));
     byId('sheet-round').innerHTML = quiz.rounds.map(round => `<option value="${round.id}">${round.id}. ${safe(round.title)}</option>`).join('') + '<option value="bonus">Bonusronde · 30 afbeeldingen</option>';
     const bingo = quiz.rounds.find(round => round.id === 5);
@@ -41,6 +43,7 @@ async function init() {
       if (event.key === 'ArrowLeft') { event.preventDefault(); changeSlide(-1); }
     });
     viewer.addEventListener('close', () => { document.body.style.overflow = ''; });
+    initScoreboard();
     const round = Number(new URLSearchParams(location.search).get('ronde'));
     if (quiz.rounds.some(item => item.id === round)) openRound(round);
   } catch (error) {
@@ -106,3 +109,37 @@ function renderSheet() {
   byId('do-print').addEventListener('click', () => window.print());
 }
 init();
+
+let scoreState;
+let scoreBusy=false;
+function drawScoreboard(){
+  if(!scoreState)return;
+  document.querySelectorAll('[data-round-podium]').forEach(node=>{node.innerHTML=roundPodium(scoreState,node.dataset.roundPodium);});
+  const through=byId('public-through').value;
+  const result=summarize(scoreState,through,byId('public-bonus').checked);
+  byId('public-podium').innerHTML=podium(result,'Het erepodium · totaal');
+  byId('public-standings').innerHTML=standingsTable(result);
+  byId('public-score-note').textContent=result.provisional?'Voorlopige stand · Alleen toegekende punten tellen mee. — Nog niet beoordeeld. * Nog niet volledig nagekeken.':'Alle geselecteerde rondes zijn afgesloten. Gelijke scores delen dezelfde plaats.';
+}
+async function loadScoreboard(){
+  if(scoreBusy || document.hidden)return;
+  scoreBusy=true;
+  try{
+    const response=await fetch('https://vps.opticore-insights.nl/pubquiz-api/v1/standings');
+    if(!response.ok)throw new Error('Geen stand');
+    scoreState=await response.json();
+    drawScoreboard();
+    byId('public-score-sync').textContent='Live bijgewerkt · '+new Date().toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'});
+  }catch{
+    byId('public-score-sync').textContent=scoreState?'Verbinding onderbroken · laatst opgehaalde stand':'De tussenstand is even niet bereikbaar. We proberen opnieuw.';
+    if(!scoreState)document.querySelectorAll('[data-round-podium]').forEach(node=>{node.innerHTML='<p class="score-loading">De top 3 volgt zodra de verbinding terug is.</p>';});
+  }finally{scoreBusy=false;}
+}
+function initScoreboard(){
+  byId('public-through').innerHTML=quiz.rounds.map(round=>`<option value="${round.id}" ${round.id===9?'selected':''}>Ronde ${round.id} · ${safe(round.title)}</option>`).join('');
+  byId('public-through').addEventListener('change',drawScoreboard);
+  byId('public-bonus').addEventListener('change',drawScoreboard);
+  loadScoreboard();
+  setInterval(loadScoreboard,5000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadScoreboard();});
+}

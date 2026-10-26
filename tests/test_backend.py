@@ -174,6 +174,17 @@ class QuizTests(unittest.TestCase):
             with db.cursor() as cur:
                 self.assertEqual(app.state(cur)['questions'][0]['max_cents'],100)
 
+    def test_public_standings_contains_scores_without_answers_or_audit(self):
+        self.save(version=0,answer='Teamantwoord',points=0.5)
+        with app.connect() as db:
+            with db.cursor() as cur:
+                snapshot=app.standings_state(cur)
+        self.assertEqual(snapshot['answers'][0]['points_cents'],50)
+        self.assertEqual(set(snapshot['answers'][0]),{'team_id','round_id','question_id','points_cents'})
+        self.assertEqual(set(snapshot['questions'][0]),{'round_id','id'})
+        self.assertNotIn('changes',snapshot)
+        self.assertNotIn('bingo',snapshot)
+
     def test_api_open_access_and_origin_boundaries(self):
         server=app.ThreadingHTTPServer(('127.0.0.1',0),app.Handler)
         thread=threading.Thread(target=server.serve_forever,daemon=True)
@@ -185,6 +196,7 @@ class QuizTests(unittest.TestCase):
                 result=connection.getresponse();status=result.status;data=result.read();connection.close()
                 return status,json.loads(data)
             self.assertEqual(request('GET','/state')[0],200)
+            self.assertEqual(request('GET','/standings')[0],200)
             self.assertEqual(request('GET','/state',{'Origin':'https://example.com'})[0],403)
             self.assertEqual(request('GET','/state',{'Origin':app.ORIGIN})[0],200)
             self.assertEqual(request('POST','/teams/add',{'Content-Type':'application/json'},'{}')[0],403)

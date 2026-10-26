@@ -16,3 +16,9 @@ export function summarize(state, through = '9', includeBonus = false) {
   return {rounds,entries,provisional:rounds.some(round=>!round.closed) || entries.some(entry=>entry.reviewed<entry.questionCount)};
 }
 export const formatPoints = cents => new Intl.NumberFormat('nl-NL',{maximumFractionDigits:2}).format(cents/100);
+
+export function summarizeRound(state, roundId) {
+  const round = state.rounds.find(item=>item.id===String(roundId));
+  if(!round)return {rounds:[],entries:[],provisional:true};
+  return summarize({...state,rounds:[round],questions:state.questions.filter(q=>q.round_id===round.id),answers:state.answers.filter(a=>a.round_id===round.id)},round.id,round.id==='bonus');
+}

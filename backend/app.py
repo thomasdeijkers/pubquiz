@@ -153,6 +153,20 @@ def state(cur):
     return result
 
 
+def standings_state(cur):
+    # The public scoreboard needs no model answers, team answers or audit data.
+    result = {}
+    for key, sql in [
+        ('rounds', 'SELECT id,sort_order,title,closed FROM quiz_rounds ORDER BY sort_order'),
+        ('questions', 'SELECT round_id,id FROM quiz_questions'),
+        ('teams', 'SELECT id,name,active FROM quiz_teams WHERE active=true ORDER BY lower(name)'),
+        ('answers', 'SELECT a.team_id,a.round_id,a.question_id,a.points_cents FROM quiz_answers a JOIN quiz_teams t ON t.id=a.team_id WHERE t.active=true'),
+    ]:
+        cur.execute(sql)
+        result[key] = [dict(row) for row in cur.fetchall()]
+    return result
+
+
 def mutate(cur, route, body):
     actor = text(body.get('actor', ''), 80, True)
     if route == '/teams/add':
@@ -402,6 +416,8 @@ class Handler(BaseHTTPRequestHandler):
                         result = state(cur)
                         if route == '/backup':
                             result.update({'format': 'pubquiz-backup', 'version': 1})
+                    elif self.command == 'GET' and route == '/standings':
+                        result = standings_state(cur)
                     elif self.command == 'GET' and route == '/revision':
                         cur.execute("SELECT value::bigint AS revision FROM quiz_meta WHERE key='revision'")
                         result = dict(cur.fetchone())
