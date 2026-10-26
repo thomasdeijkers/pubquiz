@@ -7,7 +7,7 @@ function setup(){
   const listeners={};
   const root={addEventListener:(name,fn)=>listeners[name]=fn,querySelector:()=>{throw new Error('Gebruik de teamregel, geen globale selector');}};
   const context={document:{getElementById:id=>id==='organizer'?root:id==='sync-status'?null:{addEventListener(){}}},location:{search:'?tab=nakijken&ronde=1',hash:''},localStorage:{getItem(){return null;},removeItem(){}},window:{addEventListener(){}},URLSearchParams,Map,Date,Intl,setTimeout,clearTimeout,formatPoints:c=>String(c/100),roundPodium:()=>'',trophy:rank=>`<svg data-cup="${rank}"></svg>`};
-  vm.runInNewContext(source+`\nthis.harness={listeners:null,setState(value){state=value;},gradingView,teamScoresView,setTeam(value){selectedTeam=value;tab='perteam';},roundCorrectTeams,teamsView,teamDrafts,bingoWinOrder,setTimingMode(value){bingoTimingMode=value;},questionStanding,questionCard,expandedQuestions,saveAnswer,answerDrafts,getAnswer,answerKey,setConfirmation(accepted){confirmAction=async()=>accepted;},setMutation(fn){mutation=fn;refresh=async()=>{};notice=()=>{};saveIndicator=()=>{};}};`,context);
+  vm.runInNewContext(source+`\nthis.harness={listeners:null,setState(value){state=value;},gradingView,teamScoresView,expandedTeamQuestions,setTeam(value){selectedTeam=value;tab='perteam';},roundCorrectTeams,teamsView,teamDrafts,bingoWinOrder,setTimingMode(value){bingoTimingMode=value;},questionStanding,questionCard,expandedQuestions,saveAnswer,answerDrafts,getAnswer,answerKey,setConfirmation(accepted){confirmAction=async()=>accepted;},setMutation(fn){mutation=fn;refresh=async()=>{};notice=()=>{};saveIndicator=()=>{};}};`,context);
   const harness=context.harness;
   harness.setState({rounds:[{id:'1',title:'Ronde',closed:false}],teams:[{id:'a',name:'Alpen',active:true},{id:'b',name:'Bergen',active:true}],questions:[{round_id:'1',id:'1',prompt:'Vraag een',correct:'Model',alternatives:[],max_cents:100}],answers:[]});
   return {...harness,listeners};
@@ -168,3 +168,12 @@ test('Scores per team toont alleen het gekozen team en telt ronde, totaal en bon
   assert.equal((html.match(/class="team-answer-row team-score-entry/g)||[]).length,2);
 });
 
+
+test('Een teamvraag klapt open met de volledige vraag en het modelantwoord',()=>{
+  const app=setup();app.setTeam('b');
+  let html=app.teamScoresView();
+  assert.match(html,/aria-expanded="false"/);assert.match(html,/id="team-question-b-1" hidden/);
+  app.expandedTeamQuestions.add('b/1/1');html=app.teamScoresView();
+  assert.match(html,/aria-expanded="true"/);assert.match(html,/id="team-question-b-1" >/);
+  assert.match(html,/<p>Vraag een<\/p>/);assert.match(html,/<p>Model<\/p>/);
+});

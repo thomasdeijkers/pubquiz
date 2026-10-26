@@ -130,3 +130,13 @@ body,.organizer-body{background:#e6f3fc url('assets/alpen-achtergrond.svg') cent
  .team-scoring-page .selector-bar>div{min-width:0}
 }
 @media(max-width:360px){.team-scoring-page .team-score-entry{grid-template-columns:20px minmax(0,1fr) 124px}.team-scoring-page .team-grade-buttons{gap:6px}}
+
+.team-scoring-page button.team-score-prompt{appearance:none;border:0;background:none;padding:4px 18px 4px 0;text-align:left;color:inherit;cursor:pointer;position:relative;max-width:100%}
+.team-scoring-page button.team-score-prompt:after{content:'⌄';position:absolute;right:2px;top:50%;transform:translateY(-50%);color:#55768f}
+.team-scoring-page button.team-score-prompt[aria-expanded=true]:after{content:'⌃'}
+.team-scoring-page .team-score-entry.team-score-expanded{height:auto}
+.team-score-question-detail{grid-column:1/-1;padding:10px 12px 12px;background:#f3f7fc;border:1px solid #c5d5e3;border-radius:5px;min-width:0;font-size:13px;line-height:1.6}
+.team-score-question-detail[hidden]{display:none}
+.team-score-question-detail>p{margin:4px 0 12px;white-space:normal;overflow-wrap:anywhere}
+.team-score-question-detail .expected{margin:0;padding:8px 12px}
+.team-score-question-detail .expected p{margin:3px 0;font-size:13px}

@@ -29,6 +29,7 @@ let toastTimer;
 let loadingError = '';
 const answerDrafts = new Map();
 const expandedQuestions = new Set();
+const expandedTeamQuestions = new Set();
 const modelDrafts = new Map();
 const teamDrafts = new Map();
 const scoringDrafts = new Map();
@@ -109,7 +110,8 @@ function selectorBar(){return `<div class="selector-bar org-panel"><div><label f
 function teamAnswerRow(q,team,locked){
   if(tab==='perteam'){
     const a=getAnswer(q.id,team.id),score=a?.points_cents,draft=answerDrafts.get(answerKey(q.id,team.id));
-    return `<div class="team-answer-row team-score-entry ${q.max_cents>0 && score===q.max_cents?'answer-correct':''}" data-team="${team.id}" data-question="${q.id}"><span class="question-number">${esc(q.id)}</span><div class="team-score-prompt" title="${esc(q.prompt)}"><strong>${esc(q.prompt)}</strong></div><span class="team-score-model" title="${esc(q.correct)}">${esc(q.correct || 'Controle organisatie')}</span><textarea rows="1" maxlength="3000" aria-label="Antwoord ${esc(team.name)} vraag ${q.id}" data-answer="${q.id}" placeholder="Teamantwoord (optioneel)" ${locked?'disabled':''}>${esc(draft?.answer ?? a?.answer ?? '')}</textarea><input type="hidden" data-points="${q.id}" value="${esc(draft?.points ?? (score==null?'':score/100))}"><div class="team-grade-buttons"><button class="grade-button good ${q.max_cents>0 && score===q.max_cents?'chosen':''}" aria-label="Goed ${esc(team.name)} vraag ${q.id}" data-score="${q.id}" data-value="${q.max_cents/100}" ${locked?'disabled':''}>Goed · ${formatPoints(q.max_cents)}</button><button class="grade-button wrong ${score===0?'chosen':''}" aria-label="Fout ${esc(team.name)} vraag ${q.id}" data-score="${q.id}" data-value="0" ${locked?'disabled':''}>Fout · 0</button></div></div>`;
+    const open=expandedTeamQuestions.has(answerKey(q.id,team.id));
+    return `<div class="team-answer-row team-score-entry ${open?'team-score-expanded':''} ${q.max_cents>0 && score===q.max_cents?'answer-correct':''}" data-team="${team.id}" data-question="${q.id}"><span class="question-number">${esc(q.id)}</span><button type="button" class="team-score-prompt" data-action="toggle-team-question" data-id="${q.id}" data-team="${team.id}" aria-expanded="${open}" aria-controls="team-question-${team.id}-${q.id}" aria-label="${open?'Sluit':'Open'} volledige vraag ${q.id}"><strong>${esc(q.prompt)}</strong></button><span class="team-score-model" title="${esc(q.correct)}">${esc(q.correct || 'Controle organisatie')}</span><textarea rows="1" maxlength="3000" aria-label="Antwoord ${esc(team.name)} vraag ${q.id}" data-answer="${q.id}" placeholder="Teamantwoord (optioneel)" ${locked?'disabled':''}>${esc(draft?.answer ?? a?.answer ?? '')}</textarea><input type="hidden" data-points="${q.id}" value="${esc(draft?.points ?? (score==null?'':score/100))}"><div class="team-grade-buttons"><button class="grade-button good ${q.max_cents>0 && score===q.max_cents?'chosen':''}" aria-label="Goed ${esc(team.name)} vraag ${q.id}" data-score="${q.id}" data-value="${q.max_cents/100}" ${locked?'disabled':''}>Goed · ${formatPoints(q.max_cents)}</button><button class="grade-button wrong ${score===0?'chosen':''}" aria-label="Fout ${esc(team.name)} vraag ${q.id}" data-score="${q.id}" data-value="0" ${locked?'disabled':''}>Fout · 0</button></div><div class="team-score-question-detail" id="team-question-${team.id}-${q.id}" ${open?'':'hidden'}><strong>Vraag ${q.id}</strong><p>${esc(q.prompt)}</p><div class="expected"><strong class="expected-label">Modelantwoord</strong><p>${esc(q.correct || 'Controle door de organisatie')}</p>${q.alternatives.length?`<small>Ook goed: ${q.alternatives.map(esc).join(' · ')}</small>`:''}</div></div></div>`;
   }
   const a=getAnswer(q.id,team.id),score=a?.points_cents,draft=answerDrafts.get(answerKey(q.id,team.id));
   const fieldId=`answer-${q.id}-${team.id}`;
@@ -345,6 +347,7 @@ root.addEventListener('click',async event=>{
       form.querySelectorAll('[data-scoring-question]').forEach(input=>{input.value=field.value;});
       captureScoringDraft(form);notice('Punten ingevuld. Klik op Puntentelling opslaan om ze te bewaren.');return;
     }
+    if(action==='toggle-team-question'){const key=answerKey(button.dataset.id,button.dataset.team);if(expandedTeamQuestions.has(key))expandedTeamQuestions.delete(key);else expandedTeamQuestions.add(key);render();return;}
     if(action==='team-score-round')return navigate(()=>{selectedRound=button.dataset.id;});
     if(action==='scoring-round')return navigate(()=>{selectedRound=button.dataset.id;tab='nakijken';});
     if(action==='refresh')return navigate(()=>{refresh(true);});
