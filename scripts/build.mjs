@@ -6,7 +6,7 @@ const root = process.cwd();
 const quiz = JSON.parse(await readFile('data/quiz.json','utf8'));
 assert.equal(quiz.rounds.length,9,'De quiz heeft negen rondes');
 assert.deepEqual(quiz.rounds.map(r=>r.id),[1,2,3,4,5,6,7,8,9]);
-const files = new Set([quiz.bonus.image,'assets/clublogo-render.png','assets/apres-ski-flyer.png','assets/alpen-achtergrond.svg','assets/hout-sneeuw.svg']);
+const files = new Set([quiz.bonus.image,'assets/clublogo-render.png','assets/apres-ski-flyer.png','assets/alpen-achtergrond.svg','assets/apres-ski-sfeer.webp','assets/hout-sneeuw.svg']);
 for (const round of quiz.rounds) {
   assert(round.title && round.cards.length && round.answerCount > 0);
   for (const card of round.cards) {

@@ -104,3 +104,5 @@ Bij Teams opent Invulbladen printen per team een volledige set van tien A4-blade
 Op de homepage staan Ga naar de rondes, Start presentatie, datum, starttijd/inloop en teamgrootte in de vaste header. Op smalle schermen staat de quizinformatie onder logo en menu; de scrollafstand volgt automatisch de daadwerkelijke headerhoogte.
 
 De homepage begint direct met het rondeoverzicht onder de vaste header. Het grote introductieblok met flyer is verwijderd; de flyer blijft als deelafbeelding beschikbaar.
+
+De gedeelde schermachtergrond gebruikt assets/apres-ski-sfeer.webp: een met imagegen gemaakte panoramische skihut-sfeer op basis van de flyer, zonder posterteksten of portretten. Witte kaarten behouden hun leesbaarheid; de printbladen blijven vrij van de sfeerachtergrond.
