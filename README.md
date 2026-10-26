@@ -124,3 +124,5 @@ Bovenaan de rondecontrole staat een namenlijst van actieve teams met minstens é
 Bij gedeelde podiumplaatsen staat iedere teamnaam op een eigen regel, op de homepage, in de tussenstand en bij projectie.
 
 Onder Instellingen staat Reset alle antwoorden. De organisator typt exact pubquiz en klikt daarna op Alle antwoorden wissen. De server valideert hetzelfde woord en wist antwoorden en beoordelingen van alle teams in één transactie. Rondes worden heropend; teams, leden, bingokaartkoppelingen, vragen, antwoordmodel en punteninstellingen blijven bewaard. Een resetversie voorkomt dat oude invoer van andere organisatoren de gewiste antwoorden ongemerkt terugzet. Tests draaien alleen op pubquiz_test.
+
+De tafelkaart gebruikt een skihutdecor en een besneeuwd houten naambord. Open A5-pdf maakt de kaart in de browser als echte PDF van exact 148 × 210 mm, met ingebedde foto, logo en Anton-lettertype en vectornamen; zonder browserdatum of webadres. De pdf bevat twee tegengesteld gedraaide zijden en een vouwlijn. Pdf-lib 1.17.1 en @pdf-lib/fontkit 1.1.1 staan lokaal in vendor met licentievermeldingen; het lettertype gebruikt de SIL Open Font License.

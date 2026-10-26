@@ -6,7 +6,7 @@ const root = process.cwd();
 const quiz = JSON.parse(await readFile('data/quiz.json','utf8'));
 assert.equal(quiz.rounds.length,9,'De quiz heeft negen rondes');
 assert.deepEqual(quiz.rounds.map(r=>r.id),[1,2,3,4,5,6,7,8,9]);
-const files = new Set([quiz.bonus.image,'assets/clublogo-render.png','assets/apres-ski-flyer.png','assets/alpen-achtergrond.svg','assets/apres-ski-sfeer.webp','assets/hout-sneeuw.svg']);
+const files = new Set([quiz.bonus.image,'assets/clublogo-render.png','assets/apres-ski-flyer.png','assets/alpen-achtergrond.svg','assets/apres-ski-sfeer.webp','assets/apres-ski-sfeer-print.jpg','assets/Anton-Regular.ttf','assets/Anton-OFL.txt','vendor/pdf-lib.mjs','vendor/fontkit.mjs','vendor/pdf-lib-LICENSE.md','vendor/fontkit-NOTICE.txt','assets/hout-sneeuw.svg']);
 for (const round of quiz.rounds) {
   assert(round.title && round.cards.length && round.answerCount > 0);
   for (const card of round.cards) {
@@ -24,11 +24,11 @@ const output = path.join(root,'_site');
 assert.equal(path.dirname(output),root);
 await rm(output,{recursive:true,force:true});
 await mkdir(output,{recursive:true});
-for (const file of ['index.html','style.css','apres-ski.css','app.js','favicon.svg','robots.txt','organisator.html','organisator.css','organisator.js','scoring.mjs','scoreboard.mjs','navigation.mjs','answer-sheets.mjs','answer-sheets.css']) await copyFile(file,path.join(output,file));
+for (const file of ['index.html','style.css','apres-ski.css','app.js','favicon.svg','robots.txt','organisator.html','organisator.css','organisator.js','scoring.mjs','scoreboard.mjs','navigation.mjs','answer-sheets.mjs','answer-sheets.css','table-card-pdf.mjs']) await copyFile(file,path.join(output,file));
 // Version module dependencies too, so shared podium changes reach existing browsers.
 for (const file of ['navigation.mjs','scoreboard.mjs','app.js','organisator.js']) {
   let source=await readFile(path.join(output,file),'utf8');
-  for (const dependency of ['scoring.mjs','scoreboard.mjs','navigation.mjs','answer-sheets.mjs']) {
+  for (const dependency of ['scoring.mjs','scoreboard.mjs','navigation.mjs','answer-sheets.mjs','table-card-pdf.mjs']) {
     const hash=createHash('sha256').update(await readFile(path.join(output,dependency))).digest('hex').slice(0,12);
     source=source.replaceAll(`'./${dependency}'`,`'./${dependency}?v=${hash}'`);
   }

@@ -15,7 +15,7 @@ const sheetCheers={
 };
 
 export function tableCardSheet(teamName=''){
-  const face=`<div class="tent-face"><img src="assets/clublogo-render.png" alt="T.V. Heynkensort"><p>APRÈS-SKI PUBQUIZ</p><strong data-sheet-team class="tent-team ${teamName.length>50?'tent-name-long':teamName.length>30?'tent-name-medium':''}">${escape(teamName)||'Jullie teamnaam'}</strong><span>T.V. HEYNKENSORT</span><span class="tent-cheer" data-sheet-cheer>${escape(sheetCheers.tafelkaart)}</span></div>`;
+  const face=`<div class="tent-face"><img src="assets/clublogo-render.png" alt="T.V. Heynkensort"><p>APRÈS-SKI PUBQUIZ</p><div class="tent-nameboard"><strong data-sheet-team class="tent-team ${teamName.length>50?'tent-name-long':teamName.length>30?'tent-name-medium':''}">${escape(teamName)||'Jullie teamnaam'}</strong></div><span>T.V. HEYNKENSORT</span><span class="tent-cheer" data-sheet-cheer>${escape(sheetCheers.tafelkaart)}</span></div>`;
   return `<section class="team-sheet table-card-sheet" data-table-card><p class="table-card-instructions">Tafelkaart · A5 (148 × 210 mm) · Knip langs de buitenlijn en vouw op de stippellijn.</p><div class="table-tent" aria-label="Dubbelzijdige vouwkaart met teamnaam">${face}<span class="tent-fold-line">Vouw hier</span>${face}</div><p class="table-card-instructions">Vouw met de bedrukte zijden naar buiten en zet de kaart als een tentje op tafel.</p></section>`;
 }
 

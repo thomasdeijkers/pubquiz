@@ -96,12 +96,14 @@ function renderTeamPack(){
   const params=new URLSearchParams(location.search);
   const tentOnly=params.get('invulblad')==='tafelkaart';
   let team=(params.get('team') || '').slice(0,80);
+  let tablePdfUrl=null;
   const bingo=[1,2,3].includes(Number(params.get('bingokaart')))?Number(params.get('bingokaart')):1;
   document.body.className='print-pack'+(tentOnly?' table-card-only':'');
   document.title=`${tentOnly?'Tafelkaart':'Invulbladen'} · ${team || 'Pubquiz'}`;
-  document.body.innerHTML=`<div class="pack-toolbar"><a class="pack-back" href="organisator.html?tab=teams">← Terug naar teams</a><label>Teamnaam<input id="pack-team" maxlength="80" value="${safe(team)}" placeholder="Vul de teamnaam in"></label><label ${tentOnly?'hidden':''}>Bingokaart<select id="pack-bingo">${[1,2,3].map(id=>`<option value="${id}" ${id===bingo?'selected':''}>K${id}</option>`).join('')}</select></label><button class="button primary" id="print-pack">${tentOnly?'Print tafelkaart (A5)':'Print complete set (11 pagina’s)'} ↗</button>${tentOnly?'':`<a class="button outline" id="open-table-card" href="?invulblad=tafelkaart&amp;team=${encodeURIComponent(team)}" target="_blank" rel="noopener">Alleen tafelkaart (A5) ↗</a>`}<p>${tentOnly?'Een A5-kaart van 148 × 210 mm, met de teamnaam aan beide zijden. Vouw op de stippellijn en zet hem als een tentje op tafel.':'Tien A4-invulbladen plus een A5-tafelkaart op een extra A4-knipvel. De knop Alleen tafelkaart opent de kaart op echt A5-formaat. Kies je hier een andere bingokaart? Werk de kaartkoppeling ook bij onder Teams.'} Print op 100% / werkelijke grootte, enkelzijdig.</p></div><main id="sheet-pack">${tentOnly?tableCardSheet(team):answerSheetPack(quiz,team,bingo)}</main>`;
+  document.body.innerHTML=`<div class="pack-toolbar"><a class="pack-back" href="organisator.html?tab=teams">← Terug naar teams</a><label>Teamnaam<input id="pack-team" maxlength="80" value="${safe(team)}" placeholder="Vul de teamnaam in"></label><label ${tentOnly?'hidden':''}>Bingokaart<select id="pack-bingo">${[1,2,3].map(id=>`<option value="${id}" ${id===bingo?'selected':''}>K${id}</option>`).join('')}</select></label><button class="button ${tentOnly?'outline':'primary'}" id="print-pack">${tentOnly?'Browserafdruk':'Print complete set (11 pagina’s)'} ↗</button><button class="button ${tentOnly?'primary':'outline'}" id="open-table-card-pdf" type="button">Open A5-pdf ↗</button>${tentOnly?'':`<a class="button outline" id="open-table-card" href="?invulblad=tafelkaart&amp;team=${encodeURIComponent(team)}" target="_blank" rel="noopener">Alleen tafelkaart (A5) ↗</a>`}<p>${tentOnly?'Een A5-kaart van 148 × 210 mm, met de teamnaam aan beide zijden. Vouw op de stippellijn en zet hem als een tentje op tafel.':'Tien A4-invulbladen plus een A5-tafelkaart op een extra A4-knipvel. De knop Alleen tafelkaart opent de kaart op echt A5-formaat. Kies je hier een andere bingokaart? Werk de kaartkoppeling ook bij onder Teams.'} Print op 100% / werkelijke grootte, enkelzijdig.</p></div><main id="sheet-pack">${tentOnly?tableCardSheet(team):answerSheetPack(quiz,team,bingo)}</main><section id="table-card-pdf-preview" class="table-card-pdf-preview" hidden><div><strong>A5-tafelkaart · drukklare pdf</strong><a id="download-table-card-pdf" class="button primary">Download pdf ↓</a><a id="open-generated-pdf" class="button outline" target="_blank" rel="noopener">Open pdf ↗</a></div><iframe id="table-card-pdf-frame" title="A5-tafelkaart als pdf"></iframe></section>`;
   byId('pack-team').addEventListener('input',event=>{
     team=event.target.value;
+    if(tablePdfUrl){URL.revokeObjectURL(tablePdfUrl);tablePdfUrl=null;byId('table-card-pdf-preview').hidden=true;byId('table-card-pdf-frame').removeAttribute('src');}
     document.querySelectorAll('[data-sheet-team]').forEach(label=>{label.textContent=team || (label.classList.contains('tent-team')?'Jullie teamnaam':'________________________________________________');
       if(label.classList.contains('tent-team')){label.classList.toggle('tent-name-long',team.length>50);label.classList.toggle('tent-name-medium',team.length>30 && team.length<=50);}});
     document.title=`${tentOnly?'Tafelkaart':'Invulbladen'} · ${team || 'Pubquiz'}`;
@@ -111,6 +113,22 @@ function renderTeamPack(){
     const card=event.target.value,image=document.querySelector('[data-pack-bingo]');
     image.src=`assets/bingo-kaart-${card}.png`;image.alt=`Bingokaart K${card}`;
     document.querySelector('[data-pack-card-label]').textContent=`Kaart K${card}`;
+  });
+  byId('open-table-card-pdf').addEventListener('click',async()=>{
+    const button=byId('open-table-card-pdf'),original=button.textContent;
+    button.disabled=true;button.textContent='Pdf maken…';
+    try{
+      const {createTableCardPdf,tableCardAssets}=await import('./table-card-pdf.mjs');
+      const assets=await Promise.all(tableCardAssets.map(async path=>{const response=await fetch(path);if(!response.ok)throw new Error('Afbeelding of lettertype niet bereikbaar');return new Uint8Array(await response.arrayBuffer());}));
+      const bytes=await createTableCardPdf(team,assets),url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));
+      if(tablePdfUrl)URL.revokeObjectURL(tablePdfUrl);tablePdfUrl=url;
+      const preview=byId('table-card-pdf-preview');preview.hidden=false;
+      byId('table-card-pdf-frame').src=url;
+      const download=byId('download-table-card-pdf');download.href=url;download.download=`Tafelkaart-${team.replace(/[^a-z0-9-]/gi,'-') || 'team'}-A5.pdf`;
+      const open=byId('open-generated-pdf');open.href=url;
+      preview.scrollIntoView({behavior:'smooth',block:'start'});
+    }catch(error){alert('De pdf kon niet worden gemaakt: '+error.message);}
+    finally{button.disabled=false;button.textContent=original;}
   });
   byId('print-pack').addEventListener('click',async()=>{
     const button=byId('print-pack');button.disabled=true;
