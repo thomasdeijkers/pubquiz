@@ -6,8 +6,8 @@ const source=readFileSync(new URL('../organisator.js',import.meta.url),'utf8').r
 function setup(){
   const listeners={};
   const root={addEventListener:(name,fn)=>listeners[name]=fn,querySelector:()=>{throw new Error('Gebruik de teamregel, geen globale selector');}};
-  const context={document:{getElementById:id=>id==='organizer'?root:id==='sync-status'?null:{addEventListener(){}}},location:{search:'?tab=nakijken&ronde=1',hash:''},localStorage:{getItem(){return null;},removeItem(){}},window:{addEventListener(){}},URLSearchParams,Map,Date,Intl,setTimeout,clearTimeout,formatPoints:c=>String(c/100),roundPodium:()=>''};
-  vm.runInNewContext(source+`\nthis.harness={listeners:null,setState(value){state=value;},gradingView,saveAnswer,answerDrafts,getAnswer,answerKey,setMutation(fn){mutation=fn;refresh=async()=>{};notice=()=>{};saveIndicator=()=>{};}};`,context);
+  const context={document:{getElementById:id=>id==='organizer'?root:id==='sync-status'?null:{addEventListener(){}}},location:{search:'?tab=nakijken&ronde=1',hash:''},localStorage:{getItem(){return null;},removeItem(){}},window:{addEventListener(){}},URLSearchParams,Map,Date,Intl,setTimeout,clearTimeout,formatPoints:c=>String(c/100),roundPodium:()=>'',trophy:rank=>`<svg data-cup="${rank}"></svg>`};
+  vm.runInNewContext(source+`\nthis.harness={listeners:null,setState(value){state=value;},gradingView,questionCard,expandedQuestions,saveAnswer,answerDrafts,getAnswer,answerKey,setMutation(fn){mutation=fn;refresh=async()=>{};notice=()=>{};saveIndicator=()=>{};}};`,context);
   const harness=context.harness;
   harness.setState({rounds:[{id:'1',title:'Ronde',closed:false}],teams:[{id:'a',name:'Alpen',active:true},{id:'b',name:'Bergen',active:true}],questions:[{round_id:'1',id:'1',prompt:'Vraag een',correct:'Model',alternatives:[],max_cents:100}],answers:[]});
   return {...harness,listeners};
@@ -36,4 +36,17 @@ test('Opslaan gebruikt het team van de gekozen regel en behoudt de concepten van
   assert.equal(app.answerDrafts.has('b/1/1'),false);
   assert.equal(app.getAnswer('1','b').points_cents,100);
   assert.equal(app.getAnswer('1','a'),undefined);
+});
+
+test('Inklapstand toont scores per team en onthoudt welke vraag openstaat',()=>{
+  const app=setup();
+  const state={rounds:[{id:'1',title:'Ronde',closed:false}],teams:[{id:'a',name:'Alpen',active:true},{id:'b',name:'Bergen',active:true}],questions:[{round_id:'1',id:'1',prompt:'Vraag',correct:'Model',alternatives:[],max_cents:100}],answers:[{team_id:'b',round_id:'1',question_id:'1',points_cents:100}]};
+  app.setState(state);
+  let html=app.gradingView();
+  assert.match(html,/Stand bij deze vraag/);assert.match(html,/1\/2 nagekeken/);assert.match(html,/data-cup="1"/);
+  assert.doesNotMatch(html,/data-question-fold="1\/1" open/);
+  app.listeners.toggle({target:{dataset:{questionFold:'1/1'},open:true}});
+  html=app.gradingView();assert.match(html,/data-question-fold="1\/1" open/);
+  app.listeners.toggle({target:{dataset:{questionFold:'1/1'},open:false}});
+  assert.equal(app.expandedQuestions.size,0);
 });

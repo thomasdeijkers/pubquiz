@@ -76,3 +76,5 @@ Bij Antwoorden & punten staan nu alle actieve teams onder iedere vraag, elk met 
 ## Après-ski huisstijl
 
 `apres-ski.css` verzorgt één gedeelde schermstijl voor homepage, rondes, scorebord, beheer, projectie en printvoorbeelden. De oorspronkelijke flyer is als openbaar beeld opgenomen. Houten borden met sneeuwranden, een Alpenachtergrond, blauwe kaders en rode vraagnummers sluiten aan op de vraagkaarten. Het verenigingslogo is als transparante 3D-badge uitgewerkt in de oorspronkelijke groen/zalmtinten. De printuitvoer blijft sober en goed leesbaar.
+
+Vragen in de controle zijn inklapbaar. Ingeklapt tonen ze de opgeslagen punten per team voor die vraag en het aantal nagekeken teamantwoorden; uitgeklapt staat een compacte teamlijst met Goed/Fout rechts. De open/dicht-stand blijft behouden bij opslaan en synchroniseren. De top 3 gebruikt gouden, zilveren en bronzen bekers, met dezelfde puntentelling en gedeelde plaatsen.

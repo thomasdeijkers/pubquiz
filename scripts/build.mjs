@@ -25,11 +25,20 @@ assert.equal(path.dirname(output),root);
 await rm(output,{recursive:true,force:true});
 await mkdir(output,{recursive:true});
 for (const file of ['index.html','style.css','apres-ski.css','app.js','favicon.svg','robots.txt','organisator.html','organisator.css','organisator.js','scoring.mjs','scoreboard.mjs']) await copyFile(file,path.join(output,file));
+// Version module dependencies too, so shared podium changes reach existing browsers.
+for (const file of ['scoreboard.mjs','app.js','organisator.js']) {
+  let source=await readFile(path.join(output,file),'utf8');
+  for (const dependency of ['scoring.mjs','scoreboard.mjs']) {
+    const hash=createHash('sha256').update(await readFile(path.join(output,dependency))).digest('hex').slice(0,12);
+    source=source.replaceAll(`'./${dependency}'`,`'./${dependency}?v=${hash}'`);
+  }
+  await writeFile(path.join(output,file),source);
+}
 // Give changed browser assets a fresh URL after every publication.
 for (const page of ['index.html','organisator.html']) {
   let html=await readFile(path.join(output,page),'utf8');
   for (const asset of ['app.js','style.css','organisator.js','organisator.css','apres-ski.css']) {
-    const digest=createHash('sha256').update(await readFile(asset)).digest('hex').slice(0,12);
+    const digest=createHash('sha256').update(await readFile(path.join(output,asset))).digest('hex').slice(0,12);
     html=html.replaceAll(`"${asset}"`,`"${asset}?v=${digest}"`);
   }
   await writeFile(path.join(output,page),html);
