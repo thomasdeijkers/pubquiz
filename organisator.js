@@ -256,6 +256,12 @@ root.addEventListener('submit',async event=>{
   }catch(error){notice(error.message,true);}finally{button.disabled=false;}
 });
 root.addEventListener('click',async event=>{
+  const questionSummary=event.target.closest('.question-fold-summary');
+  if(questionSummary){
+    const fold=questionSummary.parentElement;
+    if(!fold.open)requestAnimationFrame(()=>fold.scrollIntoView({block:'start',behavior:'smooth'}));
+    return;
+  }
   const button=event.target.closest('button');if(!button)return;
   if(button.dataset.tab)return navigate(()=>{tab=button.dataset.tab;});
   if(button.dataset.media){
