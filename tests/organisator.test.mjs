@@ -7,7 +7,7 @@ function setup(){
   const listeners={};
   const root={addEventListener:(name,fn)=>listeners[name]=fn,querySelector:()=>{throw new Error('Gebruik de teamregel, geen globale selector');}};
   const context={document:{getElementById:id=>id==='organizer'?root:id==='sync-status'?null:{addEventListener(){}}},location:{search:'?tab=nakijken&ronde=1',hash:''},localStorage:{getItem(){return null;},removeItem(){}},window:{addEventListener(){}},URLSearchParams,Map,Date,Intl,setTimeout,clearTimeout,formatPoints:c=>String(c/100),roundPodium:()=>'',trophy:rank=>`<svg data-cup="${rank}"></svg>`};
-  vm.runInNewContext(source+`\nthis.harness={listeners:null,setState(value){state=value;},gradingView,roundCorrectTeams,teamsView,teamDrafts,bingoWinOrder,setTimingMode(value){bingoTimingMode=value;},questionStanding,questionCard,expandedQuestions,saveAnswer,answerDrafts,getAnswer,answerKey,setConfirmation(accepted){confirmAction=async()=>accepted;},setMutation(fn){mutation=fn;refresh=async()=>{};notice=()=>{};saveIndicator=()=>{};}};`,context);
+  vm.runInNewContext(source+`\nthis.harness={listeners:null,setState(value){state=value;},gradingView,teamScoresView,setTeam(value){selectedTeam=value;tab='perteam';},roundCorrectTeams,teamsView,teamDrafts,bingoWinOrder,setTimingMode(value){bingoTimingMode=value;},questionStanding,questionCard,expandedQuestions,saveAnswer,answerDrafts,getAnswer,answerKey,setConfirmation(accepted){confirmAction=async()=>accepted;},setMutation(fn){mutation=fn;refresh=async()=>{};notice=()=>{};saveIndicator=()=>{};}};`,context);
   const harness=context.harness;
   harness.setState({rounds:[{id:'1',title:'Ronde',closed:false}],teams:[{id:'a',name:'Alpen',active:true},{id:'b',name:'Bergen',active:true}],questions:[{round_id:'1',id:'1',prompt:'Vraag een',correct:'Model',alternatives:[],max_cents:100}],answers:[]});
   return {...harness,listeners};
@@ -155,3 +155,16 @@ test('Rondecontrole toont juiste teams eenmaal, zonder ranglijst, punten of onju
   assert.match(html,/<li>Bergen<\/li>/);
   assert.doesNotMatch(html,/Fout|Deels|Uitgesloten|Top 3|data-cup|pt|plek/);
 });
+
+test('Scores per team toont alleen het gekozen team en telt ronde, totaal en bonus afzonderlijk',()=>{
+  const app=setup();app.setTeam('b');
+  app.setState({rounds:[{id:'1',title:'Club',closed:false},{id:'bonus',title:'Bonus',closed:false}],teams:[{id:'a',name:'Alpen',active:true},{id:'b',name:'Bergen',active:true}],questions:[{round_id:'1',id:'1',prompt:'Vraag',correct:'Model',alternatives:[],max_cents:100},{round_id:'1',id:'2',prompt:'Tweede',correct:'Model',alternatives:[],max_cents:100}],answers:[{team_id:'b',round_id:'1',question_id:'1',points_cents:100},{team_id:'b',round_id:'1',question_id:'2',points_cents:0},{team_id:'b',round_id:'bonus',question_id:'1',points_cents:200},{team_id:'a',round_id:'1',question_id:'1',points_cents:100}]});
+  const html=app.teamScoresView();
+  assert.match(html,/id="grading-team"/);assert.match(html,/value="b" selected/);
+  assert.match(html,/data-team="b"/);assert.doesNotMatch(html,/data-team="a"/);
+  assert.match(html,/<strong>1<\/strong><span>punten in deze ronde/);
+  assert.match(html,/<strong>3<\/strong><span>totaal inclusief bonus/);
+  assert.equal((html.match(/answer-correct/g)||[]).length,1);
+  assert.match(html,/class="team-extra-points" open/);
+});
+
