@@ -105,3 +105,8 @@ body,.organizer-body{background:#e6f3fc url('assets/alpen-achtergrond.svg') cent
 .team-scoring-page .team-grade-buttons button{touch-action:manipulation}
 
 .org-content:has(.team-scoring-page){padding-top:10px}.team-scoring-page>.selector-bar{margin-top:0}
+
+.round-overview-actions .round-questions-button{margin-left:auto;flex:0 0 230px;min-height:52px;padding:15px 20px;font-size:14px;white-space:nowrap}
+.round-overview-actions>p{flex:1;min-width:0}
+@media(max-width:750px){.round-overview-actions .round-questions-button{flex:0 0 210px;min-height:48px;font-size:13px}}
+@media(max-width:520px){.round-overview-actions .round-questions-button{flex:0 0 auto;width:100%;margin-left:0}.round-overview-actions>p{flex-basis:100%}}
