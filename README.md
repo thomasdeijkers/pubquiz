@@ -55,7 +55,9 @@ Het model en de maximale punten kunnen in het beheer worden aangepast. De standa
 
 De playlist is gekoppeld aan ronde 5: https://open.spotify.com/playlist/09oEyjF5tRPIymghW0tD8x. De drie originele kaarten zijn beschikbaar als printblad. De originele DJ-kaarten en de broninstructie worden via de open beheer-API aangeboden; deze afbeeldingen staan niet in GitHub Pages of de repository.
 
-De Spotify-volgorde met zestig nummers is op 26 oktober 2026 uit de playlist overgenomen en met de 36 vakjes per kaart vergeleken. De nieuwe DJ-kaart wijkt vanaf nummer 21 af van Spotify. De geplande winmomenten uit de bron zijn daarom geen geldige voorspelling voor deze playlistvolgorde. In het beheer staat een tabel met de berekende momenten; K1 en K3 hebben bij deze volgorde allebei een volle kaart na nummer 57. De berekening is een momentopname en moet na veranderingen aan de playlist of kaarten opnieuw worden uitgevoerd. De site speelt of knipt geen Spotify-audio automatisch.
+De **nieuwe DJ-kaart** is de leidende bron voor de 60 nummers en de speelvolgorde. De oude DJ-kaart wordt niet meer aangeboden. De broninstructies en winplanning staan direct op halve breedte in het beheer en openen vergroot bij aanklikken. De Spotify-playlist is ongewijzigd en is alleen een afspeelhulpmiddel.
+
+De werkelijk gedrukte bingokaarten bevatten Gala – Freed From Desire (K1, K2, K3) en Avicii – Levels (K1), die op de nieuwe DJ-kaart ontbreken. De volledige kaarten zijn daardoor niet haalbaar. De nieuwe DJ-kaart noemt bovendien bij verscheidene nummers andere kaarten dan de gedrukte kaarten bevatten. Het beheer toont beide vermeldingen en berekent de combinaties met de nieuwe DJ-volgorde en de daadwerkelijke gedrukte vakjes; onhaalbare combinaties worden niet als winmoment gepresenteerd. De bronafbeelding is ongewijzigd en haar #20/#40/#58-planning wordt duidelijk als onbevestigd aangeduid. De titel “Codich” op DJ-nummer 60 is letterlijk overgenomen en moet nog worden verduidelijkt.
 
 ## Instellingen voor puntentelling
 

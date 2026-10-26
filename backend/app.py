@@ -361,7 +361,7 @@ class Handler(BaseHTTPRequestHandler):
         self.reply(200, {'ok': True})
 
     def reply_image(self, filename):
-        files = {'dj-nieuw.png', 'dj-oud.png', 'bingo-broninstructie.png'}
+        files = {'dj-nieuw.png', 'bingo-broninstructie.png'}
         if filename not in files:
             raise Problem(404, 'Bestand niet gevonden.')
         file = Path('/var/lib/pubquiz/media') / filename

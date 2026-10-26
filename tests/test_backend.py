@@ -203,6 +203,7 @@ class QuizTests(unittest.TestCase):
             self.assertEqual(request('POST','/teams/add',{'Origin':app.ORIGIN,'Content-Type':'application/json'},json.dumps({'actor':'Organisator','name':'Zonder inlog'}))[0],200)
             self.assertEqual(request('GET','/health')[0],200)
             self.assertEqual(request('GET','/media/unknown.png',{'Origin':app.ORIGIN})[0],404)
+            self.assertEqual(request('GET','/media/dj-oud.png',{'Origin':app.ORIGIN})[0],404)
         finally:
             server.shutdown();server.server_close();thread.join()
 
