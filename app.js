@@ -1,3 +1,4 @@
+import {makeDemoState,installDemo} from './demo.mjs';
 import {watchForUpdates} from './updates.mjs';
 import {answerSheetPack,tableCardSheet} from './answer-sheets.mjs';
 import {headerMenu} from './navigation.mjs';
@@ -5,6 +6,8 @@ import {summarize,formatPoints,roundProgress} from './scoring.mjs';
 import {podium,roundPodium,standingsTable} from './scoreboard.mjs';
 'use strict';
 const byId = id => document.getElementById(id);
+const demoMode=new URLSearchParams(location.search).get('demo')==='1';
+if(demoMode)installDemo();
 let quiz;
 let slides = [];
 let slideIndex = 0;
@@ -208,9 +211,10 @@ async function loadScoreboard(){
   if(scoreBusy || document.hidden)return;
   scoreBusy=true;
   try{
-    const response=await fetch('https://vps.opticore-insights.nl/pubquiz-api/v1/standings');
+    const response=await fetch('https://vps.opticore-insights.nl/pubquiz-api/v1/'+(demoMode?'state':'standings'));
     if(!response.ok)throw new Error('Geen stand');
-    const next=await response.json();
+    const loaded=await response.json();
+    const next=demoMode?makeDemoState(loaded):loaded;
     const changed=JSON.stringify(next)!==JSON.stringify(scoreState);
     scoreState=next;
     if(changed)drawScoreboard();

@@ -23,7 +23,7 @@ jobs:
           node-version: '22'
       - name: Controleer inhoud en maak publicatiemap
         run: |
-          node --test tests/updates.test.mjs tests/scoring.test.mjs tests/organisator.test.mjs tests/answer-sheets.test.mjs tests/table-card-pdf.test.mjs tests/answer-sheets-pdf.test.mjs
+          node --test tests/demo.test.mjs tests/updates.test.mjs tests/scoring.test.mjs tests/organisator.test.mjs tests/answer-sheets.test.mjs tests/table-card-pdf.test.mjs tests/answer-sheets-pdf.test.mjs
           node --check organisator.js
           node scripts/build.mjs
       - uses: actions/configure-pages@v5

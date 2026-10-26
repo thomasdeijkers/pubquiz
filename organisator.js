@@ -1,9 +1,12 @@
+import {makeDemoState,installDemo} from './demo.mjs';
 import {watchForUpdates} from './updates.mjs';
 import {headerMenu} from './navigation.mjs';
 import {podium,roundPodium,trophy} from './scoreboard.mjs';
 import {summarize,formatPoints} from './scoring.mjs';
 const API = 'https://vps.opticore-insights.nl/pubquiz-api/v1';
 const root = document.getElementById('organizer');
+const demoMode=new URLSearchParams(location.search).get('demo')==='1';
+if(demoMode)installDemo();
 const esc = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let actor = 'Organisator';
 try {
@@ -57,11 +60,13 @@ function confirmAction(title,message,label='Doorgaan') {
   return new Promise(resolve=>dialog.addEventListener('close',()=>resolve(dialog.returnValue==='confirm'),{once:true}));
 }
 async function api(path,body) {
+  if(demoMode && body)throw new Error('Dit is een demoversie. Er worden geen wijzigingen aan de echte quiz opgeslagen.');
+  if(demoMode && path==='/revision' && state)return {revision:state.revision};
   const response=await fetch(API+path,{method:body?'POST':'GET',headers:body?{'Content-Type':'application/json'}:{},...(body?{body:JSON.stringify({...body,actor,answers_epoch:state?.answers_epoch ?? 0})}:{})});
   let data;
   try { data=await response.json(); } catch { throw new Error('De server gaf geen geldig antwoord. Probeer opnieuw.'); }
   if(!response.ok) { const error=new Error(data.error || 'De actie kon niet worden uitgevoerd.'); error.status=response.status; error.data=data; throw error; }
-  return data;
+  return demoMode && path==='/state'?makeDemoState(data):data;
 }
 function activeTeams(){ return state.teams.filter(team=>team.active); }
 function currentRound(){return state.rounds.find(round=>round.id===selectedRound);}
