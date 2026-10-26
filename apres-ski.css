@@ -164,3 +164,5 @@ body,.organizer-body{background:#e6f3fc url('assets/alpen-achtergrond.svg') cent
 .round-progress{display:inline-block;background:#eaf0f6;border:1px solid #c2d0de;color:#49637a;border-radius:20px;padding:4px 8px;font:500 10px/1.3 'DM Sans',sans-serif;white-space:nowrap}
 .round-progress.complete{background:#e5f3df;border-color:#9abb89;color:#306027}
 @media(max-width:750px){.round-progress{display:table;margin-top:4px;font-size:9px;padding:3px 6px}.round-overview-summary{min-height:76px}.round-overview-tile>.round-control-link{min-height:76px}}
+
+@media screen and (min-width:700px){.header-menu-panel{grid-template-columns:1fr;width:350px}.header-menu-panel .menu-group{border-right:0}}
