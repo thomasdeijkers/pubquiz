@@ -114,3 +114,19 @@ body,.organizer-body{background:#e6f3fc url('assets/alpen-achtergrond.svg') cent
 /* Ruimte rondom de beoordelingsknoppen in de compacte controle. */
 .team-scoring-page .team-score-entry{padding-right:18px}.team-scoring-page .team-grade-buttons{gap:10px}.team-scoring-page .team-grade-buttons .grade-button{width:auto;flex:1 1 0;min-width:0}
 @media(max-width:750px){.team-scoring-page .team-score-entry{padding-right:10px}.team-scoring-page .team-grade-buttons{gap:8px}}
+
+/* De algemene minimumbreedte van beoordelingsknoppen mag mobiel niet overlopen. */
+.team-scoring-page .team-grade-buttons{min-width:0;max-width:100%;width:100%;flex-basis:auto}
+@media(max-width:750px){
+ .org-layout:has(.team-scoring-page){padding-left:8px;padding-right:8px;margin-top:8px}
+ .org-content:has(.team-scoring-page){padding:4px 0 20px;min-width:0}
+ .team-scoring-page{min-width:0;width:100%}
+ .team-scoring-page .team-score-list{padding:0 8px}
+ .team-scoring-page .team-score-entry{grid-template-columns:22px minmax(0,1fr) 138px;gap:5px;padding:4px 2px;min-height:44px;height:44px;min-width:0;width:100%}
+ .team-scoring-page .team-grade-buttons{gap:8px}
+ .team-scoring-page .team-score-entry .grade-button{height:36px;font-size:11px;padding:4px 3px;min-width:0;touch-action:manipulation}
+ .team-scoring-page .team-score-prompt strong{font-size:11px}
+ .team-scoring-page .selector-bar select{min-width:0;width:100%;height:40px;font-size:16px}
+ .team-scoring-page .selector-bar>div{min-width:0}
+}
+@media(max-width:360px){.team-scoring-page .team-score-entry{grid-template-columns:20px minmax(0,1fr) 124px}.team-scoring-page .team-grade-buttons{gap:6px}}
