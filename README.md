@@ -30,6 +30,8 @@ TransIP: record `pubquiz`, type `CNAME`, doel `thomasdeijkers.github.io.`. Dit g
 
 ## Gedeeld quizbeheer
 
+Linkvoorbeelden op de homepage en beheerpagina bevatten de datum, aanvang, locatie, teamgrootte, prijs en de originele pubquizflyer. De build neemt dezelfde deelmetadata over voor beheerlinks. Previewcrawlers mogen de openbare pagina en afbeelding ophalen; de noindex-instelling blijft actief. De ontvangende app bepaalt de uiteindelijke weergave en kan eerdere voorbeelden tijdelijk cachen.
+
 `organisator.html` biedt teambeheer, antwoorden en punten per vraag, een tussenstand na iedere ronde, een projectiescherm en exports naar JSON/CSV. Het beheer opent direct zonder account, naamopgave of toegangssleutel. Iedereen met de gewone beheerlink kan teams, antwoorden, antwoordmodellen en punten bekijken en aanpassen. Een naam invullen is optioneel via Naam wijzigen, om wijzigingen herkenbaar te maken.
 
 De API draait als afzonderlijke gebruiker `pubquiz` op de bestaande VPS, via `https://vps.opticore-insights.nl/pubquiz-api/v1`. De gegevens staan in een aparte PostgreSQL-database `pubquiz`. Databaseverbindingen gebruiken een lokale Unix-socket en peer-authenticatie. Er staat geen databasewachtwoord in GitHub. De juiste antwoorden zijn rechtstreeks uit het lokale controleblad geïmporteerd; bronbestanden en antwoordmodellen blijven buiten deze openbare repository en de Pages-deployment.

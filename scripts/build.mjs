@@ -34,9 +34,12 @@ for (const file of ['navigation.mjs','scoreboard.mjs','app.js','organisator.js']
   }
   await writeFile(path.join(output,file),source);
 }
+// Use the same event and flyer preview for shared organizer links.
+const shareMeta=(await readFile('index.html','utf8')).split('\n').filter(line=>/<meta (property="og:|name="twitter:)/.test(line)).join('\n');
 // Give changed browser assets a fresh URL after every publication.
 for (const page of ['index.html','organisator.html']) {
   let html=await readFile(path.join(output,page),'utf8');
+  if(page==='organisator.html')html=html.replace('</head>',shareMeta+'\n</head>');
   for (const asset of ['app.js','style.css','organisator.js','organisator.css','apres-ski.css']) {
     const digest=createHash('sha256').update(await readFile(path.join(output,asset))).digest('hex').slice(0,12);
     html=html.replaceAll(`"${asset}"`,`"${asset}?v=${digest}"`);

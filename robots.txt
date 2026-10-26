@@ -1,2 +1,12 @@
+# Linkvoorbeelden mogen de openbare pagina en flyer ophalen.
+User-agent: WhatsApp
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
 User-agent: *
 Disallow: /
