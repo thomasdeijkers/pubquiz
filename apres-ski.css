@@ -70,3 +70,26 @@ body,.organizer-body{background:#e6f3fc url('assets/alpen-achtergrond.svg') cent
 @media screen{.reset-answers-panel{margin-top:28px;border-color:#ac3034;background:#fff6f2}.reset-answers-panel h2{font:500 24px Oswald,sans-serif;margin:0 0 10px;color:#81242a}.reset-answers-panel p{font-size:12px;line-height:1.8;margin:0 0 16px}#reset-answers-dialog{max-width:540px;width:calc(100% - 28px);padding:26px;border:3px solid #8e4e2b;border-top:7px solid #fff;border-radius:10px;background:#fffefa;color:#173348}#reset-answers-dialog::backdrop{background:#03192bbf}#reset-answers-dialog h2{font:500 29px Oswald,sans-serif;margin:0 0 14px}#reset-answers-dialog p{font-size:12px;line-height:1.8}#reset-answers-dialog label{display:block;font-size:12px;margin:17px 0 7px}#reset-password{width:100%;font:16px 'DM Sans',sans-serif;padding:11px;border:1px solid #9db8d0;border-radius:4px}.reset-dialog-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:22px}#reset-answers-error{color:#9c2029}#reset-answers-error[hidden]{display:none}}
 
 @media screen and (max-width:750px){.topbar .header-quiz-info{display:none}}
+
+/* Controle per team: één smalle regel per vraag, ook op tablet. */
+.team-scoring-page .team-score-title{background:none;box-shadow:none;border:0;border-radius:0;padding:0 2px;margin:0 0 8px;color:#fff}
+.team-scoring-page .team-score-title:before,.team-scoring-page .team-score-title:after{display:none}
+.team-scoring-page .team-score-title h1{font-size:23px;color:#fff;margin:0}
+.team-scoring-page .team-score-title p{display:none}
+.team-scoring-page .selector-bar{padding:8px 12px;margin-bottom:8px;gap:12px;grid-template-columns:1fr 1fr}
+.team-scoring-page .selector-bar label{margin-bottom:3px;font-size:10px}
+.team-scoring-page .selector-bar select{height:32px;padding:4px 8px;font-size:12px}
+.team-scoring-page .team-round-scores{padding:6px;margin-bottom:8px}
+.team-scoring-page .grading-summary{padding:7px 12px;margin:0 0 8px;gap:20px}
+.team-scoring-page .grading-summary>div{display:flex;align-items:center;gap:7px}
+.team-scoring-page .grading-summary strong{font-size:18px;margin:0}
+.team-scoring-page .grading-summary span{font-size:10px;margin:0}
+.team-scoring-page .team-score-list{padding:0 10px;margin:0}
+.team-scoring-page .team-score-entry{display:grid;grid-template-columns:24px minmax(0,1fr) minmax(90px,180px) 145px;gap:8px;padding:4px 0;min-height:36px;height:36px}
+.team-scoring-page .team-score-entry textarea{display:none}
+.team-scoring-page .team-score-prompt,.team-scoring-page .team-score-model{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;font-size:11px;line-height:1.3}
+.team-scoring-page .team-score-prompt strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}
+.team-scoring-page .team-score-model{color:#526879}
+.team-scoring-page .team-score-entry .question-number{width:23px;height:23px;min-width:0;min-height:0;padding:0;font-size:14px}
+.team-scoring-page .team-score-entry .grade-button{height:27px;min-height:0;min-width:0;padding:3px 6px;font-size:11px}
+@media(max-width:750px){.team-scoring-page .team-score-entry{grid-template-columns:20px minmax(0,1fr) 100px;gap:5px}.team-scoring-page .team-score-model{display:none}.team-scoring-page .team-score-prompt{font-size:10px}.team-scoring-page .team-score-entry .grade-button{font-size:10px;padding:3px}.team-scoring-page .grading-summary{gap:10px}.team-scoring-page .grading-summary>div{display:block}.team-scoring-page .grading-summary span{font-size:9px}}
