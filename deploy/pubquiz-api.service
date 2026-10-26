@@ -1,0 +1,22 @@
+[Unit]
+Description=Pubquiz organisator API
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=pubquiz
+Group=pubquiz
+WorkingDirectory=/opt/pubquiz/current
+Environment="PUBQUIZ_DSN=dbname=pubquiz user=pubquiz host=/var/run/postgresql"
+ExecStart=/usr/bin/python3 /opt/pubquiz/current/backend/app.py
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/pubquiz
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

@@ -16,7 +16,7 @@ Geen installatie of framework nodig. Controleer met `node scripts/build.mjs`. St
 ## DNS en HTTPS
 
 GitHub Pages custom domain: `pubquiz.opticore-insights.nl`.
-TransIP: record `pubquiz`, type `CNAME`, doel `thomasdeijkers.github.io.`. Dit geldt alleen voor het subdomein; de bestaande records blijven intact. Zet **Enforce HTTPS** aan zodra GitHub het certificaat heeft uitgegeven.
+TransIP: record `pubquiz`, type `CNAME`, doel `thomasdeijkers.github.io.`. Dit geldt alleen voor het subdomein; de bestaande records blijven intact. **Enforce HTTPS** staat aan; HTTP verwijst automatisch naar HTTPS.
 
 ## Inhoudelijke aandachtspunten
 
@@ -28,8 +28,25 @@ TransIP: record `pubquiz`, type `CNAME`, doel `thomasdeijkers.github.io.`. Dit g
 - De getoonde vragen en antwoordopties zijn overgenomen; de feitelijke juistheid van alle vragen is nog niet gecontroleerd.
 - Het aantal tennisballen en lokale clubgegevens moeten door de organisatie bevestigd worden.
 
-## Antwoorden en controleblad
+## Gedeeld quizbeheer
 
-Het controleblad en de Word-bronbestanden staan bewust buiten deze repository en buiten de deployment. Publiceer hier geen antwoorden, DJ-kaarten of geheime gegevens. GitHub Pages is statische openbare hosting: een verborgen URL of wachtwoord in JavaScript biedt geen echte afscherming. Voor een later online controleblad is aparte toegangsbeveiliging nodig, of gebruik een lokaal printbaar bestand.
+`organisator.html` biedt teambeheer, antwoorden en punten per vraag, een tussenstand na iedere ronde, een projectiescherm en exports naar JSON/CSV. Organisatoren gebruiken een gedeelde beheerlink; er zijn geen gebruikersaccounts of inlogschermen. De link bevat een willekeurige toegangssleutel in het URL-fragment. Na openen verdwijnt de sleutel uit de adresbalk en wordt hij alleen in de browser onthouden. Deel de beheerlink alleen met organisatoren. De openbare quizpagina geeft geen toegang tot de database.
 
-Er worden geen deelnemersantwoorden opgeslagen. De invulbladen zijn bedoeld om te printen. `noindex` en `robots.txt` vragen zoekmachines om de tijdelijke quiz niet te indexeren; dit is geen toegangsbeveiliging.
+De API draait als afzonderlijke gebruiker `pubquiz` op de bestaande VPS, via `https://vps.opticore-insights.nl/pubquiz-api/v1`. De gegevens staan in een aparte PostgreSQL-database `pubquiz`. Databaseverbindingen gebruiken een lokale Unix-socket en peer-authenticatie. Er staat geen databasewachtwoord in GitHub. De juiste antwoorden zijn rechtstreeks uit het lokale controleblad geïmporteerd; bronbestanden en antwoordmodellen blijven buiten deze openbare repository en de Pages-deployment.
+
+Elke beoordeling heeft een wijzigingsversie. Bij gelijktijdige wijzigingen krijgt de organisator een conflictmelding in plaats van stilzwijgend andermans werk te vervangen. Aanpassingen aan een teamantwoord wissen de oude beoordeling, tenzij je opnieuw punten meegeeft. Een ronde kan pas worden afgesloten als alle actieve teams volledig zijn beoordeeld. Afgesloten rondes zijn voor iedereen vergrendeld totdat ze worden heropend.
+
+Het model en de maximale punten kunnen in het beheer worden aangepast. De standaard is één punt per gewone vraag, twee punten per muziekfragment, maximaal tien punten voor de kaartentoren en zes voor beerpong. Bingopunten staan op nul totdat de organisatie deze heeft vastgesteld. Gelijke antwoorden kunnen automatisch worden herkend; afwijkende antwoorden blijven ter beoordeling staan. Eerdere beoordelingen worden bij een modelwijziging niet automatisch herberekend.
+
+## Backend publiceren en testen
+
+`.github/workflows/backend.yml` test de API tegen een geïsoleerde PostgreSQL-testdatabase en publiceert daarna alleen `backend/app.py`. GitHub gebruikt een afzonderlijke SSH-sleutel die alleen het vaste deployscript mag starten; er is daarmee geen vrije shelltoegang. De host key is vastgelegd in een GitHub-secret. De database en beheersleutel worden niet door deployments vervangen. Iedere backend-deployment maakt eerst een PostgreSQL-reservekopie in `/var/backups/pubquiz` en zet de vorige codeversie terug als de gezondheidscontrole faalt.
+
+- Frontend en puntentelling: `node --test tests/scoring.test.mjs` en `node scripts/build.mjs`.
+- API: stel `PUBQUIZ_DSN` in op een afzonderlijke database genaamd `pubquiz_test` en voer `python -m unittest discover -s tests -p test_backend.py -v` uit. Gebruik nooit de productiedatabase voor tests.
+- Eerste serverinrichting: `deploy/bootstrap.sh`; deze gebruikt het lokale, niet-gepubliceerde seedbestand en bewaart de beheerlink privé op de server.
+- Een reservekopie van teams, antwoorden, model en scores kan ook vanuit het beheer worden gedownload. CSV bevat de geselecteerde tussenstand.
+
+`private/` en `qa/` zijn uitgesloten van Git. Daar staan lokaal de beheerlink, de beperkte deploysleutel, de antwoordimport en interne controlebestanden. Maak deze bestanden niet openbaar.
+
+`noindex` en `robots.txt` vragen zoekmachines om de tijdelijke quiz niet te indexeren; de beheer-API vereist altijd een geldige toegangssleutel.

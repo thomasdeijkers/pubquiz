@@ -19,7 +19,7 @@ const output = path.join(root,'_site');
 assert.equal(path.dirname(output),root);
 await rm(output,{recursive:true,force:true});
 await mkdir(output,{recursive:true});
-for (const file of ['index.html','style.css','app.js','favicon.svg','robots.txt']) await copyFile(file,path.join(output,file));
+for (const file of ['index.html','style.css','app.js','favicon.svg','robots.txt','organisator.html','organisator.css','organisator.js','scoring.mjs']) await copyFile(file,path.join(output,file));
 await mkdir(path.join(output,'data'));
 await copyFile('data/quiz.json',path.join(output,'data/quiz.json'));
 for (const file of files) {

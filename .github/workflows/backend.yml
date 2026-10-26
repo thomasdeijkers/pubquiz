@@ -1,0 +1,52 @@
+name: Publiceer quizbeheer
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - 'tests/test_backend.py'
+      - '.github/workflows/backend.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pubquiz-backend
+  cancel-in-progress: false
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:14-alpine
+        env:
+          POSTGRES_DB: pubquiz_test
+          POSTGRES_PASSWORD: ci-only-isolated-test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Installeer PostgreSQL-client voor tests
+        run: pip install psycopg2-binary==2.9.11
+      - name: Test gedeeld nakijken en afscherming
+        env:
+          PUBQUIZ_DSN: dbname=pubquiz_test user=postgres password=ci-only-isolated-test host=127.0.0.1
+        run: python -m unittest discover -s tests -p 'test_backend.py' -v
+      - name: Configureer beperkte deploytoegang
+        env:
+          DEPLOY_KEY: ${{ secrets.PUBQUIZ_DEPLOY_KEY }}
+          KNOWN_HOSTS: ${{ secrets.PUBQUIZ_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/pubquiz
+          chmod 600 ~/.ssh/pubquiz
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+      - name: Publiceer alleen de pubquiz-API
+        run: ssh -i ~/.ssh/pubquiz -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes root@136.144.183.127 "$GITHUB_SHA"
