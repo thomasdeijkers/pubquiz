@@ -14,7 +14,7 @@ async function init() {
     if (!response.ok) throw new Error('Inhoud niet beschikbaar');
     quiz = await response.json();
     if (new URLSearchParams(location.search).has('invulblad')) return renderSheet();
-    byId('round-grid').innerHTML = quiz.rounds.map(round => `<article class="round-tile"><button class="round-card" data-round="${round.id}"><div class="card-top"><span class="round-number">${String(round.id).padStart(2,'0')}</span><span class="tag ${round.pending ? 'pending' : ''}">${safe(round.type)}</span></div><h3>${safe(round.title)}</h3><p class="card-description">${safe(round.description)}</p><div class="card-bottom"><span>${safe(round.summary)}</span><span aria-hidden="true">Open ronde ↗</span></div></button><div data-round-podium="${round.id}"><p class="score-loading">De top 3 wordt geladen…</p></div></article>`).join('');
+    byId('round-grid').innerHTML = quiz.rounds.map(round => `<article class="round-tile"><button class="round-card" data-round="${round.id}"><div class="card-top"><span class="round-number">${String(round.id).padStart(2,'0')}</span><span class="tag ${round.pending ? 'pending' : ''}">${safe(round.type)}</span></div><h3>${safe(round.title)}</h3><p class="card-description">${safe(round.description)}</p><div class="card-bottom"><span>${safe(round.summary)}</span><span aria-hidden="true">Open ronde ↗</span></div></button><a class="round-control-link" href="organisator.html?tab=nakijken&amp;ronde=${round.id}" aria-label="Open controle ronde ${round.id} · ${safe(round.title)}">Open controle <span aria-hidden="true">→</span></a><div data-round-podium="${round.id}"><p class="score-loading">De top 3 wordt geladen…</p></div></article>`).join('');
     document.querySelectorAll('[data-round]').forEach(button => button.addEventListener('click', () => openRound(Number(button.dataset.round))));
     byId('sheet-round').innerHTML = quiz.rounds.map(round => `<option value="${round.id}">${round.id}. ${safe(round.title)}</option>`).join('') + '<option value="bonus">Bonusronde · 30 afbeeldingen</option>';
     const bingo = quiz.rounds.find(round => round.id === 5);
@@ -81,6 +81,7 @@ function updateSlide() {
   byId('viewer-kicker').textContent = slide.id === 'BONUS' ? 'BONUSRONDE' : `RONDE ${slide.id}`;
   byId('viewer-title').textContent = slide.round;
   byId('viewer-note').textContent = slide.note;
+  byId('viewer-control').href = `organisator.html?tab=nakijken&ronde=${slide.id==='BONUS'?'bonus':slide.id}`;
   byId('viewer-resource').hidden = slide.id !== 5;
   byId('image-error').hidden = true;
   byId('slide').src = slide.src;

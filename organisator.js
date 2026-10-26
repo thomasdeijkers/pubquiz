@@ -13,9 +13,9 @@ if (new URLSearchParams(location.hash.slice(1)).has('sleutel')) {
   history.replaceState(null,'',location.pathname+location.search);
 }
 let state;
-let tab = 'teams';
-if(new URLSearchParams(location.search).get('tab')==='instellingen')tab='settings';
-let selectedRound = '1';
+const routeParams = new URLSearchParams(location.search);
+let tab = ({instellingen:'settings',nakijken:'nakijken',stand:'stand',teams:'teams'})[routeParams.get('tab')] || 'teams';
+let selectedRound = routeParams.get('ronde') || '1';
 let selectedTeam = '';
 let through = '9';
 let includeBonus = false;
@@ -83,6 +83,7 @@ async function refresh(force=false) {
     const next=await api('/state');
     const changed=!state || next.revision!==state.revision;
     state=next; lastSync=new Date(); loadingError='';
+    if(!state.rounds.some(round=>round.id===selectedRound))selectedRound=state.rounds[0]?.id || '1';
     if(!selectedTeam || !activeTeams().some(team=>team.id===selectedTeam))selectedTeam=activeTeams()[0]?.id || '';
     if(changed || force)render();else saveIndicator();
   }catch(error){loadingError=error.message;if(!state)accessPage();saveIndicator();}
@@ -105,7 +106,7 @@ function gradingView(){
   const round=currentRound(),list=questions(),locked=round.closed;
   const reviewed=list.filter(q=>getAnswer(q.id)?.points_cents!=null).length;
   const points=list.reduce((sum,q)=>sum+(getAnswer(q.id)?.points_cents || 0),0);
-  return `<div class="org-title"><div><p class="eyebrow dark">PER TEAM EN PER RONDE</p><h1>Antwoorden & punten</h1><p>Voer de antwoorden in en beoordeel ze. Afwijkende formuleringen kun je zelf goed rekenen.</p></div></div>${selectorBar()}${roundPodium(state,selectedRound,false)}<div class="grading-summary"><div><strong>${reviewed} / ${list.length}</strong><span>beoordeeld</span></div><div><strong>${formatPoints(points)}</strong><span>punten in deze ronde</span></div><button class="button outline" data-action="match" ${locked?'disabled':''}>Herken gelijke antwoorden</button><button class="button ${locked?'outline':'primary'}" data-action="round-status">${locked?'Heropen ronde':'Ronde afsluiten'}</button></div>${locked?'<div class="info-note">Deze ronde is afgesloten voor alle organisatoren. Heropen de ronde om nog iets te corrigeren.</div>':''}${selectedRound==='5'?'<div class="info-note">De bingopunten staan voorlopig op 0. Spreek de puntentelling af en pas de maxima aan bij Instellingen → Puntentelling voordat je beoordeelt.</div>':''}<div class="answer-list">${list.map(q=>{
+  return `<div class="org-title"><div><p class="eyebrow dark">PER TEAM EN PER RONDE</p><h1>Antwoorden & punten</h1><p>Kies hieronder een team. Vul het teamantwoord direct onder iedere vraag in en sla het op, of ken meteen punten toe.</p></div></div>${selectorBar()}${roundPodium(state,selectedRound,false)}<div class="grading-summary"><div><strong>${reviewed} / ${list.length}</strong><span>beoordeeld</span></div><div><strong>${formatPoints(points)}</strong><span>punten in deze ronde</span></div><button class="button outline" data-action="match" ${locked?'disabled':''}>Herken gelijke antwoorden</button><button class="button ${locked?'outline':'primary'}" data-action="round-status">${locked?'Heropen ronde':'Ronde afsluiten'}</button></div>${locked?'<div class="info-note">Deze ronde is afgesloten voor alle organisatoren. Heropen de ronde om nog iets te corrigeren.</div>':''}${selectedRound==='5'?'<div class="info-note">De bingopunten staan voorlopig op 0. Spreek de puntentelling af en pas de maxima aan bij Instellingen → Puntentelling voordat je beoordeelt.</div>':''}<div class="answer-list">${list.map(q=>{
     const a=getAnswer(q.id),score=a?.points_cents,draft=answerDrafts.get(answerKey(q.id));
     return `<article class="answer-card ${score!=null?'reviewed':''}" data-question="${q.id}"><div class="question-number">${q.id}</div><div class="answer-body"><h2>${esc(q.prompt)}</h2><div class="expected"><strong class="expected-label">Modelantwoord</strong><p>${esc(q.correct || 'Nog niet ingevuld — beoordeel dit onderdeel zelf of vul het antwoordmodel aan.')}</p>${q.alternatives.length?`<small>Ook goed: ${q.alternatives.map(esc).join(' · ')}</small>`:''}</div><label for="answer-${q.id}">Antwoord van het team</label><textarea id="answer-${q.id}" data-answer="${q.id}" rows="2" maxlength="3000" ${locked?'disabled':''} placeholder="Noteer het ingeleverde antwoord…">${esc(draft?.answer ?? a?.answer ?? '')}</textarea><div class="score-actions"><button class="grade-button good ${score===q.max_cents?'chosen':''}" data-score="${q.id}" data-value="${q.max_cents/100}" ${locked?'disabled':''}>Goed · ${formatPoints(q.max_cents)}</button><button class="grade-button wrong ${score===0?'chosen':''}" data-score="${q.id}" data-value="0" ${locked?'disabled':''}>Fout · 0</button><label class="points-input">Punten<input aria-label="Punten voor vraag ${q.id}" data-points="${q.id}" type="number" min="0" max="${q.max_cents/100}" step="0.01" value="${esc(draft?.points ?? (score==null?'':score/100))}" ${locked?'disabled':''} placeholder="—"><span>/ ${formatPoints(q.max_cents)}</span></label><button class="text-button" data-action="save-answer" data-id="${q.id}" ${locked?'disabled':''}>Opslaan</button>${score!=null?`<button class="text-button" data-action="ungrade" data-id="${q.id}" ${locked?'disabled':''}>Beoordeling wissen</button>`:''}</div><div class="answer-meta" id="meta-${q.id}">${draft?'Niet-opgeslagen invoer':a?`${score!=null?'Beoordeeld':'Nog te beoordelen'} · ${esc(a.updated_by)} · ${new Date(a.updated_at).toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'})}`:'Nog niet ingevuld'}</div></div></article>`;
   }).join('')}</div>`;
