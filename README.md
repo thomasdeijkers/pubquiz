@@ -128,3 +128,5 @@ Onder Instellingen staat Reset alle antwoorden. De organisator typt exact pubqui
 De tafelkaart gebruikt een skihutdecor en een besneeuwd houten naambord. Open A5-pdf maakt de kaart in de browser als echte PDF van exact 148 × 210 mm, met ingebedde foto, logo en Anton-lettertype en vectornamen; zonder browserdatum of webadres. De pdf bevat twee tegengesteld gedraaide zijden en een vouwlijn. Pdf-lib 1.17.1 en @pdf-lib/fontkit 1.1.1 staan lokaal in vendor met licentievermeldingen; het lettertype gebruikt de SIL Open Font License.
 
 Het pdf-voorbeeld wordt met een lokaal meegeleverde PDF.js-renderer op canvas getoond, zodat het ook werkt in browsers zonder ingebouwde pdf-plug-in. Het gedownloade bestand blijft een echte A5-pdf.
+
+De invulbladen hebben een eigen witte voettekst zonder de websitefooter: punten en bladnummer op één regel, daaronder de unieke kreet helemaal onderaan, cursief en grijs. Open complete set als pdf maakt elf echte A4-pagina’s (negen rondes, bonus en A5-tafelkaart op knipvel), zonder browserdatum of webadres. Het ingebouwde pdf-voorbeeld heeft een paginakeuze; afdrukken en downloaden lopen via de pdf.

@@ -96,14 +96,14 @@ function renderTeamPack(){
   const params=new URLSearchParams(location.search);
   const tentOnly=params.get('invulblad')==='tafelkaart';
   let team=(params.get('team') || '').slice(0,80);
-  let tablePdfUrl=null;
+  let tablePdfUrl=null,previewPdf=null,renderTask=null;
   const bingo=[1,2,3].includes(Number(params.get('bingokaart')))?Number(params.get('bingokaart')):1;
   document.body.className='print-pack'+(tentOnly?' table-card-only':'');
   document.title=`${tentOnly?'Tafelkaart':'Invulbladen'} · ${team || 'Pubquiz'}`;
-  document.body.innerHTML=`<div class="pack-toolbar"><a class="pack-back" href="organisator.html?tab=teams">← Terug naar teams</a><label>Teamnaam<input id="pack-team" maxlength="80" value="${safe(team)}" placeholder="Vul de teamnaam in"></label><label ${tentOnly?'hidden':''}>Bingokaart<select id="pack-bingo">${[1,2,3].map(id=>`<option value="${id}" ${id===bingo?'selected':''}>K${id}</option>`).join('')}</select></label><button class="button ${tentOnly?'outline':'primary'}" id="print-pack">${tentOnly?'Browserafdruk':'Print complete set (11 pagina’s)'} ↗</button><button class="button ${tentOnly?'primary':'outline'}" id="open-table-card-pdf" type="button">Open A5-pdf ↗</button>${tentOnly?'':`<a class="button outline" id="open-table-card" href="?invulblad=tafelkaart&amp;team=${encodeURIComponent(team)}" target="_blank" rel="noopener">Alleen tafelkaart (A5) ↗</a>`}<p>${tentOnly?'Een A5-kaart van 148 × 210 mm, met de teamnaam aan beide zijden. Vouw op de stippellijn en zet hem als een tentje op tafel.':'Tien A4-invulbladen plus een A5-tafelkaart op een extra A4-knipvel. De knop Alleen tafelkaart opent de kaart op echt A5-formaat. Kies je hier een andere bingokaart? Werk de kaartkoppeling ook bij onder Teams.'} Print op 100% / werkelijke grootte, enkelzijdig.</p></div><main id="sheet-pack">${tentOnly?tableCardSheet(team):answerSheetPack(quiz,team,bingo)}</main><section id="table-card-pdf-preview" class="table-card-pdf-preview" hidden><div><strong>A5-tafelkaart · drukklare pdf</strong><a id="download-table-card-pdf" class="button primary">Download pdf ↓</a><a id="open-generated-pdf" class="button outline" target="_blank" rel="noopener">Open pdf ↗</a></div><p id="table-card-pdf-status" role="status"></p><canvas id="table-card-pdf-canvas" aria-label="Voorbeeld van de A5-tafelkaart als pdf" hidden></canvas></section>`;
+  document.body.innerHTML=`<div class="pack-toolbar"><a class="pack-back" href="organisator.html?tab=teams">← Terug naar teams</a><label>Teamnaam<input id="pack-team" maxlength="80" value="${safe(team)}" placeholder="Vul de teamnaam in"></label><label ${tentOnly?'hidden':''}>Bingokaart<select id="pack-bingo">${[1,2,3].map(id=>`<option value="${id}" ${id===bingo?'selected':''}>K${id}</option>`).join('')}</select></label><button class="button primary" id="print-pack" ${tentOnly?'hidden':''}>Open complete set als pdf ↗</button><button class="button ${tentOnly?'primary':'outline'}" id="open-table-card-pdf" type="button">Open A5-pdf ↗</button>${tentOnly?'':`<a class="button outline" id="open-table-card" href="?invulblad=tafelkaart&amp;team=${encodeURIComponent(team)}" target="_blank" rel="noopener">Alleen tafelkaart (A5) ↗</a>`}<p>${tentOnly?'Een A5-kaart van 148 × 210 mm, met de teamnaam aan beide zijden. Vouw op de stippellijn en zet hem als een tentje op tafel.':'Tien A4-invulbladen plus een A5-tafelkaart op een extra A4-knipvel. De knop Alleen tafelkaart opent de kaart op echt A5-formaat. Kies je hier een andere bingokaart? Werk de kaartkoppeling ook bij onder Teams.'}  Gebruik de pdf-knop voor een afdruk zonder datum en webadres. Print op 100% / werkelijke grootte, enkelzijdig.</p></div><main id="sheet-pack">${tentOnly?tableCardSheet(team):answerSheetPack(quiz,team,bingo)}</main><section id="table-card-pdf-preview" class="table-card-pdf-preview" hidden><div><strong id="pdf-preview-title">Drukklare pdf</strong><label class="pdf-page-control" id="pdf-page-control" hidden>Pagina<select id="pdf-page"></select></label><a id="download-table-card-pdf" class="button primary">Download pdf ↓</a><a id="open-generated-pdf" class="button outline" target="_blank" rel="noopener">Open pdf ↗</a></div><p id="table-card-pdf-status" role="status"></p><canvas id="table-card-pdf-canvas" aria-label="Voorbeeld van de A5-tafelkaart als pdf" hidden></canvas></section>`;
   byId('pack-team').addEventListener('input',event=>{
     team=event.target.value;
-    if(tablePdfUrl){URL.revokeObjectURL(tablePdfUrl);tablePdfUrl=null;byId('table-card-pdf-preview').hidden=true;byId('table-card-pdf-canvas').hidden=true;}
+    if(tablePdfUrl){URL.revokeObjectURL(tablePdfUrl);tablePdfUrl=null;byId('table-card-pdf-preview').hidden=true;byId('table-card-pdf-canvas').hidden=true;if(renderTask)renderTask.cancel();if(previewPdf){void previewPdf.destroy();previewPdf=null;}}
     document.querySelectorAll('[data-sheet-team]').forEach(label=>{label.textContent=team || (label.classList.contains('tent-team')?'Jullie teamnaam':'________________________________________________');
       if(label.classList.contains('tent-team')){label.classList.toggle('tent-name-long',team.length>50);label.classList.toggle('tent-name-medium',team.length>30 && team.length<=50);}});
     document.title=`${tentOnly?'Tafelkaart':'Invulbladen'} · ${team || 'Pubquiz'}`;
@@ -114,38 +114,52 @@ function renderTeamPack(){
     image.src=`assets/bingo-kaart-${card}.png`;image.alt=`Bingokaart K${card}`;
     document.querySelector('[data-pack-card-label]').textContent=`Kaart K${card}`;
   });
-  byId('open-table-card-pdf').addEventListener('click',async()=>{
-    const button=byId('open-table-card-pdf'),original=button.textContent;
-    button.disabled=true;button.textContent='Pdf maken…';
+  async function showPdfPage(number){
+    if(!previewPdf)return;
+    if(renderTask){renderTask.cancel();try{await renderTask.promise;}catch{}}
+    const current=previewPdf,page=await current.getPage(number);
+    if(current!==previewPdf)return;
+    const canvas=byId('table-card-pdf-canvas'),viewport=page.getViewport({scale:1.5});
+    canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);
+    const task=page.render({canvasContext:canvas.getContext('2d'),viewport});renderTask=task;
+    await task.promise;if(renderTask===task)renderTask=null;
+    canvas.hidden=false;
+    const format=Math.round(page.getViewport({scale:1}).width*25.4/72)===148?'A5 · 148 × 210 mm':'A4 · 210 × 297 mm';
+    byId('table-card-pdf-status').textContent=`Pagina ${number} / ${current.numPages} · ${format} · Print op 100%, enkelzijdig.`;
+  }
+  byId('pdf-page').addEventListener('change',event=>{showPdfPage(Number(event.target.value)).catch(()=>{byId('table-card-pdf-status').textContent='Open of download de pdf om deze pagina te bekijken.';});});
+  async function openPdf(pack){
+    const button=byId(pack?'print-pack':'open-table-card-pdf'),original=button.textContent,pdfTeam=team;
+    const controls=[byId('print-pack'),byId('open-table-card-pdf'),byId('pack-team'),byId('pack-bingo')];
+    controls.forEach(control=>{control.disabled=true;});button.textContent='Pdf maken…';
     try{
       const {createTableCardPdf,tableCardAssets}=await import('./table-card-pdf.mjs');
-      const assets=await Promise.all(tableCardAssets.map(async path=>{const response=await fetch(path);if(!response.ok)throw new Error('Afbeelding of lettertype niet bereikbaar');return new Uint8Array(await response.arrayBuffer());}));
-      const bytes=await createTableCardPdf(team,assets),url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));
+      const paths=pack?[...tableCardAssets,`assets/bingo-kaart-${byId('pack-bingo').value}.png`]:tableCardAssets;
+      const assets=await Promise.all(paths.map(async path=>{const response=await fetch(path);if(!response.ok)throw new Error('Afbeelding of lettertype niet bereikbaar');return new Uint8Array(await response.arrayBuffer());}));
+      const bytes=pack?await (await import('./answer-sheets-pdf.mjs')).createAnswerSheetsPdf(quiz,pdfTeam,assets):await createTableCardPdf(pdfTeam,assets);
+      const url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));
       if(tablePdfUrl)URL.revokeObjectURL(tablePdfUrl);tablePdfUrl=url;
+      if(renderTask){renderTask.cancel();try{await renderTask.promise;}catch{}renderTask=null;}
+      if(previewPdf){await previewPdf.destroy();previewPdf=null;}
       const preview=byId('table-card-pdf-preview');preview.hidden=false;
       const canvas=byId('table-card-pdf-canvas'),status=byId('table-card-pdf-status');canvas.hidden=true;status.textContent='Pdf-voorbeeld laden…';
-      const download=byId('download-table-card-pdf');download.href=url;download.download=`Tafelkaart-${team.replace(/[^a-z0-9-]/gi,'-') || 'team'}-A5.pdf`;
-      const open=byId('open-generated-pdf');open.href=url;
+      byId('pdf-preview-title').textContent=pack?'Complete invulbladenset · drukklare pdf':'A5-tafelkaart · drukklare pdf';
+      const download=byId('download-table-card-pdf');download.href=url;download.download=`${pack?'Invulbladen':'Tafelkaart'}-${pdfTeam.replace(/[^a-z0-9-]/gi,'-') || 'team'}${pack?'':'-A5'}.pdf`;
+      byId('open-generated-pdf').href=url;
       preview.scrollIntoView({behavior:'smooth',block:'start'});
       try{
         const pdfjs=await import('./vendor/pdfjs.mjs');
         pdfjs.GlobalWorkerOptions.workerSrc=new URL('./vendor/pdf.worker.min.mjs',import.meta.url).href;
-        const pdf=await pdfjs.getDocument({data:bytes.slice(),useSystemFonts:true}).promise;
-        const page=await pdf.getPage(1),viewport=page.getViewport({scale:1.7});
-        canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);
-        await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
-        canvas.hidden=false;status.textContent='A5 · 148 × 210 mm · Print op 100%, enkelzijdig.';await pdf.destroy();
+        previewPdf=await pdfjs.getDocument({data:bytes.slice(),useSystemFonts:true}).promise;
+        byId('pdf-page-control').hidden=previewPdf.numPages===1;
+        byId('pdf-page').innerHTML=Array.from({length:previewPdf.numPages},(_,i)=>`<option value="${i+1}">${i+1} / ${previewPdf.numPages}</option>`).join('');
+        await showPdfPage(1);
       }catch{status.textContent='De pdf is klaar. Gebruik Open pdf of Download pdf om hem te bekijken.';}
-
     }catch(error){alert('De pdf kon niet worden gemaakt: '+error.message);}
-    finally{button.disabled=false;button.textContent=original;}
-  });
-  byId('print-pack').addEventListener('click',async()=>{
-    const button=byId('print-pack');button.disabled=true;
-    try{await document.fonts.ready;await Promise.all([...document.querySelectorAll('#sheet-pack img')].map(image=>image.decode()));window.print();}
-    catch{alert('Een afbeelding kon niet worden geladen. Vernieuw de pagina en probeer opnieuw.');}
-    finally{button.disabled=false;}
-  });
+    finally{controls.forEach(control=>{control.disabled=false;});button.textContent=original;}
+  }
+  byId('open-table-card-pdf').addEventListener('click',()=>openPdf(false));
+  byId('print-pack').addEventListener('click',()=>openPdf(true));
 }
 function renderSheet() {
   const id = new URLSearchParams(location.search).get('invulblad');

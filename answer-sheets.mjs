@@ -1,6 +1,6 @@
 const escape = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-const sheetCheers={
+export const sheetCheers={
   1:'Service, sneeuw en slimme koppen!',
   2:'Een berg vragen? Daar skiën wij zo doorheen.',
   3:'Volume omhoog, antwoorden paraat!',
