@@ -118,7 +118,13 @@ function drawScoreboard(){
   const through=byId('public-through').value;
   const result=summarize(scoreState,through,byId('public-bonus').checked);
   byId('public-podium').innerHTML=podium(result,'Het erepodium · totaal');
+  const oldTable=byId('public-standings').querySelector('.scoreboard-scroll');
+  const horizontal=oldTable?.scrollLeft || 0;
+  const focused=oldTable===document.activeElement;
   byId('public-standings').innerHTML=standingsTable(result);
+  const newTable=byId('public-standings').querySelector('.scoreboard-scroll');
+  newTable.scrollLeft=horizontal;
+  if(focused)newTable.focus({preventScroll:true});
   byId('public-score-note').textContent=result.provisional?'Voorlopige stand · Alleen toegekende punten tellen mee. — Nog niet beoordeeld. * Nog niet volledig nagekeken.':'Alle geselecteerde rondes zijn afgesloten. Gelijke scores delen dezelfde plaats.';
 }
 async function loadScoreboard(){
@@ -127,11 +133,14 @@ async function loadScoreboard(){
   try{
     const response=await fetch('https://vps.opticore-insights.nl/pubquiz-api/v1/standings');
     if(!response.ok)throw new Error('Geen stand');
-    scoreState=await response.json();
-    drawScoreboard();
+    const next=await response.json();
+    const changed=JSON.stringify(next)!==JSON.stringify(scoreState);
+    scoreState=next;
+    if(changed)drawScoreboard();
     byId('public-score-sync').textContent='Live bijgewerkt · '+new Date().toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'});
   }catch{
     byId('public-score-sync').textContent=scoreState?'Verbinding onderbroken · laatst opgehaalde stand':'De tussenstand is even niet bereikbaar. We proberen opnieuw.';
+    if(!scoreState)byId('public-standings').innerHTML='<p class="scoreboard-note">De scores verschijnen hier zodra de verbinding terug is.</p>';
     if(!scoreState)document.querySelectorAll('[data-round-podium]').forEach(node=>{node.innerHTML='<p class="score-loading">De top 3 volgt zodra de verbinding terug is.</p>';});
   }finally{scoreBusy=false;}
 }
