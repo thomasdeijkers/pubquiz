@@ -1,6 +1,6 @@
 import {answerSheetPack,tableCardSheet} from './answer-sheets.mjs';
 import {headerMenu} from './navigation.mjs';
-import {summarize,formatPoints} from './scoring.mjs';
+import {summarize,formatPoints,roundProgress} from './scoring.mjs';
 import {podium,roundPodium,standingsTable} from './scoreboard.mjs';
 'use strict';
 const byId = id => document.getElementById(id);
@@ -20,7 +20,7 @@ async function init() {
     quiz = await response.json();
     if (new URLSearchParams(location.search).has('invulblad')) return renderSheet();
     const overviewRounds=[...quiz.rounds,{id:'bonus',title:'Bonusronde',summary:'30 afbeeldingen · de hele avond',description:'Herken de personen, plaatsen en voorwerpen op de bonuskaart. Deze ronde loopt de hele avond door.'}];
-    byId('round-grid').innerHTML = overviewRounds.map(round => `<article class="round-tile round-overview-tile" id="${round.id==='bonus'?'bonus':'ronde-'+round.id}"><details class="round-overview" data-overview="${round.id}"><summary class="round-overview-summary"><span class="round-number">${round.id==='bonus'?'B':String(round.id).padStart(2,'0')}</span><span class="round-overview-title"><strong>${safe(round.title)}</strong><small>${safe(round.summary)}</small></span><span class="round-overview-arrow" aria-hidden="true">⌄</span></summary><div class="round-overview-body"><div class="round-overview-actions"><p>${safe(round.description)}</p>${round.id===5?'<a class="button outline" href="organisator.html?tab=bingo">Uitleg, playlist & bingokaarten →</a>':`<button class="button primary round-questions-button" data-round="${round.id}">Open de vragen <span aria-hidden="true">↗</span></button>`}</div><div data-round-podium="${round.id}"><p class="score-loading">De top 3 wordt geladen…</p></div></div></details><a class="round-control-link" href="organisator.html?tab=nakijken&amp;ronde=${round.id}" aria-label="Open controle ronde ${round.id} · ${safe(round.title)}">Open controle <span aria-hidden="true">→</span></a></article>`).join('');
+    byId('round-grid').innerHTML = overviewRounds.map(round => `<article class="round-tile round-overview-tile" id="${round.id==='bonus'?'bonus':'ronde-'+round.id}"><details class="round-overview" data-overview="${round.id}"><summary class="round-overview-summary"><span class="round-number">${round.id==='bonus'?'B':String(round.id).padStart(2,'0')}</span><span class="round-overview-title"><strong>${safe(round.title)}</strong><small>${safe(round.summary)}</small><span class="round-progress" data-round-progress="${round.id}">Voortgang laden…</span></span><span class="round-overview-arrow" aria-hidden="true">⌄</span></summary><div class="round-overview-body"><div class="round-overview-actions"><p>${safe(round.description)}</p>${round.id===5?'<a class="button outline" href="organisator.html?tab=bingo">Uitleg, playlist & bingokaarten →</a>':`<button class="button primary round-questions-button" data-round="${round.id}">Open de vragen <span aria-hidden="true">↗</span></button>`}</div><div data-round-podium="${round.id}"><p class="score-loading">De top 3 wordt geladen…</p></div></div></details><a class="round-control-link" href="organisator.html?tab=nakijken&amp;ronde=${round.id}" aria-label="Open controle ronde ${round.id} · ${safe(round.title)}">Open controle <span aria-hidden="true">→</span></a></article>`).join('');
     byId('collapse-rounds').addEventListener('click',()=>document.querySelectorAll('.round-overview[open]').forEach(round=>{round.open=false;}));
     document.querySelectorAll('[data-round]').forEach(button => button.addEventListener('click', () => button.dataset.round==='bonus'?openBonus():openRound(Number(button.dataset.round))));
     byId('close-viewer').addEventListener('click', closeViewer);
@@ -186,6 +186,11 @@ let scoreBusy=false;
 function drawScoreboard(){
   if(!scoreState)return;
   document.querySelectorAll('[data-round-podium]').forEach(node=>{node.innerHTML=roundPodium(scoreState,node.dataset.roundPodium);});
+  document.querySelectorAll('[data-round-progress]').forEach(node=>{
+    const progress=roundProgress(scoreState,node.dataset.roundProgress);
+    node.classList.toggle('complete',progress.complete);
+    node.textContent=progress.complete?`✓ Afgerond · ${progress.reviewed}/${progress.total}`:progress.total?`${progress.reviewed}/${progress.total} ingevuld`:'Nog geen teams of vragen';
+  });
   const through=byId('public-through').value;
   const result=summarize(scoreState,through,byId('public-bonus').checked);
   byId('public-podium').innerHTML=podium(result,'Het erepodium · totaal');
@@ -210,6 +215,7 @@ async function loadScoreboard(){
     if(changed)drawScoreboard();
     byId('public-score-sync').textContent='Live bijgewerkt · '+new Date().toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'});
   }catch{
+    if(!scoreState)document.querySelectorAll('[data-round-progress]').forEach(node=>{node.textContent='Voortgang niet bereikbaar';});
     byId('public-score-sync').textContent=scoreState?'Verbinding onderbroken · laatst opgehaalde stand':'De tussenstand is even niet bereikbaar. We proberen opnieuw.';
     if(!scoreState)byId('public-standings').innerHTML='<p class="scoreboard-note">De scores verschijnen hier zodra de verbinding terug is.</p>';
     if(!scoreState)document.querySelectorAll('[data-round-podium]').forEach(node=>{node.innerHTML='<p class="score-loading">De top 3 volgt zodra de verbinding terug is.</p>';});

@@ -22,3 +22,11 @@ export function summarizeRound(state, roundId) {
   if(!round)return {rounds:[],entries:[],provisional:true};
   return summarize({...state,rounds:[round],questions:state.questions.filter(q=>q.round_id===round.id),answers:state.answers.filter(a=>a.round_id===round.id)},round.id,round.id==='bonus');
 }
+
+export function roundProgress(state,roundId){
+  const teams=new Set(state.teams.filter(team=>team.active).map(team=>team.id));
+  const questions=new Set(state.questions.filter(q=>q.round_id===String(roundId)).map(q=>q.id));
+  const reviewed=new Set(state.answers.filter(a=>a.round_id===String(roundId) && teams.has(a.team_id) && questions.has(a.question_id) && a.points_cents!=null).map(a=>`${a.team_id}/${a.question_id}`)).size;
+  const total=teams.size*questions.size;
+  return {reviewed,total,complete:total>0 && reviewed===total};
+}

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {summarize,summarizeRound,formatPoints} from '../scoring.mjs';
+import {summarize,summarizeRound,formatPoints,roundProgress} from '../scoring.mjs';
 const base=()=>({rounds:[{id:'1',sort_order:0,closed:true},{id:'2',sort_order:1,closed:false},{id:'bonus',sort_order:9,closed:false}],questions:[{round_id:'1',id:'1'},{round_id:'2',id:'1'},{round_id:'bonus',id:'1'}],teams:[{id:'a',name:'Alpen',active:true},{id:'b',name:'Ballen',active:true},{id:'c',name:'Uitgesloten',active:false}],answers:[{team_id:'a',round_id:'1',question_id:'1',points_cents:50},{team_id:'b',round_id:'1',question_id:'1',points_cents:50},{team_id:'a',round_id:'2',question_id:'1',points_cents:100},{team_id:'a',round_id:'bonus',question_id:'1',points_cents:200}]});
 test('Stand na ronde 1 telt latere rondes en bonus niet mee; gelijke punten delen een positie',()=>{const result=summarize(base(),'1');assert.deepEqual(result.entries.map(e=>[e.name,e.total,e.rank]),[['Alpen',50,1],['Ballen',50,1]]);assert.equal(result.provisional,false);});
 test('Een gedeeltelijk nagekeken ronde blijft voorlopig en nul punten is wel beoordeeld',()=>{const data=base();data.answers.push({team_id:'b',round_id:'2',question_id:'1',points_cents:0});const result=summarize(data,'2');assert.equal(result.entries[1].reviewed,2);assert.equal(result.entries[0].total,150);assert.equal(result.provisional,true);});
@@ -38,4 +38,17 @@ test('Gedeelde eerste en derde plek krijgen ieder één beker met alle teamnamen
   assert.doesNotMatch(html,/Plaats 2/);
   assert.match(html,/<span class="podium-team-name">Team 1<\/span><span class="podium-team-name">Team 4<\/span>/);
   for(const name of ['Barteam!','Team 2','Team 3','Team 6'])assert.ok(html.includes(`<span class="podium-team-name">${name}</span>`));
+});
+
+test('Rondevoortgang telt Goed en Fout, geen andere rondes of uitgesloten teams',()=>{
+  const state=base();state.answers[0].points_cents=0;
+  assert.deepEqual(roundProgress(state,'1'),{reviewed:2,total:2,complete:true});
+  state.answers[1].points_cents=null;
+  state.answers.push({team_id:'c',round_id:'1',question_id:'1',points_cents:100},{team_id:'a',round_id:'1',question_id:'onbekend',points_cents:100});
+  assert.deepEqual(roundProgress(state,'1'),{reviewed:1,total:2,complete:false});
+});
+test('Een lege of alleen afgesloten ronde wordt niet als volledig ingevuld getoond',()=>{
+  const state=base();state.answers=[];
+  assert.equal(roundProgress(state,'1').complete,false);
+  state.teams=[];assert.deepEqual(roundProgress(state,'1'),{reviewed:0,total:0,complete:false});
 });
