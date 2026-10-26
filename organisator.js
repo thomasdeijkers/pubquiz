@@ -29,7 +29,7 @@ const answerDrafts = new Map();
 const modelDrafts = new Map();
 const teamDrafts = new Map();
 const scoringDrafts = new Map();
-const answerKey = qid => `${selectedTeam}/${selectedRound}/${qid}`;
+const answerKey = (qid,teamId=selectedTeam) => `${teamId}/${selectedRound}/${qid}`;
 const modelKey = qid => `${selectedRound}/${qid}`;
 function updateDirty(){dirty=!!(answerDrafts.size || modelDrafts.size || teamDrafts.size || scoringDrafts.size);saveIndicator();}
 const projection = new URLSearchParams(location.search).get('scherm') === 'stand';
@@ -61,7 +61,7 @@ async function api(path,body) {
 function activeTeams(){ return state.teams.filter(team=>team.active); }
 function currentRound(){return state.rounds.find(round=>round.id===selectedRound);}
 function questions(){return state.questions.filter(question=>question.round_id===selectedRound).sort((a,b)=>Number(a.id)-Number(b.id)).map(question=>{const draft=tab==='model'?modelDrafts.get(modelKey(question.id)):null;return draft?{...question,...draft,max_cents:Math.round(Number(draft.max_points)*100),alternatives:draft.alternatives.split('\n').map(x=>x.trim()).filter(Boolean)}:question;});}
-function getAnswer(qid){return state.answers.find(answer=>answer.team_id===selectedTeam && answer.round_id===selectedRound && answer.question_id===qid);}
+function getAnswer(qid,teamId=selectedTeam){return state.answers.find(answer=>answer.team_id===teamId && answer.round_id===selectedRound && answer.question_id===qid);}
 function roundLabel(round){return round.id==='bonus'?'Bonusronde':`Ronde ${round.id} · ${round.title}`;}
 function options(items,selected,label){return items.map(item=>`<option value="${esc(item.id)}" ${item.id===selected?'selected':''}>${esc(label(item))}</option>`).join('');}
 function nav(){return [['teams','Teams'],['nakijken','Antwoorden & punten'],['stand','Tussenstand'],['model','Antwoordmodel'],['bingo','Muziekbingo'],['settings','Instellingen']].map(([id,label])=>`<button class="org-nav-button ${tab===id?'active':''}" data-tab="${id}" ${tab===id?'aria-current="page"':''}>${label}</button>`).join('');}
@@ -100,16 +100,20 @@ function teamsView(){
   const teams=activeTeams(),archived=state.teams.filter(team=>!team.active);
   return `<div class="org-title"><div><p class="eyebrow dark">DE DEELNEMERS</p><h1>Teams</h1><p>Voeg de teams toe voordat het nakijken begint.</p></div><span class="count-badge">${teams.length} teams</span></div><form id="team-add-form" class="team-add org-panel"><label for="team-name">Teamnaam</label><div><input name="name" id="team-name" required maxlength="80" placeholder="Naam van het team" autocomplete="off"><button class="button primary">Team toevoegen +</button></div></form>${teams.length?`<div class="org-panel team-list">${teams.map((team,index)=>`<div class="team-row"><span class="team-index">${String(index+1).padStart(2,'0')}</span><form class="team-rename" data-id="${team.id}"><label class="sr-only" for="name-${team.id}">Naam ${esc(team.name)}</label><input id="name-${team.id}" name="name" value="${esc(teamDrafts.get(team.id) ?? team.name)}" maxlength="80" required><button class="text-button">Naam opslaan</button></form><button class="text-button" data-action="grade-team" data-id="${team.id}">Nakijken →</button><button class="text-button danger" data-action="archive-team" data-id="${team.id}">Uitsluiten</button></div>`).join('')}</div>`:`<div class="empty-state"><span>01</span><h2>De eerste teams kunnen erbij</h2><p>Gebruik het veld hierboven. Daarna kun je per team de antwoorden invoeren en punten geven.</p></div>`}${archived.length?`<details class="org-panel archived"><summary>Uitgesloten teams (${archived.length})</summary>${archived.map(team=>`<div class="team-row"><strong>${esc(team.name)}</strong><button class="text-button" data-action="restore-team" data-id="${team.id}">Weer laten meedoen</button></div>`).join('')}</details>`:''}<div class="info-note">Uitgesloten teams tellen niet mee in de tussenstand. Hun antwoorden blijven bewaard en kunnen worden teruggezet.</div>`;
 }
-function selectorBar(){return `<div class="selector-bar org-panel"><div><label for="grading-round">Ronde</label><select id="grading-round">${options(state.rounds,selectedRound,roundLabel)}</select></div>${tab==='nakijken'?`<div><label for="grading-team">Team</label><select id="grading-team">${options(activeTeams(),selectedTeam,team=>team.name)}</select></div>`:''}</div>`;}
+function selectorBar(){return `<div class="selector-bar org-panel"><div><label for="grading-round">Ronde</label><select id="grading-round">${options(state.rounds,selectedRound,roundLabel)}</select></div>${tab==='nakijken'?'<div class="all-teams-note"><strong>Alle teams onder iedere vraag</strong><span>Vul het antwoord in en klik rechts op Goed of Fout.</span></div>':''}</div>`;}
+function teamAnswerRow(q,team,locked){
+  const a=getAnswer(q.id,team.id),score=a?.points_cents,draft=answerDrafts.get(answerKey(q.id,team.id));
+  const fieldId=`answer-${q.id}-${team.id}`;
+  return `<div class="team-answer-row ${score!=null?'reviewed':''}" data-team="${team.id}" data-question="${q.id}"><label class="team-answer-name" for="${fieldId}">${esc(team.name)}<span>${score==null?'Nog te beoordelen':`${formatPoints(score)} / ${formatPoints(q.max_cents)} punten`}</span></label><div class="team-answer-editor"><textarea id="${fieldId}" aria-label="Antwoord ${esc(team.name)} vraag ${q.id}" data-answer="${q.id}" rows="2" maxlength="3000" ${locked?'disabled':''} placeholder="Antwoord van ${esc(team.name)}…">${esc(draft?.answer ?? a?.answer ?? '')}</textarea><div class="team-answer-status"><span class="answer-meta">${draft?'Niet-opgeslagen invoer':a?`${score!=null?'Beoordeeld':'Opgeslagen'} · ${esc(a.updated_by)}`:'Nog niet ingevuld'}</span><button class="text-button" data-action="save-answer" data-id="${q.id}" ${locked?'disabled':''}>Antwoord opslaan</button></div></div><div class="team-answer-controls"><div class="team-grade-buttons"><button class="grade-button good ${score===q.max_cents?'chosen':''}" aria-label="Goed ${esc(team.name)} vraag ${q.id}" data-score="${q.id}" data-value="${q.max_cents/100}" ${locked?'disabled':''}>Goed · ${formatPoints(q.max_cents)}</button><button class="grade-button wrong ${score===0?'chosen':''}" aria-label="Fout ${esc(team.name)} vraag ${q.id}" data-score="${q.id}" data-value="0" ${locked?'disabled':''}>Fout · 0</button></div><details class="team-extra-points"><summary>Andere punten</summary><div class="score-actions"><label class="points-input">Punten<input aria-label="Punten ${esc(team.name)} vraag ${q.id}" data-points="${q.id}" type="number" min="0" max="${q.max_cents/100}" step="0.01" value="${esc(draft?.points ?? (score==null?'':score/100))}" ${locked?'disabled':''}><span>/ ${formatPoints(q.max_cents)}</span></label><button class="text-button" data-action="save-answer" data-id="${q.id}" ${locked?'disabled':''}>Opslaan</button>${score!=null?`<button class="text-button" data-action="ungrade" data-id="${q.id}" ${locked?'disabled':''}>Beoordeling wissen</button>`:''}</div></details></div></div>`;
+}
 function gradingView(){
-  if(!activeTeams().length)return `<div class="org-title"><div><h1>Antwoorden & punten</h1></div></div><div class="empty-state"><h2>Voeg eerst een team toe</h2><p>Daarna kun je de antwoorden per ronde bijhouden.</p><button class="button primary" data-tab="teams">Naar teams →</button></div>`;
+  const teams=activeTeams();
+  if(!teams.length)return `<div class="org-title"><div><h1>Antwoorden & punten</h1></div></div><div class="empty-state"><h2>Voeg eerst een team toe</h2><p>Daarna kun je alle teams direct onder iedere vraag nakijken.</p><button class="button primary" data-tab="teams">Naar teams →</button></div>`;
   const round=currentRound(),list=questions(),locked=round.closed;
-  const reviewed=list.filter(q=>getAnswer(q.id)?.points_cents!=null).length;
-  const points=list.reduce((sum,q)=>sum+(getAnswer(q.id)?.points_cents || 0),0);
-  return `<div class="org-title"><div><p class="eyebrow dark">PER TEAM EN PER RONDE</p><h1>Antwoorden & punten</h1><p>Kies hieronder een team. Vul het teamantwoord direct onder iedere vraag in en sla het op, of ken meteen punten toe.</p></div></div>${selectorBar()}${roundPodium(state,selectedRound,false)}<div class="grading-summary"><div><strong>${reviewed} / ${list.length}</strong><span>beoordeeld</span></div><div><strong>${formatPoints(points)}</strong><span>punten in deze ronde</span></div><button class="button outline" data-action="match" ${locked?'disabled':''}>Herken gelijke antwoorden</button><button class="button ${locked?'outline':'primary'}" data-action="round-status">${locked?'Heropen ronde':'Ronde afsluiten'}</button></div>${locked?'<div class="info-note">Deze ronde is afgesloten voor alle organisatoren. Heropen de ronde om nog iets te corrigeren.</div>':''}${selectedRound==='5'?'<div class="info-note">De bingopunten staan voorlopig op 0. Spreek de puntentelling af en pas de maxima aan bij Instellingen → Puntentelling voordat je beoordeelt.</div>':''}<div class="answer-list">${list.map(q=>{
-    const a=getAnswer(q.id),score=a?.points_cents,draft=answerDrafts.get(answerKey(q.id));
-    return `<article class="answer-card ${score!=null?'reviewed':''}" data-question="${q.id}"><div class="question-number">${q.id}</div><div class="answer-body"><h2>${esc(q.prompt)}</h2><div class="expected"><strong class="expected-label">Modelantwoord</strong><p>${esc(q.correct || 'Nog niet ingevuld — beoordeel dit onderdeel zelf of vul het antwoordmodel aan.')}</p>${q.alternatives.length?`<small>Ook goed: ${q.alternatives.map(esc).join(' · ')}</small>`:''}</div><label for="answer-${q.id}">Antwoord van het team</label><textarea id="answer-${q.id}" data-answer="${q.id}" rows="2" maxlength="3000" ${locked?'disabled':''} placeholder="Noteer het ingeleverde antwoord…">${esc(draft?.answer ?? a?.answer ?? '')}</textarea><div class="score-actions"><button class="grade-button good ${score===q.max_cents?'chosen':''}" data-score="${q.id}" data-value="${q.max_cents/100}" ${locked?'disabled':''}>Goed · ${formatPoints(q.max_cents)}</button><button class="grade-button wrong ${score===0?'chosen':''}" data-score="${q.id}" data-value="0" ${locked?'disabled':''}>Fout · 0</button><label class="points-input">Punten<input aria-label="Punten voor vraag ${q.id}" data-points="${q.id}" type="number" min="0" max="${q.max_cents/100}" step="0.01" value="${esc(draft?.points ?? (score==null?'':score/100))}" ${locked?'disabled':''} placeholder="—"><span>/ ${formatPoints(q.max_cents)}</span></label><button class="text-button" data-action="save-answer" data-id="${q.id}" ${locked?'disabled':''}>Opslaan</button>${score!=null?`<button class="text-button" data-action="ungrade" data-id="${q.id}" ${locked?'disabled':''}>Beoordeling wissen</button>`:''}</div><div class="answer-meta" id="meta-${q.id}">${draft?'Niet-opgeslagen invoer':a?`${score!=null?'Beoordeeld':'Nog te beoordelen'} · ${esc(a.updated_by)} · ${new Date(a.updated_at).toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'})}`:'Nog niet ingevuld'}</div></div></article>`;
-  }).join('')}</div>`;
+  const answers=teams.flatMap(team=>list.map(q=>getAnswer(q.id,team.id)));
+  const reviewed=answers.filter(a=>a?.points_cents!=null).length;
+  const points=answers.reduce((sum,a)=>sum+(a?.points_cents || 0),0);
+  return `<div class="org-title"><div><p class="eyebrow dark">VRAAG VOOR VRAAG · ALLE TEAMS BIJ ELKAAR</p><h1>Antwoorden & punten</h1><p>Onder iedere vraag staan alle teams. Vul hun antwoord in en klik rechts op Goed of Fout; het antwoord en de punten worden samen opgeslagen.</p></div></div>${selectorBar()}${roundPodium(state,selectedRound,false)}<div class="grading-summary"><div><strong>${reviewed} / ${list.length*teams.length}</strong><span>teamantwoorden beoordeeld</span></div><div><strong>${formatPoints(points)}</strong><span>punten verdeeld in deze ronde</span></div><button class="button outline" data-action="match" ${locked?'disabled':''}>Herken gelijke antwoorden · alle teams</button><button class="button ${locked?'outline':'primary'}" data-action="round-status">${locked?'Heropen ronde':'Ronde afsluiten'}</button></div>${locked?'<div class="info-note">Deze ronde is afgesloten voor alle organisatoren. Heropen de ronde om nog iets te corrigeren.</div>':''}<div class="answer-list">${list.map(q=>`<article class="answer-card question-all-teams" data-question="${q.id}"><div class="question-number">${q.id}</div><div class="answer-body"><h2>${esc(q.prompt)}</h2><div class="expected"><strong class="expected-label">Modelantwoord</strong><p>${esc(q.correct || 'Nog niet ingevuld — beoordeel dit onderdeel zelf of vul het antwoordmodel aan.')}</p>${q.alternatives.length?`<small>Ook goed: ${q.alternatives.map(esc).join(' · ')}</small>`:''}</div><div class="question-team-answers">${teams.map(team=>teamAnswerRow(q,team,locked)).join('')}</div></div></article>`).join('')}</div>`;
 }
 function standingsView(projected=false){
   const result=summarize(state,through,includeBonus);
@@ -153,16 +157,17 @@ async function mutation(path,body){
   try{return await api(path,body);}
   finally{pending--;saveIndicator();}
 }
-async function saveAnswer(qid,points,button){
+async function saveAnswer(qid,points,button,teamId=selectedTeam){
   if(pending)return notice('Wacht tot de vorige wijziging is opgeslagen.');
-  const area=root.querySelector(`[data-answer="${qid}"]`),current=getAnswer(qid);
-  const key=answerKey(qid),draft=answerDrafts.get(key);
-  const body={team_id:selectedTeam,round_id:selectedRound,question_id:qid,version:draft?.version ?? current?.version ?? 0,answer:area.value};
+  const row=button.closest('.team-answer-row');
+  const area=row.querySelector(`[data-answer="${qid}"]`),current=getAnswer(qid,teamId);
+  const key=answerKey(qid,teamId),draft=answerDrafts.get(key);
+  const body={team_id:teamId,round_id:selectedRound,question_id:qid,version:draft?.version ?? current?.version ?? 0,answer:area.value};
   if(points!==undefined)body.points=points;
   if(button)button.disabled=true;
   try{
     const saved=await mutation('/answers/save',body);
-    const index=state.answers.findIndex(a=>a.team_id===selectedTeam && a.round_id===selectedRound && a.question_id===qid);
+    const index=state.answers.findIndex(a=>a.team_id===teamId && a.round_id===selectedRound && a.question_id===qid);
     if(index<0)state.answers.push(saved);else state.answers[index]=saved;
     answerDrafts.delete(key);updateDirty();await refresh(true);notice('Antwoord en punten opgeslagen.');
   }catch(error){
@@ -185,11 +190,12 @@ root.addEventListener('input',event=>{
   const field=event.target;
   if(field.closest('.scoring-form')){captureScoringDraft(field.closest('.scoring-form'));return;}
   if(field.dataset.answer || field.dataset.points){
-    const qid=field.dataset.answer || field.dataset.points,key=answerKey(qid),current=getAnswer(qid);
+    const row=field.closest('.team-answer-row'),teamId=row.dataset.team;
+    const qid=field.dataset.answer || field.dataset.points,key=answerKey(qid,teamId),current=getAnswer(qid,teamId);
     const old=answerDrafts.get(key);
-    const points=root.querySelector(`[data-points="${qid}"]`);
+    const points=row.querySelector(`[data-points="${qid}"]`);
     if(field.dataset.answer)points.value='';
-    answerDrafts.set(key,{version:old?.version ?? current?.version ?? 0,answer:root.querySelector(`[data-answer="${qid}"]`).value,points:points.value});
+    answerDrafts.set(key,{version:old?.version ?? current?.version ?? 0,answer:row.querySelector(`[data-answer="${qid}"]`).value,points:points.value});
   }else if(field.closest('.model-form')){
     const form=field.closest('.model-form'),data=Object.fromEntries(new FormData(form));
     const q=questions().find(q=>q.id===form.dataset.id);
@@ -249,7 +255,7 @@ root.addEventListener('click',async event=>{
     }catch(error){notice(error.message,true);}finally{button.disabled=false;}
     return;
   }
-  if(button.dataset.score){const area=root.querySelector(`[data-answer="${button.dataset.score}"]`);if(!area.value.trim() && !await confirmAction('Geen antwoord genoteerd','Je kunt wel punten toekennen. Wil je doorgaan zonder het teamantwoord vast te leggen?','Punten opslaan'))return;return saveAnswer(button.dataset.score,Number(button.dataset.value),button);}
+  if(button.dataset.score){const row=button.closest('.team-answer-row'),area=row.querySelector(`[data-answer="${button.dataset.score}"]`);if(!area.value.trim() && !await confirmAction('Geen antwoord genoteerd','Je kunt wel punten toekennen. Wil je doorgaan zonder het teamantwoord vast te leggen?','Punten opslaan'))return;return saveAnswer(button.dataset.score,Number(button.dataset.value),button,row.dataset.team);}
   const action=button.dataset.action;if(!action)return;
   try{
     if(action==='scoring-uniform'){
@@ -262,8 +268,8 @@ root.addEventListener('click',async event=>{
     if(action==='refresh')return navigate(()=>{refresh(true);});
     if(action==='grade-team')return navigate(()=>{selectedTeam=button.dataset.id;tab='nakijken';});
     if(action==='bingo-scores')return navigate(()=>{selectedRound='5';tab='nakijken';});
-    if(action==='save-answer'){const qid=button.dataset.id,field=root.querySelector(`[data-points="${qid}"]`);if(!field.checkValidity())return field.reportValidity();return saveAnswer(qid,field.value===''?undefined:Number(field.value),button);}
-    if(action==='ungrade')return saveAnswer(button.dataset.id,null,button);
+    if(action==='save-answer'){const row=button.closest('.team-answer-row'),qid=button.dataset.id,field=row.querySelector(`[data-points="${qid}"]`);if(!field.checkValidity())return field.reportValidity();return saveAnswer(qid,field.value===''?undefined:Number(field.value),button,row.dataset.team);}
+    if(action==='ungrade')return saveAnswer(button.dataset.id,null,button,button.closest('.team-answer-row').dataset.team);
     if(action==='archive-team' || action==='restore-team'){
       const team=state.teams.find(t=>t.id===button.dataset.id),active=action==='restore-team';
       if(!active && !await confirmAction('Team uitsluiten',`${team.name} telt dan niet meer mee in de tussenstand. De antwoorden blijven bewaard.`,'Team uitsluiten'))return;
@@ -271,7 +277,9 @@ root.addEventListener('click',async event=>{
     }
     if(action==='match'){
       if(dirty)return notice('Sla je invoer eerst op.',true);
-      const result=await mutation('/answers/match',{team_id:selectedTeam,round_id:selectedRound});await refresh(true);notice(`${result.matched} gelijke antwoorden goed gerekend. De overige antwoorden beoordeel je zelf.`);
+      let matched=0;
+      for(const team of activeTeams()){const result=await mutation('/answers/match',{team_id:team.id,round_id:selectedRound});matched+=result.matched;}
+      await refresh(true);notice(`${matched} gelijke antwoorden goed gerekend voor alle teams. De overige antwoorden beoordeel je zelf.`);
     }
     if(action==='round-status'){
       if(dirty)return notice('Sla je invoer eerst op.',true);
