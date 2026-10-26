@@ -22,7 +22,20 @@ test('Podium behoudt gedeelde plaatsen en toont alle teams op een gedeelde derde
   const {podium}=await import('../scoreboard.mjs');
   const result={provisional:true,entries:[{name:'A',total:300,reviewed:1},{name:'B',total:200,reviewed:1},{name:'C',total:100,reviewed:1},{name:'D',total:100,reviewed:1},{name:'E',total:0,reviewed:1}]};
   const html=podium(result);
-  assert.equal((html.match(/podium-place /g)||[]).length,4);
-  assert.equal((html.match(/Plaats 3/g)||[]).length,2);
+  assert.equal((html.match(/podium-place /g)||[]).length,3);
+  assert.equal((html.match(/Plaats 3/g)||[]).length,1);
+  assert.match(html,/C · D/);
   assert.match(html,/Voorlopig/);
+});
+
+test('Gedeelde eerste en derde plek krijgen ieder één beker met alle teamnamen',async()=>{
+  const {podium}=await import('../scoreboard.mjs');
+  const entries=['Team 1','Team 4','Barteam!','Team 2','Team 3','Team 6'].map((name,index)=>({name,total:index<2?200:100,reviewed:1}));
+  const html=podium({provisional:true,entries});
+  assert.equal((html.match(/podium-place /g)||[]).length,2);
+  assert.equal((html.match(/Plaats 1/g)||[]).length,1);
+  assert.equal((html.match(/Plaats 3/g)||[]).length,1);
+  assert.doesNotMatch(html,/Plaats 2/);
+  assert.match(html,/Team 1 · Team 4/);
+  assert.match(html,/Barteam! · Team 2 · Team 3 · Team 6/);
 });

@@ -8,8 +8,15 @@ export function podium(result, title='Top 3', compact=false) {
   const entries=result.entries.filter(entry=>entry.reviewed>0);
   // Unreviewed teams have zero points but do not take a podium position.
   let previous;let rank=0;
-  const leaders=entries.map((entry,index)=>{if(entry.total!==previous)rank=index+1;previous=entry.total;return {...entry,rank};}).filter(entry=>entry.rank<=3);
-  return `<section class="quiz-podium ${compact?'compact':''}" aria-label="${esc(title)}"><div class="podium-heading"><strong>${esc(title)}</strong><span>${leaders.length?(result.provisional?'Voorlopig':'Definitief'):'Nog geen punten'}</span></div>${leaders.length?`<ol class="podium-list">${leaders.map(entry=>`<li class="podium-place place-${entry.rank}">${trophy(entry.rank)}<span class="podium-team">${esc(entry.name)}</span><strong>${formatPoints(entry.total)} <small>pt</small></strong></li>`).join('')}</ol>`:'<p class="podium-empty">De eerste scores komen eraan. Wie pakt de koppositie?</p>'}</section>`;
+  const places=[];
+  entries.forEach((entry,index)=>{
+    if(entry.total!==previous){rank=index+1;previous=entry.total;}
+    if(rank>3)return;
+    let place=places.find(item=>item.rank===rank);
+    if(!place){place={rank,total:entry.total,names:[]};places.push(place);}
+    place.names.push(entry.name);
+  });
+  return `<section class="quiz-podium ${compact?'compact':''}" aria-label="${esc(title)}"><div class="podium-heading"><strong>${esc(title)}</strong><span>${places.length?(result.provisional?'Voorlopig':'Definitief'):'Nog geen punten'}</span></div>${places.length?`<ol class="podium-list">${places.map(place=>`<li class="podium-place place-${place.rank}">${trophy(place.rank)}<span class="podium-team"><span class="podium-place-label">${place.names.length>1?'Gedeelde ':''}${place.rank}e plek</span><span class="podium-team-names">${place.names.map(esc).join(' · ')}</span></span><strong>${formatPoints(place.total)} <small>pt</small></strong></li>`).join('')}</ol>`:'<p class="podium-empty">De eerste scores komen eraan. Wie pakt de koppositie?</p>'}</section>`;
 }
 export function roundPodium(state,id,compact=true){return podium(summarizeRound(state,id),'Top 3 · deze ronde',compact);}
 export function standingsTable(result){

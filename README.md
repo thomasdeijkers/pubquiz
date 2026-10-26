@@ -86,3 +86,5 @@ Vragen in de controle zijn inklapbaar. Ingeklapt tonen ze de opgeslagen punten p
 Het rondeoverzicht op de homepage is standaard ingeklapt: negen compacte regels met titel, aantal onderdelen, korte koppositie en een direct bereikbare controlelink. Openklappen toont de vraagkaartenknop, uitleg en volledige top 3. Alles inklappen sluit de rondes met één handeling; automatische score-updates behouden de open/dicht-stand.
 
 De navigatie zit op alle schermen rechts in de vaste header onder Menu. Quiz & spelen bevat de publieke pagina’s; Organisatie bevat teams, nakijken, tussenstand, antwoordmodel, DJ en instellingen. Beheerhulpmiddelen bevat delen, reservekopie en naam wijzigen. Interne beheerknoppen blijven de waarschuwing voor niet-opgeslagen invoer gebruiken. Escape, buiten klikken of een bestemming kiezen sluit het menu.
+
+Podia groeperen teams op gedeelde positie: één vak en één beker per plek, met alle bijbehorende teamnamen en één puntentotaal. De bestaande rangschikking blijft behouden (bij twee gedeelde eerste plaatsen volgt plaats 3). Dit geldt voor rondepodiums, totaalstand en projectie.
