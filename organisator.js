@@ -1,5 +1,5 @@
 import {headerMenu} from './navigation.mjs';
-import {podium,roundPodium,trophy} from './scoreboard.mjs';
+import {podium,trophy} from './scoreboard.mjs';
 import {summarize,formatPoints} from './scoring.mjs';
 const API = 'https://vps.opticore-insights.nl/pubquiz-api/v1';
 const root = document.getElementById('organizer');
@@ -138,6 +138,10 @@ function questionCard(q,teams,locked){
   const foldKey=`${selectedRound}/${q.id}`;
   return `<details class="answer-card question-all-teams question-fold" data-question="${q.id}" data-question-fold="${foldKey}" ${expandedQuestions.has(foldKey)?'open':''}><summary class="question-fold-summary"><span class="question-heading"><span class="question-number">${q.id}</span><span class="question-prompt">${esc(q.prompt)}</span><span class="question-progress">${filled}/${teams.length} ingevuld · ${reviewed}/${teams.length} nagekeken</span><span class="question-fold-arrow" aria-hidden="true">⌄</span></span><span class="question-collapsed-standing"><span class="question-standing-label">Goed beantwoord</span><span class="question-scoreboard">${questionStanding(q,teams)}</span></span></summary><div class="answer-body question-fold-body"><div class="expected"><strong class="expected-label">Modelantwoord</strong><p>${esc(q.correct || 'Nog niet ingevuld — beoordeel dit onderdeel zelf of vul het antwoordmodel aan.')}</p>${q.alternatives.length?`<small>Ook goed: ${q.alternatives.map(esc).join(' · ')}</small>`:''}</div>${selectedRound==='5'?bingoWinOrder(q.id):''}<div class="compact-teams-heading"><span>Team & punten</span><span>Ingeleverd antwoord</span><span>Beoordeling</span></div><div class="question-team-answers">${teams.map(team=>teamAnswerRow(q,team,locked)).join('')}</div></div></details>`;
 }
+function roundCorrectTeams(teams,list){
+  const correct=teams.filter(team=>team.active && list.some(q=>q.max_cents>0 && getAnswer(q.id,team.id)?.points_cents===q.max_cents));
+  return `<section class="org-panel round-correct-teams" aria-label="Teams met juiste antwoorden in deze ronde"><h2>Teams met juiste antwoorden</h2>${correct.length?`<ul>${correct.map(team=>`<li>${esc(team.name)}</li>`).join('')}</ul>`:'<p>Nog geen teams met een goed gerekend antwoord in deze ronde.</p>'}</section>`;
+}
 function gradingView(){
   const teams=activeTeams();
   if(!teams.length)return `<div class="org-title"><div><h1>Antwoorden & punten</h1></div></div><div class="empty-state"><h2>Voeg eerst een team toe</h2><p>Daarna kun je alle teams direct onder iedere vraag nakijken.</p><button class="button primary" data-tab="teams">Naar teams →</button></div>`;
@@ -145,7 +149,7 @@ function gradingView(){
   const answers=teams.flatMap(team=>list.map(q=>getAnswer(q.id,team.id)));
   const reviewed=answers.filter(a=>a?.points_cents!=null).length;
   const points=answers.reduce((sum,a)=>sum+(a?.points_cents || 0),0);
-  return `<div class="org-title"><div><p class="eyebrow dark">VRAAG VOOR VRAAG · ALLE TEAMS BIJ ELKAAR</p><h1>Antwoorden & punten</h1><p>Onder iedere vraag staan alle teams. Vul hun antwoord in en klik rechts op Goed of Fout; het antwoord en de punten worden samen opgeslagen.</p></div></div>${selectorBar()}${selectedRound==='5'?bingoTimingControls():''}${roundPodium(state,selectedRound,false)}<div class="grading-summary"><div><strong>${reviewed} / ${list.length*teams.length}</strong><span>teamantwoorden beoordeeld</span></div><div><strong>${formatPoints(points)}</strong><span>punten verdeeld in deze ronde</span></div><button class="button outline" data-action="match" ${locked?'disabled':''}>Herken gelijke antwoorden · alle teams</button><button class="button ${locked?'outline':'primary'}" data-action="round-status">${locked?'Heropen ronde':'Ronde afsluiten'}</button></div>${locked?'<div class="info-note">Deze ronde is afgesloten voor alle organisatoren. Heropen de ronde om nog iets te corrigeren.</div>':''}<div class="answer-list">${list.map(q=>questionCard(q,teams,locked)).join('')}</div>`;
+  return `<div class="org-title"><div><p class="eyebrow dark">VRAAG VOOR VRAAG · ALLE TEAMS BIJ ELKAAR</p><h1>Antwoorden & punten</h1><p>Onder iedere vraag staan alle teams. Vul hun antwoord in en klik rechts op Goed of Fout; het antwoord en de punten worden samen opgeslagen.</p></div></div>${selectorBar()}${selectedRound==='5'?bingoTimingControls():''}${roundCorrectTeams(teams,list)}<div class="grading-summary"><div><strong>${reviewed} / ${list.length*teams.length}</strong><span>teamantwoorden beoordeeld</span></div><div><strong>${formatPoints(points)}</strong><span>punten verdeeld in deze ronde</span></div><button class="button outline" data-action="match" ${locked?'disabled':''}>Herken gelijke antwoorden · alle teams</button><button class="button ${locked?'outline':'primary'}" data-action="round-status">${locked?'Heropen ronde':'Ronde afsluiten'}</button></div>${locked?'<div class="info-note">Deze ronde is afgesloten voor alle organisatoren. Heropen de ronde om nog iets te corrigeren.</div>':''}<div class="answer-list">${list.map(q=>questionCard(q,teams,locked)).join('')}</div>`;
 }
 function standingsView(projected=false){
   const result=summarize(state,through,includeBonus);
