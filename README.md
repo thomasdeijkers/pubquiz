@@ -114,3 +114,5 @@ De complete teamset bevat daarnaast een A5-tafelkaart (148 × 210 mm) als elfde 
 Elk printblad heeft onderaan een eigen après-ski-kreet, passend bij de ronde. De tafelkaart heeft een afzonderlijke kreet op beide vouwvlakken.
 
 Teams bewaart teamnaam en leden apart. Leden zijn vrije tekst (maximaal 2000 tekens), bij voorkeur één naam per regel, en worden gedeeld via PostgreSQL. Nieuwe teams en wijzigingen hebben aparte velden; invoerconcepten houden beide velden en de wijzigingsversie vast. De leden gaan mee in reservekopieën, maar niet in de publieke scorebordrespons of printlinks. De migratie voegt alleen een lege kolom toe en past bestaande namen, teams, antwoorden en scores niet aan.
+
+Teams kan actieve en uitgesloten teams definitief verwijderen na bevestiging. De API vergrendelt het team, controleert de wijzigingsversie en verwijdert uitsluitend de antwoorden en het team in één transactie. Uitsluiten blijft beschikbaar om gegevens te bewaren. Niet-opgeslagen invoer moet eerst worden opgeslagen.

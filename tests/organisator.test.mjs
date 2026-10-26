@@ -7,7 +7,7 @@ function setup(){
   const listeners={};
   const root={addEventListener:(name,fn)=>listeners[name]=fn,querySelector:()=>{throw new Error('Gebruik de teamregel, geen globale selector');}};
   const context={document:{getElementById:id=>id==='organizer'?root:id==='sync-status'?null:{addEventListener(){}}},location:{search:'?tab=nakijken&ronde=1',hash:''},localStorage:{getItem(){return null;},removeItem(){}},window:{addEventListener(){}},URLSearchParams,Map,Date,Intl,setTimeout,clearTimeout,formatPoints:c=>String(c/100),roundPodium:()=>'',trophy:rank=>`<svg data-cup="${rank}"></svg>`};
-  vm.runInNewContext(source+`\nthis.harness={listeners:null,setState(value){state=value;},gradingView,teamsView,teamDrafts,questionStanding,questionCard,expandedQuestions,saveAnswer,answerDrafts,getAnswer,answerKey,setMutation(fn){mutation=fn;refresh=async()=>{};notice=()=>{};saveIndicator=()=>{};}};`,context);
+  vm.runInNewContext(source+`\nthis.harness={listeners:null,setState(value){state=value;},gradingView,teamsView,teamDrafts,questionStanding,questionCard,expandedQuestions,saveAnswer,answerDrafts,getAnswer,answerKey,setConfirmation(accepted){confirmAction=async()=>accepted;},setMutation(fn){mutation=fn;refresh=async()=>{};notice=()=>{};saveIndicator=()=>{};}};`,context);
   const harness=context.harness;
   harness.setState({rounds:[{id:'1',title:'Ronde',closed:false}],teams:[{id:'a',name:'Alpen',active:true},{id:'b',name:'Bergen',active:true}],questions:[{round_id:'1',id:'1',prompt:'Vraag een',correct:'Model',alternatives:[],max_cents:100}],answers:[]});
   return {...harness,listeners};
@@ -82,4 +82,21 @@ test('Teamnaam en leden hebben aparte velden en concepten blijven gescheiden',()
   assert.match(html,/id="name-a" name="name" value="Berggeiten"/);
   assert.match(html,/Anna\nBram/);
   assert.doesNotMatch(html,/team=Berggeiten.*Anna/);
+});
+
+test('Verwijderen voert zonder bevestiging geen wijziging uit en gebruikt daarna de teamversie',async()=>{
+  const app=setup();
+  app.setState({teams:[{id:'a',name:'Alpen',version:7,active:true}],answers:[],questions:[],rounds:[]});
+  let calls=0,sent;
+  app.setMutation(async(path,body)=>{calls++;sent={path,body};return {ok:true};});
+  const button={dataset:{action:'delete-team',id:'a'},disabled:false};
+  const event={target:{closest:selector=>selector==='button'?button:null}};
+  app.setConfirmation(false);
+  await app.listeners.click(event);
+  assert.equal(calls,0);
+  app.setConfirmation(true);
+  await app.listeners.click(event);
+  assert.equal(calls,1);
+  assert.equal(sent.path,'/teams/delete');
+  assert.equal(sent.body.id,'a');assert.equal(sent.body.version,7);
 });
