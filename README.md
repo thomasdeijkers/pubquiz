@@ -90,3 +90,5 @@ De navigatie zit op alle schermen rechts in de vaste header onder Menu. Quiz & s
 Podia groeperen teams op gedeelde positie: één vak en één beker per plek, met alle bijbehorende teamnamen en één puntentotaal. De bestaande rangschikking blijft behouden (bij twee gedeelde eerste plaatsen volgt plaats 3). Dit geldt voor rondepodiums, totaalstand en projectie.
 
 De ingeklapte vraagstand toont drie even brede vakken. Teams worden per gelijke vraagscore gegroepeerd op de eerste, tweede en derde scorepositie, met één beker en één puntenaantal per vak. Nul punten is een beoordeelde score; nog niet beoordeelde teams blijven buiten deze rangschikking en tellen mee in de voortgang boven de vraag.
+
+De bonusronde staat als tiende, inklapbare regel (B) onder ronde 9 in het rondeoverzicht, met de bonuskaart, controle en eigen podium. De aparte bonusbanner en het blok De invulbladen zijn verwijderd. Invulbladen blijven per ronde beschikbaar na openklappen. De bonusverwijzing in het menu verwijst naar de bonusregel in het overzicht.
