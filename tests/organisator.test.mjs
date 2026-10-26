@@ -7,7 +7,7 @@ function setup(){
   const listeners={};
   const root={addEventListener:(name,fn)=>listeners[name]=fn,querySelector:()=>{throw new Error('Gebruik de teamregel, geen globale selector');}};
   const context={document:{getElementById:id=>id==='organizer'?root:id==='sync-status'?null:{addEventListener(){}}},location:{search:'?tab=nakijken&ronde=1',hash:''},localStorage:{getItem(){return null;},removeItem(){}},window:{addEventListener(){}},URLSearchParams,Map,Date,Intl,setTimeout,clearTimeout,formatPoints:c=>String(c/100),roundPodium:()=>'',trophy:rank=>`<svg data-cup="${rank}"></svg>`};
-  vm.runInNewContext(source+`\nthis.harness={listeners:null,setState(value){state=value;},gradingView,questionCard,expandedQuestions,saveAnswer,answerDrafts,getAnswer,answerKey,setMutation(fn){mutation=fn;refresh=async()=>{};notice=()=>{};saveIndicator=()=>{};}};`,context);
+  vm.runInNewContext(source+`\nthis.harness={listeners:null,setState(value){state=value;},gradingView,questionStanding,questionCard,expandedQuestions,saveAnswer,answerDrafts,getAnswer,answerKey,setMutation(fn){mutation=fn;refresh=async()=>{};notice=()=>{};saveIndicator=()=>{};}};`,context);
   const harness=context.harness;
   harness.setState({rounds:[{id:'1',title:'Ronde',closed:false}],teams:[{id:'a',name:'Alpen',active:true},{id:'b',name:'Bergen',active:true}],questions:[{round_id:'1',id:'1',prompt:'Vraag een',correct:'Model',alternatives:[],max_cents:100}],answers:[]});
   return {...harness,listeners};
@@ -49,4 +49,18 @@ test('Inklapstand toont scores per team en onthoudt welke vraag openstaat',()=>{
   html=app.gradingView();assert.match(html,/data-question-fold="1\/1" open/);
   app.listeners.toggle({target:{dataset:{questionFold:'1/1'},open:false}});
   assert.equal(app.expandedQuestions.size,0);
+});
+
+test('Vraagstand verdeelt gelijke scores over precies drie plekken met één beker per plek',()=>{
+  const app=setup();
+  const teams=['Alpen','Bergen','Chalet','Onbeoordeeld'].map((name,index)=>({id:String(index),name,active:true}));
+  app.setState({teams,answers:[{team_id:'0',round_id:'1',question_id:'1',points_cents:100},{team_id:'1',round_id:'1',question_id:'1',points_cents:100},{team_id:'2',round_id:'1',question_id:'1',points_cents:0}]});
+  const html=app.questionStanding({id:'1'},teams);
+  assert.equal((html.match(/class="question-place question-place-/g)||[]).length,3);
+  for(const rank of [1,2,3])assert.equal((html.match(new RegExp('data-cup="'+rank+'"','g'))||[]).length,1);
+  assert.match(html,/Alpen · Bergen/);
+  assert.match(html,/Chalet/);
+  assert.match(html,/0 pt/);
+  assert.match(html,/Nog geen teams/);
+  assert.doesNotMatch(html,/Onbeoordeeld/);
 });

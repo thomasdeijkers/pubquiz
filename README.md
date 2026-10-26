@@ -88,3 +88,5 @@ Het rondeoverzicht op de homepage is standaard ingeklapt: negen compacte regels 
 De navigatie zit op alle schermen rechts in de vaste header onder Menu. Quiz & spelen bevat de publieke pagina’s; Organisatie bevat teams, nakijken, tussenstand, antwoordmodel, DJ en instellingen. Beheerhulpmiddelen bevat delen, reservekopie en naam wijzigen. Interne beheerknoppen blijven de waarschuwing voor niet-opgeslagen invoer gebruiken. Escape, buiten klikken of een bestemming kiezen sluit het menu.
 
 Podia groeperen teams op gedeelde positie: één vak en één beker per plek, met alle bijbehorende teamnamen en één puntentotaal. De bestaande rangschikking blijft behouden (bij twee gedeelde eerste plaatsen volgt plaats 3). Dit geldt voor rondepodiums, totaalstand en projectie.
+
+De ingeklapte vraagstand toont drie even brede vakken. Teams worden per gelijke vraagscore gegroepeerd op de eerste, tweede en derde scorepositie, met één beker en één puntenaantal per vak. Nul punten is een beoordeelde score; nog niet beoordeelde teams blijven buiten deze rangschikking en tellen mee in de voortgang boven de vraag.
