@@ -103,3 +103,5 @@ body,.organizer-body{background:#e6f3fc url('assets/alpen-achtergrond.svg') cent
  .team-scoring-page .selector-bar select{height:36px;font-size:14px}
 }
 .team-scoring-page .team-grade-buttons button{touch-action:manipulation}
+
+.org-content:has(.team-scoring-page){padding-top:10px}.team-scoring-page>.selector-bar{margin-top:0}
