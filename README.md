@@ -72,3 +72,7 @@ Het openbare scorebord toont alle actieve teams met rondepunten en totaal, een k
 Op iedere rondekaart staat **Open controle**. Deze link opent rechtstreeks `organisator.html?tab=nakijken&ronde=…`, met de juiste ronde geselecteerd. Kies daar een team en vul de antwoorden direct onder de vragen in. Ook de homepage, bonusronde en presentatie verwijzen rechtstreeks naar de controle.
 
 Bij Antwoorden & punten staan nu alle actieve teams onder iedere vraag, elk met een eigen antwoordveld en Goed/Fout-knoppen rechts. Goed/Fout slaat zowel het antwoord als de beoordeling voor die teamregel op. Andere punten en het wissen van een beoordeling blijven beschikbaar onder Andere punten. Concepten van andere teams blijven bij opslaan bewaard.
+
+## Après-ski huisstijl
+
+`apres-ski.css` verzorgt één gedeelde schermstijl voor homepage, rondes, scorebord, beheer, projectie en printvoorbeelden. De oorspronkelijke flyer is als openbaar beeld opgenomen. Houten borden met sneeuwranden, een Alpenachtergrond, blauwe kaders en rode vraagnummers sluiten aan op de vraagkaarten. Het verenigingslogo is als transparante 3D-badge uitgewerkt in de oorspronkelijke groen/zalmtinten. De printuitvoer blijft sober en goed leesbaar.
