@@ -24,7 +24,7 @@ test('Podium behoudt gedeelde plaatsen en toont alle teams op een gedeelde derde
   const html=podium(result);
   assert.equal((html.match(/podium-place /g)||[]).length,3);
   assert.equal((html.match(/Plaats 3/g)||[]).length,1);
-  assert.match(html,/C · D/);
+  assert.match(html,/<span class="podium-team-name">C<\/span><span class="podium-team-name">D<\/span>/);
   assert.match(html,/Voorlopig/);
 });
 
@@ -36,6 +36,6 @@ test('Gedeelde eerste en derde plek krijgen ieder één beker met alle teamnamen
   assert.equal((html.match(/Plaats 1/g)||[]).length,1);
   assert.equal((html.match(/Plaats 3/g)||[]).length,1);
   assert.doesNotMatch(html,/Plaats 2/);
-  assert.match(html,/Team 1 · Team 4/);
-  assert.match(html,/Barteam! · Team 2 · Team 3 · Team 6/);
+  assert.match(html,/<span class="podium-team-name">Team 1<\/span><span class="podium-team-name">Team 4<\/span>/);
+  for(const name of ['Barteam!','Team 2','Team 3','Team 6'])assert.ok(html.includes(`<span class="podium-team-name">${name}</span>`));
 });

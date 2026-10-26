@@ -120,3 +120,5 @@ Teams kan actieve en uitgesloten teams definitief verwijderen na bevestiging. De
 Het uniforme puntenveld past de maxima direct aan bij typen; afzonderlijk aangepaste maxima blijven behouden en maken het uniforme veld leeg. Opslaan verstuurt die daadwerkelijke waarden. Onder de bingo-onderdelen staan de mogelijke completeermomenten per kaart, op volgorde, met gekoppelde teamnamen. Er is een expliciete keuze tussen huidige DJ-kaart en het niet-actieve playlistvoorstel. Inconsistente winrondes en onhaalbare volle kaarten worden gemeld. Teams kan bingokaart K1/K2/K3 bewaren; bestaande teams krijgen geen geraden kaarttoewijzing. Printlinks gebruiken de opgeslagen kaart; afwijkingen in het printvoorbeeld moeten ook bij Teams worden vastgelegd.
 
 Bovenaan de rondecontrole staat een namenlijst van actieve teams met minstens één volledig goed gerekend antwoord in die ronde. Dit blok heeft geen Top 3, bekers, rangnummers of punten; de afzonderlijke scoreborden behouden hun ranglijst.
+
+Bij gedeelde podiumplaatsen staat iedere teamnaam op een eigen regel, op de homepage, in de tussenstand en bij projectie.
