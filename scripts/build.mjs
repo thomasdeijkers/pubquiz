@@ -13,6 +13,10 @@ for (const round of quiz.rounds) {
     assert(!/antwoord|controle|dj-/i.test(card.src),'Geen antwoorden in publieke kaarten');
     files.add(card.src);
   }
+  for (const card of round.printables || []) {
+    assert(/^assets\/bingo-kaart-[123]\.png$/.test(card.src));
+    files.add(card.src);
+  }
 }
 for (const file of files) assert((await stat(file)).size > 0,`Ontbrekend bestand: ${file}`);
 const output = path.join(root,'_site');

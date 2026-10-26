@@ -130,11 +130,13 @@ class QuizTests(unittest.TestCase):
                 result=connection.getresponse();status=result.status;data=result.read();connection.close()
                 return status,json.loads(data)
             self.assertEqual(request('GET','/state')[0],401)
+            self.assertEqual(request('GET','/media/dj-nieuw.png')[0],401)
             self.assertEqual(request('GET','/state',{'Authorization':'Bearer wrong'})[0],401)
             self.assertEqual(request('GET','/state',{'Authorization':'Bearer test-only-token','Origin':'https://example.com'})[0],403)
             self.assertEqual(request('GET','/state',{'Authorization':'Bearer test-only-token','Origin':app.ORIGIN})[0],200)
             self.assertEqual(request('POST','/teams/add',{'Authorization':'Bearer test-only-token','Content-Type':'application/json'},'{}')[0],403)
             self.assertEqual(request('GET','/health')[0],200)
+            self.assertEqual(request('GET','/media/unknown.png',{'Authorization':'Bearer test-only-token','Origin':app.ORIGIN})[0],404)
         finally:
             server.shutdown();server.server_close();thread.join()
 

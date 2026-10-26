@@ -50,3 +50,9 @@ Het model en de maximale punten kunnen in het beheer worden aangepast. De standa
 `private/` en `qa/` zijn uitgesloten van Git. Daar staan lokaal de beheerlink, de beperkte deploysleutel, de antwoordimport en interne controlebestanden. Maak deze bestanden niet openbaar.
 
 `noindex` en `robots.txt` vragen zoekmachines om de tijdelijke quiz niet te indexeren; de beheer-API vereist altijd een geldige toegangssleutel.
+
+## Muziekbingo
+
+De playlist is gekoppeld aan ronde 5: https://open.spotify.com/playlist/09oEyjF5tRPIymghW0tD8x. De drie originele kaarten zijn beschikbaar als printblad. De originele DJ-kaarten en de broninstructie worden uitsluitend via de beheer-API met toegangssleutel aangeboden; deze afbeeldingen staan niet in GitHub Pages of de repository.
+
+De Spotify-volgorde met zestig nummers is op 26 oktober 2026 uit de playlist overgenomen en met de 36 vakjes per kaart vergeleken. De nieuwe DJ-kaart wijkt vanaf nummer 21 af van Spotify. De geplande winmomenten uit de bron zijn daarom geen geldige voorspelling voor deze playlistvolgorde. In het beheer staat een tabel met de berekende momenten; K1 en K3 hebben bij deze volgorde allebei een volle kaart na nummer 57. De berekening is een momentopname en moet na veranderingen aan de playlist of kaarten opnieuw worden uitgevoerd. De site speelt of knipt geen Spotify-audio automatisch.

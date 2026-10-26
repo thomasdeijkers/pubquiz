@@ -15,6 +15,10 @@ async function init() {
     byId('round-grid').innerHTML = quiz.rounds.map(round => `<button class="round-card" data-round="${round.id}"><div class="card-top"><span class="round-number">${String(round.id).padStart(2,'0')}</span><span class="tag ${round.pending ? 'pending' : ''}">${safe(round.type)}</span></div><h3>${safe(round.title)}</h3><p class="card-description">${safe(round.description)}</p><div class="card-bottom"><span>${safe(round.summary)}</span><span aria-hidden="true">Open ronde ↗</span></div></button>`).join('');
     document.querySelectorAll('[data-round]').forEach(button => button.addEventListener('click', () => openRound(Number(button.dataset.round))));
     byId('sheet-round').innerHTML = quiz.rounds.map(round => `<option value="${round.id}">${round.id}. ${safe(round.title)}</option>`).join('') + '<option value="bonus">Bonusronde · 30 afbeeldingen</option>';
+    const bingo = quiz.rounds.find(round => round.id === 5);
+    byId('bingo-printables').innerHTML = (bingo.printables || []).map(card => `<a class="button outline" href="?invulblad=${safe(card.id)}" target="_blank" rel="noopener">${safe(card.title)} printen ↗</a>`).join('');
+    byId('sheet-round').innerHTML += (bingo.printables || []).map(card => `<option value="${safe(card.id)}">${safe(card.title)}</option>`).join('');
+    byId('viewer-resource').addEventListener('click',async event=>{event.preventDefault();await closeViewer();location.hash='muziekbingo';});
     byId('print-sheet').addEventListener('click', () => { window.open(`?invulblad=${byId('sheet-round').value}`, '_blank', 'noopener'); });
     byId('open-bonus').addEventListener('click', openBonus);
     byId('start').addEventListener('click', () => {
@@ -74,6 +78,7 @@ function updateSlide() {
   byId('viewer-kicker').textContent = slide.id === 'BONUS' ? 'BONUSRONDE' : `RONDE ${slide.id}`;
   byId('viewer-title').textContent = slide.round;
   byId('viewer-note').textContent = slide.note;
+  byId('viewer-resource').hidden = slide.id !== 5;
   byId('image-error').hidden = true;
   byId('slide').src = slide.src;
   byId('slide').alt = `${slide.round} — ${slide.label}`;
@@ -85,6 +90,12 @@ function updateSlide() {
 }
 function renderSheet() {
   const id = new URLSearchParams(location.search).get('invulblad');
+  const bingoCard = quiz.rounds.find(round=>round.id===5).printables?.find(card=>card.id===id);
+  if(bingoCard){
+    document.title=bingoCard.title+' · Pubquiz';
+    document.body.innerHTML=`<main class="print-page bingo-print"><div class="print-toolbar"><a href="./#muziekbingo">← Terug naar muziekbingo</a><button class="button primary" id="do-print">Print ${safe(bingoCard.title)}</button></div><h1>${safe(bingoCard.title)}</h1><div class="print-meta">Teamnaam: __________________________________________________</div><img src="${safe(bingoCard.src)}" alt="${safe(bingoCard.title)} met 36 muziekfragmenten"></main>`;
+    byId('do-print').addEventListener('click',()=>window.print());return;
+  }
   const round = id === 'bonus' ? {title:'Bonusronde', id:'Bonus', answerCount:30} : quiz.rounds.find(item => String(item.id) === id);
   if (!round) throw new Error('Ronde bestaat niet');
   document.title = `Invulblad · ${round.title}`;

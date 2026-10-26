@@ -43,6 +43,8 @@ CREATE TABLE IF NOT EXISTS quiz_answers (
 CREATE TABLE IF NOT EXISTS quiz_changes (
  id bigserial PRIMARY KEY, actor text NOT NULL, action text NOT NULL,
  details text NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS quiz_bingo_config (
+ id boolean PRIMARY KEY DEFAULT true CHECK(id), data jsonb NOT NULL);
 '''
 
 
@@ -148,6 +150,9 @@ def state(cur):
     ]:
         cur.execute(sql)
         result[key] = [dict(row) for row in cur.fetchall()]
+    cur.execute('SELECT data FROM quiz_bingo_config WHERE id=true')
+    bingo = cur.fetchone()
+    result['bingo'] = bingo['data'] if bingo else None
     return result
 
 
@@ -298,6 +303,27 @@ class Handler(BaseHTTPRequestHandler):
             return self.reply(403, {'error': 'Deze website heeft geen toegang.'})
         self.reply(200, {'ok': True})
 
+    def reply_image(self, filename):
+        files = {'dj-nieuw.png', 'dj-oud.png', 'bingo-broninstructie.png'}
+        if filename not in files:
+            raise Problem(404, 'Bestand niet gevonden.')
+        file = Path('/var/lib/pubquiz/media') / filename
+        if not file.is_file():
+            raise Problem(404, 'Dit bestand is nog niet beschikbaar.')
+        content = file.read_bytes()
+        self.send_response(200)
+        self.send_header('Content-Type', 'image/png')
+        self.send_header('Content-Length', str(len(content)))
+        self.send_header('Cache-Control', 'no-store')
+        self.send_header('Connection', 'close')
+        self.close_connection = True
+        self.send_header('X-Content-Type-Options', 'nosniff')
+        self.send_header('Vary', 'Origin')
+        if self.headers.get('Origin') == ORIGIN:
+            self.send_header('Access-Control-Allow-Origin', ORIGIN)
+        self.end_headers()
+        self.wfile.write(content)
+
     def do_GET(self):
         self.handle_api()
 
@@ -341,6 +367,11 @@ class Handler(BaseHTTPRequestHandler):
                         result = state(cur)
                         if route == '/backup':
                             result.update({'format': 'pubquiz-backup', 'version': 1})
+                    elif self.command == 'GET' and route == '/revision':
+                        cur.execute("SELECT value::bigint AS revision FROM quiz_meta WHERE key='revision'")
+                        result = dict(cur.fetchone())
+                    elif self.command == 'GET' and route.startswith('/media/'):
+                        return self.reply_image(route[len('/media/'):])
                     elif self.command == 'POST':
                         if self.headers.get_content_type() != 'application/json':
                             raise Problem(415, 'Gebruik JSON voor deze actie.')
@@ -412,4 +443,7 @@ if __name__ == '__main__':
     if args.seed:
         initialize(args.seed, args.access_file)
     else:
+        with connect() as db:
+            with db.cursor() as cur:
+                cur.execute(SCHEMA)
         ThreadingHTTPServer(('127.0.0.1', args.port), Handler).serve_forever()

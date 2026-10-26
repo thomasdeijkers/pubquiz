@@ -84,7 +84,7 @@
       "title": "Muziekbingo",
       "type": "Bingo",
       "description": "Luister, herken en streep af op je kaart.",
-      "summary": "Bingokaarten op papier",
+      "summary": "60 nummers · 3 bingokaarten",
       "answerCount": 4,
       "cards": [
         {
@@ -92,7 +92,25 @@
           "label": "Uitleg muziekbingo"
         }
       ],
-      "note": "Speel met de originele bingokaarten en de muziek van de DJ. Dit is de uitlegkaart; de DJ-lijst blijft bij de organisatie."
+      "note": "Speel met de originele bingokaarten en de muziek van de DJ. Dit is de uitlegkaart; de DJ-lijst blijft bij de organisatie.",
+      "playlist_url": "https://open.spotify.com/playlist/09oEyjF5tRPIymghW0tD8x",
+      "printables": [
+        {
+          "id": "bingo-1",
+          "title": "Bingokaart K1",
+          "src": "assets/bingo-kaart-1.png"
+        },
+        {
+          "id": "bingo-2",
+          "title": "Bingokaart K2",
+          "src": "assets/bingo-kaart-2.png"
+        },
+        {
+          "id": "bingo-3",
+          "title": "Bingokaart K3",
+          "src": "assets/bingo-kaart-3.png"
+        }
+      ]
     },
     {
       "id": 6,

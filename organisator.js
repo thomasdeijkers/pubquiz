@@ -64,7 +64,7 @@ function questions(){return state.questions.filter(question=>question.round_id==
 function getAnswer(qid){return state.answers.find(answer=>answer.team_id===selectedTeam && answer.round_id===selectedRound && answer.question_id===qid);}
 function roundLabel(round){return round.id==='bonus'?'Bonusronde':`Ronde ${round.id} · ${round.title}`;}
 function options(items,selected,label){return items.map(item=>`<option value="${esc(item.id)}" ${item.id===selected?'selected':''}>${esc(label(item))}</option>`).join('');}
-function nav(){return [['teams','Teams'],['nakijken','Antwoorden & punten'],['stand','Tussenstand'],['model','Antwoordmodel']].map(([id,label])=>`<button class="org-nav-button ${tab===id?'active':''}" data-tab="${id}" ${tab===id?'aria-current="page"':''}>${label}</button>`).join('');}
+function nav(){return [['teams','Teams'],['nakijken','Antwoorden & punten'],['stand','Tussenstand'],['model','Antwoordmodel'],['bingo','Muziekbingo']].map(([id,label])=>`<button class="org-nav-button ${tab===id?'active':''}" data-tab="${id}" ${tab===id?'aria-current="page"':''}>${label}</button>`).join('');}
 function saveIndicator(){const node=document.getElementById('sync-status');if(node){node.classList.toggle('unsaved',!!(dirty || pending || loadingError));node.textContent=loadingError?'Verbinding verbroken':pending?'Bezig met opslaan…':dirty?'Er is nog niet-opgeslagen invoer':lastSync?`Gedeeld · bijgewerkt ${lastSync.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}`:'Verbinden…';}}
 function accessPage(message='Open de gedeelde beheerlink om verder te gaan.') {
   root.innerHTML=`<main class="access-page"><a class="brand" href="./"><span class="brand-mark">PQ</span><span>PUBQUIZ<small>Organisator</small></span></a><p class="eyebrow dark">SAMEN DE QUIZ BIJHOUDEN</p><h1>Het beheer van de quiz</h1><p>${esc(message)}</p><p>Je hebt geen account nodig. Vraag de organisator om de volledige beheerlink. Die geeft toegang tot de teams, antwoorden en scores.</p><a class="button outline" href="./">Terug naar de quiz</a></main>`;
@@ -76,6 +76,10 @@ async function refresh(force=false) {
   if(polling || (!force && (dirty || pending || root.contains(document.activeElement) && /INPUT|TEXTAREA/.test(document.activeElement.tagName))))return;
   polling=true;
   try{
+    if(state && !force){
+      const check=await api('/revision');
+      if(check.revision===state.revision){lastSync=new Date();loadingError='';saveIndicator();return;}
+    }
     const next=await api('/state');
     const changed=!state || next.revision!==state.revision;
     state=next; lastSync=new Date(); loadingError='';
@@ -87,7 +91,7 @@ async function refresh(force=false) {
 function render(){
   if(!state)return;
   if(projection){root.innerHTML=`<main class="projection"><header><span class="brand">PUBQUIZ · T.V. HEYNKENSORT</span><span id="sync-status"></span></header>${standingsView(true)}</main>`; saveIndicator();return;}
-  const view=tab==='teams'?teamsView():tab==='nakijken'?gradingView():tab==='model'?modelView():standingsView();
+  const view=tab==='teams'?teamsView():tab==='nakijken'?gradingView():tab==='model'?modelView():tab==='bingo'?bingoView():standingsView();
   root.innerHTML=`<header class="org-header"><a class="brand" href="./"><span class="brand-mark">PQ</span><span>PUBQUIZ<small>Organisator</small></span></a><div class="org-header-right"><span class="actor-badge">${esc(actor)}</span><button class="text-button" data-action="change-actor">Naam wijzigen</button><a class="text-button" href="./" target="_blank" rel="noopener">Quiz openen ↗</a></div></header><div class="org-layout"><aside class="org-sidebar"><p class="eyebrow dark">QUIZADMINISTRATIE</p><nav aria-label="Beheernavigatie">${nav()}</nav><div class="org-sharing"><strong>Samen aan het nakijken</strong><p>Iedereen met de beheerlink werkt in dezelfde database.</p><button class="button outline" data-action="share">Beheerlink kopiëren</button><button class="text-button" data-action="backup">Reservekopie downloaden ↓</button><button class="text-button" data-action="forget">Beheerlink vergeten op dit apparaat</button></div></aside><main class="org-content"><div class="org-sync"><span id="sync-status"></span><button class="text-button" data-action="refresh">Vernieuwen ↻</button></div>${view}</main></div>`;
   saveIndicator();
 }
@@ -114,6 +118,12 @@ function standingsView(projected=false){
 function modelView(){
   const locked=currentRound().closed;
   return `<div class="org-title"><div><p class="eyebrow dark">DE BASIS VOOR HET NAKIJKEN</p><h1>Antwoordmodel</h1><p>Controleer de antwoorden en stel de punten per vraag vast voordat je gaat nakijken.</p></div></div>${selectorBar()}<div class="info-note">Het model is overgenomen uit het bestaande controleblad en moet inhoudelijk nog worden gecontroleerd. De muziekfragmenten en het aantal tennisballen zijn nog niet definitief. Wijzigingen rekenen eerder beoordeelde antwoorden niet automatisch opnieuw na.</div>${locked?'<div class="info-note">Deze ronde is afgesloten. Heropen hem bij Antwoorden & punten om het model te wijzigen.</div>':''}<div class="model-list">${questions().map(q=>`<form class="model-form org-panel" data-id="${q.id}"><div class="model-heading"><span class="question-number">${q.id}</span><h2>Vraag ${q.id}</h2><label class="points-input">Maximaal<input name="max_points" aria-label="Maximumscore vraag ${q.id}" type="number" min="0" max="1000" step="0.25" value="${q.max_cents/100}" ${locked?'disabled':''} required>punten</label></div><label for="prompt-${q.id}">Vraag of onderdeel</label><textarea id="prompt-${q.id}" name="prompt" maxlength="3000" rows="2" required ${locked?'disabled':''}>${esc(q.prompt)}</textarea><label for="correct-${q.id}">Correct antwoord</label><textarea id="correct-${q.id}" name="correct" rows="2" maxlength="3000" ${locked?'disabled':''}>${esc(q.correct)}</textarea><label for="alternatives-${q.id}">Andere toegestane antwoorden (één per regel)</label><textarea id="alternatives-${q.id}" name="alternatives" rows="2" ${locked?'disabled':''}>${esc(q.alternatives.join('\n'))}</textarea><button class="button primary" ${locked?'disabled':''}>Vraag opslaan</button></form>`).join('')}</div>`;
+}
+function bingoView(){
+  const bingo=state.bingo;
+  if(!bingo)return '<div class="org-title"><h1>Muziekbingo</h1></div><p>De materialen worden nog toegevoegd.</p>';
+  const titles={first:'Diagonaal linksboven → rechtsonder',second:'Diagonaal rechtsboven → linksonder',full:'Volle kaart'};
+  return `<div class="org-title"><div><p class="eyebrow dark">RONDE 5 · VOOR DE DJ EN ORGANISATIE</p><h1>Muziekbingo</h1><p>${esc(bingo.playlist_title)} · ${bingo.tracks.length} nummers. Speel ongeveer 30 seconden per nummer met 3–5 seconden wisseltijd.</p></div><a class="button primary" href="${esc(bingo.playlist_url)}" target="_blank" rel="noopener noreferrer">Open Spotify ↗</a></div><div class="org-panel bingo-material-buttons"><button class="button outline" data-media="dj-nieuw.png" data-title="DJ-kaart (nieuw)">DJ-kaart (nieuw)</button><button class="button outline" data-media="dj-oud.png" data-title="DJ-kaart (oud)">DJ-kaart (oud)</button><button class="button outline" data-media="bingo-broninstructie.png" data-title="Oorspronkelijke uitleg en winplanning">Broninstructie & winplanning</button>${[1,2,3].map(id=>`<a class="button outline" href="./?invulblad=bingo-${id}" target="_blank" rel="noopener">Bingokaart K${id} printen ↗</a>`).join('')}</div><div class="info-note">Let op: de nieuwe DJ-kaart en de huidige Spotify-volgorde verschillen vanaf nummer 21. De winplanning in de bron (K2 na 20, K3 na 40, K1 na 58) past daardoor niet bij deze volgorde. Hieronder staat de berekening op basis van de huidige Spotify-lijst en de 36 vakjes van iedere kaart. Deze geldt alleen als je die volgorde aanhoudt en shuffle uitstaat.</div><div class="org-panel"><h2 class="bingo-subtitle">Wanneer zijn de combinaties compleet?</h2><div class="table-scroll"><table class="standings-table"><thead><tr><th>Combinatie</th><th>K1</th><th>K2</th><th>K3</th></tr></thead><tbody>${Object.entries(titles).map(([key,title])=>`<tr><th scope="row">${title}</th>${['K1','K2','K3'].map(card=>`<td>Na nummer ${bingo.completions[card][key]}</td>`).join('')}</tr>`).join('')}</tbody></table></div><p class="table-note">Bij deze volgorde hebben K1 en K3 allebei een volle kaart na nummer 57. De tweede diagonaal van K3 is al compleet bij nummer 42. Spreek vooraf af hoe je opeenvolgende bingo’s en gelijke winmomenten behandelt.</p></div><div class="org-panel"><h2 class="bingo-subtitle">De afspeellijst in Spotify-volgorde</h2><p class="table-note">Gecontroleerd op ${esc(bingo.checked_date)}. Wijzig je de Spotify-lijst of volgorde, dan moet deze controle opnieuw worden gedaan. Muziek wordt in Spotify afgespeeld; de site start of stopt de fragmenten niet automatisch.</p><div class="table-scroll"><table class="standings-table bingo-track-table"><thead><tr><th>#</th><th>Nummer</th><th>Artiest</th><th>Op kaarten</th><th></th></tr></thead><tbody>${bingo.tracks.map(track=>`<tr><td>${track.position}</td><th scope="row">${esc(track.title)}</th><td>${track.artists.map(esc).join(', ')}</td><td>${track.cards.join(' · ')}</td><td><a href="${esc(track.url)}" target="_blank" rel="noopener noreferrer">Spotify ↗</a></td></tr>`).join('')}</tbody></table></div></div><button class="button primary" data-action="bingo-scores">Naar bingopunten per team →</button>`;
 }
 async function mutation(path,body){
   pending++;saveIndicator();
@@ -187,11 +197,26 @@ root.addEventListener('submit',async event=>{
 root.addEventListener('click',async event=>{
   const button=event.target.closest('button');if(!button)return;
   if(button.dataset.tab)return navigate(()=>{tab=button.dataset.tab;});
+  if(button.dataset.media){
+    button.disabled=true;
+    try{
+      const response=await fetch(API+'/media/'+button.dataset.media,{headers:{Authorization:`Bearer ${token}`}});
+      if(!response.ok)throw new Error('Het bestand kon niet worden geopend.');
+      const url=URL.createObjectURL(await response.blob());
+      const dialog=document.getElementById('bingo-media');
+      document.getElementById('bingo-media-title').textContent=button.dataset.title;
+      const image=document.getElementById('bingo-media-image');image.src=url;image.alt=button.dataset.title;
+      dialog.addEventListener('close',()=>{URL.revokeObjectURL(url);image.removeAttribute('src');},{once:true});
+      dialog.showModal();
+    }catch(error){notice(error.message,true);}finally{button.disabled=false;}
+    return;
+  }
   if(button.dataset.score){const area=root.querySelector(`[data-answer="${button.dataset.score}"]`);if(!area.value.trim() && !await confirmAction('Geen antwoord genoteerd','Je kunt wel punten toekennen. Wil je doorgaan zonder het teamantwoord vast te leggen?','Punten opslaan'))return;return saveAnswer(button.dataset.score,Number(button.dataset.value),button);}
   const action=button.dataset.action;if(!action)return;
   try{
     if(action==='refresh')return navigate(()=>{refresh(true);});
     if(action==='grade-team')return navigate(()=>{selectedTeam=button.dataset.id;tab='nakijken';});
+    if(action==='bingo-scores')return navigate(()=>{selectedRound='5';tab='nakijken';});
     if(action==='save-answer'){const qid=button.dataset.id,field=root.querySelector(`[data-points="${qid}"]`);if(!field.checkValidity())return field.reportValidity();return saveAnswer(qid,field.value===''?undefined:Number(field.value),button);}
     if(action==='ungrade')return saveAnswer(button.dataset.id,null,button);
     if(action==='archive-team' || action==='restore-team'){
@@ -224,6 +249,7 @@ root.addEventListener('click',async event=>{
 });
 window.addEventListener('beforeunload',event=>{if(dirty || pending){event.preventDefault();event.returnValue='';}});
 window.addEventListener('online',()=>refresh());
+document.getElementById('close-bingo-media').addEventListener('click',()=>document.getElementById('bingo-media').close());
 window.addEventListener('hashchange',()=>{
   const sharedKey=new URLSearchParams(location.hash.slice(1)).get('sleutel');
   if(!sharedKey)return;
