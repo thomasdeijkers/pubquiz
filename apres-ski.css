@@ -173,3 +173,13 @@ body,.organizer-body{background:#e6f3fc url('assets/alpen-achtergrond.svg') cent
 .header-menu-panel .menu-panel-heading strong{font-size:22px}
 .header-menu-panel .menu-group{height:auto;padding:6px 8px;border:0}
 .header-menu .header-menu-panel .menu-group a,.header-menu .header-menu-panel .menu-group button{text-align:right;padding:12px 14px;min-height:44px;font-size:13px}
+
+@media(max-width:600px){
+ .topbar .brand,.org-header .brand{min-width:0;gap:8px}
+ .topbar .club-brand-logo,.org-header .club-brand-logo{width:44px;height:44px;flex-shrink:0}
+ .topbar .brand>span,.org-header .brand>span{min-width:0;font-size:12px}
+ .topbar .brand small,.org-header .brand small{font-size:8px;max-width:110px}
+ .topbar .header-actions,.org-header .header-actions{gap:7px}
+ .topbar .header-score-link,.org-header .header-score-link{display:inline-flex;white-space:nowrap;font-size:10px;padding:9px 8px;min-height:40px;flex-shrink:0}
+ .header-menu-toggle{min-width:70px;padding:9px;font-size:10px}
+}
