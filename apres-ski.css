@@ -41,7 +41,6 @@ body,.organizer-body{background:#e6f3fc url('assets/alpen-achtergrond.svg') cent
 }
 @media print{.header-menu,.header-actions{display:none!important}}
 @media screen{.topbar .header-menu-panel .menu-group a{display:block}}
-@media screen and (min-width:700px){.header-menu-panel{display:grid!important;grid-template-columns:1fr 1fr;width:590px;align-items:start}.menu-panel-heading{grid-column:1/-1}.menu-group{height:100%;padding:12px 10px}.menu-panel-heading+.menu-group{border-right:1px solid #cfdeeb}.menu-utilities{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;height:auto;padding-top:8px;padding-bottom:0}.menu-utilities h2{grid-column:1/-1;margin:0}.header-menu-panel .menu-utilities button{font-size:10px!important;padding:9px 10px}.header-menu-panel .menu-group a,.header-menu-panel .menu-group button{padding-top:8px;padding-bottom:8px}}
 @media screen{.bingo-instructions .bingo-subtitle{margin-bottom:12px}.bingo-inline-preview{display:block;width:50%;padding:0;margin:20px auto 0;border:2px solid #174b80;border-radius:8px;background:#eaf5ff;color:#07336d;overflow:hidden;cursor:zoom-in;box-shadow:0 4px 0 #173d6620}.bingo-inline-preview img{display:block;width:100%;height:auto}.bingo-inline-preview span{display:block;padding:9px 12px;font:600 11px 'DM Sans',sans-serif;text-align:center}.bingo-inline-preview:hover{border-color:#b31a22}.bingo-source-warning strong{display:block;margin-bottom:5px}.bingo-card-difference td:nth-child(5){background:#fff2da}.bingo-track-table th:nth-child(4),.bingo-track-table td:nth-child(5){white-space:nowrap}@media(max-width:700px){.bingo-inline-preview{width:100%}}}
 @media screen{.podium-place-label{display:block;font-size:9px;font-weight:500;color:#5a6f80;margin-bottom:5px}.podium-team-names{display:block;line-height:1.65;overflow-wrap:anywhere}.podium-place .podium-team{line-height:1.5}.compact .podium-place-label{font-size:8px;margin-bottom:3px}.compact .podium-team-names{line-height:1.6}.projection .podium-place-label{font-size:12px}}
 @media screen{.question-scoreboard{display:flex;align-items:center;flex-wrap:wrap;gap:5px;width:100%}.question-no-correct{font-size:10px;color:#61798d}.question-scoreboard>.trophy-cup{width:20px;height:23px;margin-right:3px}.question-progress{font-weight:600}}
@@ -165,6 +164,12 @@ body,.organizer-body{background:#e6f3fc url('assets/alpen-achtergrond.svg') cent
 .round-progress.complete{background:#e5f3df;border-color:#9abb89;color:#306027}
 @media(max-width:750px){.round-progress{display:table;margin-top:4px;font-size:9px;padding:3px 6px}.round-overview-summary{min-height:76px}.round-overview-tile>.round-control-link{min-height:76px}}
 
-@media screen and (min-width:700px){.header-menu-panel{grid-template-columns:1fr;width:350px}.header-menu-panel .menu-group{border-right:0}}
 
 .question-progress.question-review-complete{color:#306027;background:#e5f3df;border:1px solid #9abb89;border-radius:16px;padding:4px 8px}.question-review-complete>span{font-size:15px;font-weight:700}
+
+/* Eén compacte, rechts uitgelijnde navigatie op alle schermformaten. */
+.header-menu>.header-menu-panel{display:block!important;right:0;left:auto;width:280px;padding-bottom:6px;text-align:right}
+.header-menu-panel .menu-panel-heading{padding:14px 18px;text-align:right}
+.header-menu-panel .menu-panel-heading strong{font-size:22px}
+.header-menu-panel .menu-group{height:auto;padding:6px 8px;border:0}
+.header-menu .header-menu-panel .menu-group a,.header-menu .header-menu-panel .menu-group button{text-align:right;padding:12px 14px;min-height:44px;font-size:13px}
