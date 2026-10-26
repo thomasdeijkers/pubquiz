@@ -1,5 +1,5 @@
-import {summarize} from './scoring.mjs';
-import {podium,roundPodium,standingsTable} from './scoreboard.mjs';
+import {summarize,summarizeRound,formatPoints} from './scoring.mjs';
+import {podium,roundPodium,standingsTable,trophy} from './scoreboard.mjs';
 'use strict';
 const byId = id => document.getElementById(id);
 let quiz;
@@ -14,7 +14,8 @@ async function init() {
     if (!response.ok) throw new Error('Inhoud niet beschikbaar');
     quiz = await response.json();
     if (new URLSearchParams(location.search).has('invulblad')) return renderSheet();
-    byId('round-grid').innerHTML = quiz.rounds.map(round => `<article class="round-tile"><button class="round-card" data-round="${round.id}"><div class="card-top"><span class="round-number">${String(round.id).padStart(2,'0')}</span><span class="tag ${round.pending ? 'pending' : ''}">${safe(round.type)}</span></div><h3>${safe(round.title)}</h3><p class="card-description">${safe(round.description)}</p><div class="card-bottom"><span>${safe(round.summary)}</span><span aria-hidden="true">Open ronde ↗</span></div></button><a class="round-control-link" href="organisator.html?tab=nakijken&amp;ronde=${round.id}" aria-label="Open controle ronde ${round.id} · ${safe(round.title)}">Open controle <span aria-hidden="true">→</span></a><div data-round-podium="${round.id}"><p class="score-loading">De top 3 wordt geladen…</p></div></article>`).join('');
+    byId('round-grid').innerHTML = quiz.rounds.map(round => `<article class="round-tile round-overview-tile"><details class="round-overview" data-overview="${round.id}"><summary class="round-overview-summary"><span class="round-number">${String(round.id).padStart(2,'0')}</span><span class="round-overview-title"><strong>${safe(round.title)}</strong><small>${safe(round.summary)}</small></span><span class="round-leader" data-round-leader="${round.id}">Stand laden…</span><span class="round-overview-arrow" aria-hidden="true">⌄</span></summary><div class="round-overview-body"><div class="round-overview-actions"><p>${safe(round.description)}</p><button class="button outline" data-round="${round.id}">Open ronde · vraagkaarten ↗</button></div><div data-round-podium="${round.id}"><p class="score-loading">De top 3 wordt geladen…</p></div></div></details><a class="round-control-link" href="organisator.html?tab=nakijken&amp;ronde=${round.id}" aria-label="Open controle ronde ${round.id} · ${safe(round.title)}">Open controle <span aria-hidden="true">→</span></a></article>`).join('');
+    byId('collapse-rounds').addEventListener('click',()=>document.querySelectorAll('.round-overview[open]').forEach(round=>{round.open=false;}));
     document.querySelectorAll('[data-round]').forEach(button => button.addEventListener('click', () => openRound(Number(button.dataset.round))));
     byId('sheet-round').innerHTML = quiz.rounds.map(round => `<option value="${round.id}">${round.id}. ${safe(round.title)}</option>`).join('') + '<option value="bonus">Bonusronde · 30 afbeeldingen</option>';
     const bingo = quiz.rounds.find(round => round.id === 5);
@@ -116,6 +117,13 @@ let scoreBusy=false;
 function drawScoreboard(){
   if(!scoreState)return;
   document.querySelectorAll('[data-round-podium]').forEach(node=>{node.innerHTML=roundPodium(scoreState,node.dataset.roundPodium);});
+  document.querySelectorAll('[data-round-leader]').forEach(node=>{
+    const result=summarizeRound(scoreState,node.dataset.roundLeader);
+    const leaders=result.entries.filter(entry=>entry.reviewed>0);
+    const best=leaders[0];
+    const ties=leaders.filter(entry=>entry.total===best?.total).length;
+    node.innerHTML=best?`${trophy(1)}<span>${safe(best.name)}${ties>1?` + ${ties-1}`:''}</span><strong>${formatPoints(best.total)} pt</strong>`:'<span>Nog geen punten</span>';
+  });
   const through=byId('public-through').value;
   const result=summarize(scoreState,through,byId('public-bonus').checked);
   byId('public-podium').innerHTML=podium(result,'Het erepodium · totaal');
@@ -142,6 +150,7 @@ async function loadScoreboard(){
   }catch{
     byId('public-score-sync').textContent=scoreState?'Verbinding onderbroken · laatst opgehaalde stand':'De tussenstand is even niet bereikbaar. We proberen opnieuw.';
     if(!scoreState)byId('public-standings').innerHTML='<p class="scoreboard-note">De scores verschijnen hier zodra de verbinding terug is.</p>';
+    if(!scoreState)document.querySelectorAll('[data-round-leader]').forEach(node=>{node.textContent='Stand tijdelijk niet bereikbaar';});
     if(!scoreState)document.querySelectorAll('[data-round-podium]').forEach(node=>{node.innerHTML='<p class="score-loading">De top 3 volgt zodra de verbinding terug is.</p>';});
   }finally{scoreBusy=false;}
 }
