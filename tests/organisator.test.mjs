@@ -7,7 +7,7 @@ function setup(){
   const listeners={};
   const root={addEventListener:(name,fn)=>listeners[name]=fn,querySelector:()=>{throw new Error('Gebruik de teamregel, geen globale selector');}};
   const context={document:{getElementById:id=>id==='organizer'?root:id==='sync-status'?null:{addEventListener(){}}},location:{search:'?tab=nakijken&ronde=1',hash:''},localStorage:{getItem(){return null;},removeItem(){}},window:{addEventListener(){}},URLSearchParams,Map,Date,Intl,setTimeout,clearTimeout,formatPoints:c=>String(c/100),roundPodium:()=>'',trophy:rank=>`<svg data-cup="${rank}"></svg>`};
-  vm.runInNewContext(source+`\nthis.harness={listeners:null,setState(value){state=value;},gradingView,questionStanding,questionCard,expandedQuestions,saveAnswer,answerDrafts,getAnswer,answerKey,setMutation(fn){mutation=fn;refresh=async()=>{};notice=()=>{};saveIndicator=()=>{};}};`,context);
+  vm.runInNewContext(source+`\nthis.harness={listeners:null,setState(value){state=value;},gradingView,teamsView,teamDrafts,questionStanding,questionCard,expandedQuestions,saveAnswer,answerDrafts,getAnswer,answerKey,setMutation(fn){mutation=fn;refresh=async()=>{};notice=()=>{};saveIndicator=()=>{};}};`,context);
   const harness=context.harness;
   harness.setState({rounds:[{id:'1',title:'Ronde',closed:false}],teams:[{id:'a',name:'Alpen',active:true},{id:'b',name:'Bergen',active:true}],questions:[{round_id:'1',id:'1',prompt:'Vraag een',correct:'Model',alternatives:[],max_cents:100}],answers:[]});
   return {...harness,listeners};
@@ -68,4 +68,18 @@ test('Ingevuld telt opgeslagen antwoordtekst los van de beoordeling, ook bij fou
   app.setState({teams,answers:[{team_id:'0',round_id:'1',question_id:'1',answer:'1973',points_cents:100},{team_id:'1',round_id:'1',question_id:'1',answer:'1980',points_cents:0},{team_id:'2',round_id:'1',question_id:'1',answer:'1973',points_cents:null},{team_id:'3',round_id:'1',question_id:'1',answer:'',points_cents:100},{team_id:'4',round_id:'1',question_id:'1',answer:'  ',points_cents:null}]});
   const html=app.questionCard({id:'1',prompt:'Vraag',correct:'1973',alternatives:[],max_cents:100},teams,false);
   assert.match(html,/3\/5 ingevuld · 3\/5 nagekeken/);
+});
+
+test('Teamnaam en leden hebben aparte velden en concepten blijven gescheiden',()=>{
+  const app=setup();
+  const form={dataset:{id:'a'},elements:{name:{value:'Berggeiten'},members:{value:'Anna\nBram'}}};
+  const field={dataset:{},closest:selector=>selector==='.team-rename' || selector==='form'?form:null};
+  app.listeners.input({target:field});
+  assert.equal(app.teamDrafts.get('a').name,'Berggeiten');
+  assert.equal(app.teamDrafts.get('a').members,'Anna\nBram');
+  const html=app.teamsView();
+  assert.match(html,/name="members"/);
+  assert.match(html,/id="name-a" name="name" value="Berggeiten"/);
+  assert.match(html,/Anna\nBram/);
+  assert.doesNotMatch(html,/team=Berggeiten.*Anna/);
 });

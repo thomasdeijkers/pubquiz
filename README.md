@@ -112,3 +112,5 @@ De homepage heeft een smalle footerbalk met het verenigingslogo en de quiznaam. 
 De complete teamset bevat daarnaast een A5-tafelkaart (148 × 210 mm) als elfde A4-knipvel. De teamnaam staat op beide zijden, met het bovenste vlak 180 graden gedraaid en een vouwlijn op 105 mm. Vanuit het printvoorbeeld opent Alleen tafelkaart een zelfstandige A5-afdruk met een benoemde A5-pagina. Print enkelzijdig op 100%; dubbelvouwen geeft een staander van 148 × 105 mm.
 
 Elk printblad heeft onderaan een eigen après-ski-kreet, passend bij de ronde. De tafelkaart heeft een afzonderlijke kreet op beide vouwvlakken.
+
+Teams bewaart teamnaam en leden apart. Leden zijn vrije tekst (maximaal 2000 tekens), bij voorkeur één naam per regel, en worden gedeeld via PostgreSQL. Nieuwe teams en wijzigingen hebben aparte velden; invoerconcepten houden beide velden en de wijzigingsversie vast. De leden gaan mee in reservekopieën, maar niet in de publieke scorebordrespons of printlinks. De migratie voegt alleen een lege kolom toe en past bestaande namen, teams, antwoorden en scores niet aan.
