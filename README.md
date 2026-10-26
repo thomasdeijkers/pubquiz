@@ -106,3 +106,5 @@ Op de homepage staan Ga naar de rondes, Start presentatie, datum, starttijd/inlo
 De homepage begint direct met het rondeoverzicht onder de vaste header. Het grote introductieblok met flyer is verwijderd; de flyer blijft als deelafbeelding beschikbaar.
 
 De gedeelde schermachtergrond gebruikt assets/apres-ski-sfeer.webp: een met imagegen gemaakte panoramische skihut-sfeer op basis van de flyer, zonder posterteksten of portretten. Witte kaarten behouden hun leesbaarheid; de printbladen blijven vrij van de sfeerachtergrond.
+
+De homepage heeft een smalle footerbalk met het verenigingslogo en de quiznaam. De GitHub-beheerlink is verwijderd.
