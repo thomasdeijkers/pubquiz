@@ -132,3 +132,5 @@ Het pdf-voorbeeld wordt met een lokaal meegeleverde PDF.js-renderer op canvas ge
 De invulbladen hebben een eigen witte voettekst zonder de websitefooter: punten en bladnummer op één regel, daaronder de unieke kreet helemaal onderaan, cursief en grijs. Open complete set als pdf maakt elf echte A4-pagina’s (negen rondes, bonus en A5-tafelkaart op knipvel), zonder browserdatum of webadres. Het ingebouwde pdf-voorbeeld heeft een paginakeuze; afdrukken en downloaden lopen via de pdf.
 
 Ronde 3 is een aparte muziekronde: volgens PubQuiz tennis (definitief).docx vijf clips zonder geluid, vier nummers achterstevoren en een voorgelezen Nederlandse songtekst van een Engelse hit. De tien antwoordvelden blijven titel/ artiest. Homepage, presentatie-uitleg, controle en invulbladen vermelden deze opbouw. De fragmenten ontbreken nog.
+
+Op mobiele schermen tot en met 750 px is het blok met quizknoppen en evenementinformatie in de header verborgen. Logo en menu blijven zichtbaar; op desktop blijft de bestaande header intact.
