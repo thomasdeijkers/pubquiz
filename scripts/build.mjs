@@ -28,6 +28,8 @@ for (const file of ['index.html','style.css','apres-ski.css','app.js','favicon.s
 // Version module dependencies too, so shared podium changes reach existing browsers.
 for (const file of ['navigation.mjs','scoreboard.mjs','table-card-pdf.mjs','answer-sheets-pdf.mjs','app.js','organisator.js']) {
   let source=await readFile(path.join(output,file),'utf8');
+  const quizHash=createHash('sha256').update(await readFile('data/quiz.json')).digest('hex').slice(0,12);
+  source=source.replaceAll("'data/quiz.json'",`'data/quiz.json?v=${quizHash}'`);
   for (const dependency of ['scoring.mjs','scoreboard.mjs','navigation.mjs','answer-sheets.mjs','table-card-pdf.mjs','answer-sheets-pdf.mjs']) {
     const hash=createHash('sha256').update(await readFile(path.join(output,dependency))).digest('hex').slice(0,12);
     source=source.replaceAll(`'./${dependency}'`,`'./${dependency}?v=${hash}'`);
