@@ -7,7 +7,7 @@ function setup(){
   const listeners={};
   const root={addEventListener:(name,fn)=>listeners[name]=fn,querySelector:()=>{throw new Error('Gebruik de teamregel, geen globale selector');}};
   const context={document:{getElementById:id=>id==='organizer'?root:id==='sync-status'?null:{addEventListener(){}}},location:{search:'?tab=nakijken&ronde=1',hash:''},localStorage:{getItem(){return null;},removeItem(){}},window:{addEventListener(){}},URLSearchParams,Map,Date,Intl,setTimeout,clearTimeout,formatPoints:c=>String(c/100),roundPodium:()=>'',trophy:rank=>`<svg data-cup="${rank}"></svg>`};
-  vm.runInNewContext(source+`\nthis.harness={listeners:null,setState(value){state=value;},gradingView,teamsView,teamDrafts,questionStanding,questionCard,expandedQuestions,saveAnswer,answerDrafts,getAnswer,answerKey,setConfirmation(accepted){confirmAction=async()=>accepted;},setMutation(fn){mutation=fn;refresh=async()=>{};notice=()=>{};saveIndicator=()=>{};}};`,context);
+  vm.runInNewContext(source+`\nthis.harness={listeners:null,setState(value){state=value;},gradingView,teamsView,teamDrafts,bingoWinOrder,setTimingMode(value){bingoTimingMode=value;},questionStanding,questionCard,expandedQuestions,saveAnswer,answerDrafts,getAnswer,answerKey,setConfirmation(accepted){confirmAction=async()=>accepted;},setMutation(fn){mutation=fn;refresh=async()=>{};notice=()=>{};saveIndicator=()=>{};}};`,context);
   const harness=context.harness;
   harness.setState({rounds:[{id:'1',title:'Ronde',closed:false}],teams:[{id:'a',name:'Alpen',active:true},{id:'b',name:'Bergen',active:true}],questions:[{round_id:'1',id:'1',prompt:'Vraag een',correct:'Model',alternatives:[],max_cents:100}],answers:[]});
   return {...harness,listeners};
@@ -99,4 +99,48 @@ test('Verwijderen voert zonder bevestiging geen wijziging uit en gebruikt daarna
   assert.equal(calls,1);
   assert.equal(sent.path,'/teams/delete');
   assert.equal(sent.body.id,'a');assert.equal(sent.body.version,7);
+});
+
+function scoringFixture(){
+  const app=setup();
+  app.setState({rounds:[{id:'5',title:'Muziekbingo',closed:false}],teams:[],answers:[],questions:[1,2,3].map(id=>({round_id:'5',id:String(id),max_cents:0,version:1}))});
+  const submit={disabled:false},total={textContent:''};
+  const form={dataset:{round:'5'},elements:{uniform:{name:'uniform',value:'10',dataset:{},checkValidity:()=>true},existing_scores:{value:'keep'}},matches:selector=>selector==='.scoring-form',querySelector:selector=>selector==='[data-round-total]'?total:submit,querySelectorAll:()=>fields};
+  const fields=[1,2,3].map(id=>({dataset:{scoringQuestion:String(id)},name:'question-'+id,value:'0',closest:()=>form}));
+  form.elements.uniform.closest=()=>form;
+  let saved;
+  app.setMutation(async(path,body)=>{saved={path,body};return {changed:3};});
+  return {app,form,fields,total,saved:()=>saved};
+}
+
+test('Eén puntenaantal invullen en opslaan werkt direct zonder aparte toepasknop',async()=>{
+  const f=scoringFixture();
+  f.app.listeners.input({target:f.form.elements.uniform});
+  assert.deepEqual(f.fields.map(field=>field.value),['10','10','10']);
+  assert.equal(f.total.textContent,'maximaal 30 punten');
+  await f.app.listeners.submit({preventDefault(){},target:f.form});
+  assert.equal(f.saved().path,'/settings/scoring');
+  assert.deepEqual(Array.from(f.saved().body.questions,q=>q.max_points),[10,10,10]);
+});
+
+test('Afzonderlijke punten blijven behouden na een wijziging op één onderdeel',async()=>{
+  const f=scoringFixture();f.app.listeners.input({target:f.form.elements.uniform});
+  f.fields[0].value='5';f.app.listeners.input({target:f.fields[0]});
+  assert.equal(f.form.elements.uniform.value,'');
+  await f.app.listeners.submit({preventDefault(){},target:f.form});
+  assert.deepEqual(Array.from(f.saved().body.questions,q=>q.max_points),[5,10,10]);
+});
+
+test('Bingo toont echte kaartvolgorde en gekoppelde teams, gescheiden van het voorstel',()=>{
+  const app=setup();
+  app.setState({teams:[{id:'a',name:'Alpen',active:true,bingo_card:2},{id:'b',name:'Bergen',active:true,bingo_card:1}],bingo:{completions:{K1:{first:null,second:40,full:null},K2:{first:54,second:47,full:null},K3:{first:55,second:43,full:null}},proposal:{completions:{K1:{first:58,second:43,full:58},K2:{first:20,second:47,full:59},K3:{first:60,second:40,full:60}}}}});
+  let html=app.bingoWinOrder('1');
+  assert.ok(html.indexOf('Kaart K2')<html.indexOf('Kaart K3'));
+  assert.match(html,/Alpen/);assert.match(html,/Vanaf nummer 54/);assert.match(html,/Niet haalbaar/);
+  assert.match(app.bingoWinOrder('2'),/geen afzonderlijke tweede winronde/);
+  assert.match(app.bingoWinOrder('3'),/volle bingokaart niet haalbaar/);
+  app.setTimingMode('proposal');html=app.bingoWinOrder('2');
+  assert.match(html,/nog niet actief/);assert.match(html,/Vanaf nummer 40/);
+  assert.ok(html.indexOf('Kaart K3')<html.indexOf('Kaart K1'));
+  assert.doesNotMatch(html,/geen afzonderlijke tweede winronde/);
 });
