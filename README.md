@@ -96,3 +96,5 @@ De bonusronde staat als tiende, inklapbare regel (B) onder ronde 9 in het rondeo
 De muziekrondes (3 en 5) verwijzen vanuit het uitgeklapte rondeoverzicht direct naar organisator.html?tab=bingo voor uitleg, Spotify en bingokaarten. Het losse muziekbingo-blok op de homepage is verwijderd; ook het menu, de presentatieverwijzing en de teruglink van geprinte bingokaarten gebruiken deze centrale pagina.
 
 Ingeklapte vragen tonen uitsluitend teams met de volledige maximumscore (bij een maximum groter dan nul). De teller toont afzonderlijk opgeslagen, niet-lege antwoordteksten en nagekeken antwoorden; een beoordeling zonder tekst telt niet als ingevuld. Foute, gedeeltelijke en onbeoordeelde antwoorden worden niet in de lijst met juiste teams getoond.
+
+Het bingobeheer kan een apart, niet-actief playlistvoorstel tonen uit bingo.proposal in de database. De 60 nummers, kaartvermeldingen en CSV komen uit die configuratie en blijven buiten GitHub. Het voorstel behoudt de gedrukte kaarten en bereikt K2 diagonaal ↘ op 20, K3 diagonaal ↙ op 40 en K1 vol op 58; K2 en K3 worden vol op 59/60. De bestaande actieve DJ-configuratie en Spotify worden niet automatisch gewijzigd.
