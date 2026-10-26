@@ -1,5 +1,4 @@
 import concurrent.futures
-import hashlib
 import http.client
 import json
 import os
@@ -27,7 +26,6 @@ class QuizTests(unittest.TestCase):
             with db.cursor() as cur:
                 cur.execute('TRUNCATE quiz_answers,quiz_questions,quiz_rounds,quiz_teams,quiz_changes')
                 cur.execute("UPDATE quiz_meta SET value='0' WHERE key='revision'")
-                cur.execute("INSERT INTO quiz_meta VALUES('access_hash',%s) ON CONFLICT(key) DO UPDATE SET value=excluded.value", (hashlib.sha256(b'test-only-token').hexdigest(),))
                 cur.execute("INSERT INTO quiz_rounds(id,sort_order,title) VALUES('1',0,'Test')")
                 cur.execute("INSERT INTO quiz_questions(round_id,id,prompt,correct,alternatives,max_cents) VALUES('1','1','Testvraag','C) Voorbeeld','[\"Ook goed\"]',100)")
         self.tid=self.call('/teams/add',name='Testteam')['id']
@@ -176,7 +174,7 @@ class QuizTests(unittest.TestCase):
             with db.cursor() as cur:
                 self.assertEqual(app.state(cur)['questions'][0]['max_cents'],100)
 
-    def test_api_authentication_and_origin_boundaries(self):
+    def test_api_open_access_and_origin_boundaries(self):
         server=app.ThreadingHTTPServer(('127.0.0.1',0),app.Handler)
         thread=threading.Thread(target=server.serve_forever,daemon=True)
         thread.start()
@@ -186,14 +184,13 @@ class QuizTests(unittest.TestCase):
                 connection.request(method,app.PREFIX+path,body=body,headers=headers or {})
                 result=connection.getresponse();status=result.status;data=result.read();connection.close()
                 return status,json.loads(data)
-            self.assertEqual(request('GET','/state')[0],401)
-            self.assertEqual(request('GET','/media/dj-nieuw.png')[0],401)
-            self.assertEqual(request('GET','/state',{'Authorization':'Bearer wrong'})[0],401)
-            self.assertEqual(request('GET','/state',{'Authorization':'Bearer test-only-token','Origin':'https://example.com'})[0],403)
-            self.assertEqual(request('GET','/state',{'Authorization':'Bearer test-only-token','Origin':app.ORIGIN})[0],200)
-            self.assertEqual(request('POST','/teams/add',{'Authorization':'Bearer test-only-token','Content-Type':'application/json'},'{}')[0],403)
+            self.assertEqual(request('GET','/state')[0],200)
+            self.assertEqual(request('GET','/state',{'Origin':'https://example.com'})[0],403)
+            self.assertEqual(request('GET','/state',{'Origin':app.ORIGIN})[0],200)
+            self.assertEqual(request('POST','/teams/add',{'Content-Type':'application/json'},'{}')[0],403)
+            self.assertEqual(request('POST','/teams/add',{'Origin':app.ORIGIN,'Content-Type':'application/json'},json.dumps({'actor':'Organisator','name':'Zonder inlog'}))[0],200)
             self.assertEqual(request('GET','/health')[0],200)
-            self.assertEqual(request('GET','/media/unknown.png',{'Authorization':'Bearer test-only-token','Origin':app.ORIGIN})[0],404)
+            self.assertEqual(request('GET','/media/unknown.png',{'Origin':app.ORIGIN})[0],404)
         finally:
             server.shutdown();server.server_close();thread.join()
 

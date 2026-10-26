@@ -1,11 +1,8 @@
 """Pubquiz beheer-API. Alleen loopback; HTTPS en CORS verlopen via nginx."""
 import argparse
-import hashlib
-import hmac
 import json
 import os
 import re
-import secrets
 import unicodedata
 import uuid
 from decimal import Decimal, InvalidOperation
@@ -395,19 +392,11 @@ class Handler(BaseHTTPRequestHandler):
                 raise Problem(403, 'Deze website heeft geen toegang.')
             if self.command == 'POST' and origin != ORIGIN:
                 raise Problem(403, 'Open het beheer via de quizwebsite.')
-            credential = self.headers.get('Authorization', '')
-            if not credential.startswith('Bearer ') or len(credential) > 200:
-                raise Problem(401, 'Open de gedeelde beheerlink om toegang te krijgen.')
-            token = credential[7:]
             connection = connect()
             if self.command == 'GET':
                 connection.set_session(isolation_level='REPEATABLE READ', readonly=True)
             with connection:
                 with connection.cursor() as cur:
-                    cur.execute("SELECT value FROM quiz_meta WHERE key='access_hash'")
-                    expected = cur.fetchone()
-                    if not expected or not hmac.compare_digest(expected['value'], hashlib.sha256(token.encode()).hexdigest()):
-                        raise Problem(401, 'Deze beheerlink is niet geldig.')
                     route = route[len(PREFIX):]
                     if self.command == 'GET' and route in ('/state', '/backup'):
                         result = state(cur)
@@ -461,15 +450,6 @@ def initialize(seed_path, access_path):
     with connect() as db:
         with db.cursor() as cur:
             cur.execute(SCHEMA)
-            cur.execute("SELECT 1 FROM quiz_meta WHERE key='access_hash'")
-            if not cur.fetchone():
-                token = secrets.token_urlsafe(36)
-                access = Path(access_path)
-                access.parent.mkdir(parents=True, exist_ok=True)
-                fd = os.open(str(access), os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-                with os.fdopen(fd, 'w') as file:
-                    file.write('https://pubquiz.opticore-insights.nl/organisator.html#sleutel=' + token + '\n')
-                cur.execute("INSERT INTO quiz_meta VALUES('access_hash',%s)", (hashlib.sha256(token.encode()).hexdigest(),))
             cur.execute('SELECT count(*) AS total FROM quiz_rounds')
             if not cur.fetchone()['total']:
                 for index, item in enumerate(seed['rounds']):
@@ -477,7 +457,7 @@ def initialize(seed_path, access_path):
                     for question in item['questions']:
                         cur.execute('INSERT INTO quiz_questions(round_id,id,prompt,correct,alternatives,max_cents) VALUES(%s,%s,%s,%s,%s,%s)',
                             (item['id'], question['id'], question['prompt'], question.get('correct',''), Json(question.get('alternatives',[])), question['max_cents']))
-    print('Pubquizdatabase geïnitialiseerd. Beheerlink opgeslagen in het opgegeven privébestand.')
+    print('Pubquizdatabase geïnitialiseerd. Beheer is rechtstreeks toegankelijk via organisator.html.')
 
 
 if __name__ == '__main__':

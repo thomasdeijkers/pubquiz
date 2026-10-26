@@ -30,7 +30,7 @@ TransIP: record `pubquiz`, type `CNAME`, doel `thomasdeijkers.github.io.`. Dit g
 
 ## Gedeeld quizbeheer
 
-`organisator.html` biedt teambeheer, antwoorden en punten per vraag, een tussenstand na iedere ronde, een projectiescherm en exports naar JSON/CSV. Organisatoren gebruiken een gedeelde beheerlink; er zijn geen gebruikersaccounts of inlogschermen. De link bevat een willekeurige toegangssleutel in het URL-fragment. Na openen verdwijnt de sleutel uit de adresbalk en wordt hij alleen in de browser onthouden. Deel de beheerlink alleen met organisatoren. De openbare quizpagina geeft geen toegang tot de database.
+`organisator.html` biedt teambeheer, antwoorden en punten per vraag, een tussenstand na iedere ronde, een projectiescherm en exports naar JSON/CSV. Het beheer opent direct zonder account, naamopgave of toegangssleutel. Iedereen met de gewone beheerlink kan teams, antwoorden, antwoordmodellen en punten bekijken en aanpassen. Een naam invullen is optioneel via Naam wijzigen, om wijzigingen herkenbaar te maken.
 
 De API draait als afzonderlijke gebruiker `pubquiz` op de bestaande VPS, via `https://vps.opticore-insights.nl/pubquiz-api/v1`. De gegevens staan in een aparte PostgreSQL-database `pubquiz`. Databaseverbindingen gebruiken een lokale Unix-socket en peer-authenticatie. Er staat geen databasewachtwoord in GitHub. De juiste antwoorden zijn rechtstreeks uit het lokale controleblad geïmporteerd; bronbestanden en antwoordmodellen blijven buiten deze openbare repository en de Pages-deployment.
 
@@ -40,20 +40,20 @@ Het model en de maximale punten kunnen in het beheer worden aangepast. De standa
 
 ## Backend publiceren en testen
 
-`.github/workflows/backend.yml` test de API tegen een geïsoleerde PostgreSQL-testdatabase en publiceert daarna alleen `backend/app.py`. GitHub gebruikt een afzonderlijke SSH-sleutel die alleen het vaste deployscript mag starten; er is daarmee geen vrije shelltoegang. De host key is vastgelegd in een GitHub-secret. De database en beheersleutel worden niet door deployments vervangen. Iedere backend-deployment maakt eerst een PostgreSQL-reservekopie in `/var/backups/pubquiz` en zet de vorige codeversie terug als de gezondheidscontrole faalt.
+`.github/workflows/backend.yml` test de API tegen een geïsoleerde PostgreSQL-testdatabase en publiceert daarna alleen `backend/app.py`. GitHub gebruikt een afzonderlijke SSH-sleutel die alleen het vaste deployscript mag starten; er is daarmee geen vrije shelltoegang. De host key is vastgelegd in een GitHub-secret. De database wordt niet door deployments vervangen. Iedere backend-deployment maakt eerst een PostgreSQL-reservekopie in `/var/backups/pubquiz` en zet de vorige codeversie terug als de gezondheidscontrole faalt.
 
 - Frontend en puntentelling: `node --test tests/scoring.test.mjs` en `node scripts/build.mjs`.
 - API: stel `PUBQUIZ_DSN` in op een afzonderlijke database genaamd `pubquiz_test` en voer `python -m unittest discover -s tests -p test_backend.py -v` uit. Gebruik nooit de productiedatabase voor tests.
-- Eerste serverinrichting: `deploy/bootstrap.sh`; deze gebruikt het lokale, niet-gepubliceerde seedbestand en bewaart de beheerlink privé op de server.
+- Eerste serverinrichting: `deploy/bootstrap.sh`; deze gebruikt het lokale, niet-gepubliceerde seedbestand en importeert de quizgegevens.
 - Een reservekopie van teams, antwoorden, model en scores kan ook vanuit het beheer worden gedownload. CSV bevat de geselecteerde tussenstand.
 
 `private/` en `qa/` zijn uitgesloten van Git. Daar staan lokaal de beheerlink, de beperkte deploysleutel, de antwoordimport en interne controlebestanden. Maak deze bestanden niet openbaar.
 
-`noindex` en `robots.txt` vragen zoekmachines om de tijdelijke quiz niet te indexeren; de beheer-API vereist altijd een geldige toegangssleutel.
+`noindex` en `robots.txt` vragen zoekmachines om de tijdelijke quiz niet te indexeren; het beheer is op verzoek rechtstreeks toegankelijk zonder toegangssleutel.
 
 ## Muziekbingo
 
-De playlist is gekoppeld aan ronde 5: https://open.spotify.com/playlist/09oEyjF5tRPIymghW0tD8x. De drie originele kaarten zijn beschikbaar als printblad. De originele DJ-kaarten en de broninstructie worden uitsluitend via de beheer-API met toegangssleutel aangeboden; deze afbeeldingen staan niet in GitHub Pages of de repository.
+De playlist is gekoppeld aan ronde 5: https://open.spotify.com/playlist/09oEyjF5tRPIymghW0tD8x. De drie originele kaarten zijn beschikbaar als printblad. De originele DJ-kaarten en de broninstructie worden via de open beheer-API aangeboden; deze afbeeldingen staan niet in GitHub Pages of de repository.
 
 De Spotify-volgorde met zestig nummers is op 26 oktober 2026 uit de playlist overgenomen en met de 36 vakjes per kaart vergeleken. De nieuwe DJ-kaart wijkt vanaf nummer 21 af van Spotify. De geplande winmomenten uit de bron zijn daarom geen geldige voorspelling voor deze playlistvolgorde. In het beheer staat een tabel met de berekende momenten; K1 en K3 hebben bij deze volgorde allebei een volle kaart na nummer 57. De berekening is een momentopname en moet na veranderingen aan de playlist of kaarten opnieuw worden uitgevoerd. De site speelt of knipt geen Spotify-audio automatisch.
 

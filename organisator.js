@@ -2,16 +2,13 @@ import {summarize,formatPoints} from './scoring.mjs';
 const API = 'https://vps.opticore-insights.nl/pubquiz-api/v1';
 const root = document.getElementById('organizer');
 const esc = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let token = '';
-let actor = '';
+let actor = 'Organisator';
 try {
-  token = localStorage.getItem('pubquiz-beheersleutel') || '';
-  actor = localStorage.getItem('pubquiz-organisatornaam') || '';
+  actor = localStorage.getItem('pubquiz-organisatornaam') || 'Organisator';
+  localStorage.removeItem('pubquiz-beheersleutel');
 } catch {}
-const secret = new URLSearchParams(location.hash.slice(1)).get('sleutel');
-if (secret) {
-  token = secret;
-  try { localStorage.setItem('pubquiz-beheersleutel',token); } catch {}
+// Oude beheerlinks blijven werken, zonder een sleutel te gebruiken.
+if (new URLSearchParams(location.hash.slice(1)).has('sleutel')) {
   history.replaceState(null,'',location.pathname+location.search);
 }
 let state;
@@ -54,7 +51,7 @@ function confirmAction(title,message,label='Doorgaan') {
   return new Promise(resolve=>dialog.addEventListener('close',()=>resolve(dialog.returnValue==='confirm'),{once:true}));
 }
 async function api(path,body) {
-  const response=await fetch(API+path,{method:body?'POST':'GET',headers:{Authorization:`Bearer ${token}`,...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify({...body,actor})}:{})});
+  const response=await fetch(API+path,{method:body?'POST':'GET',headers:body?{'Content-Type':'application/json'}:{},...(body?{body:JSON.stringify({...body,actor})}:{})});
   let data;
   try { data=await response.json(); } catch { throw new Error('De server gaf geen geldig antwoord. Probeer opnieuw.'); }
   if(!response.ok) { const error=new Error(data.error || 'De actie kon niet worden uitgevoerd.'); error.status=response.status; error.data=data; throw error; }
@@ -68,8 +65,8 @@ function roundLabel(round){return round.id==='bonus'?'Bonusronde':`Ronde ${round
 function options(items,selected,label){return items.map(item=>`<option value="${esc(item.id)}" ${item.id===selected?'selected':''}>${esc(label(item))}</option>`).join('');}
 function nav(){return [['teams','Teams'],['nakijken','Antwoorden & punten'],['stand','Tussenstand'],['model','Antwoordmodel'],['bingo','Muziekbingo'],['settings','Instellingen']].map(([id,label])=>`<button class="org-nav-button ${tab===id?'active':''}" data-tab="${id}" ${tab===id?'aria-current="page"':''}>${label}</button>`).join('');}
 function saveIndicator(){const node=document.getElementById('sync-status');if(node){node.classList.toggle('unsaved',!!(dirty || pending || loadingError));node.textContent=loadingError?'Verbinding verbroken':pending?'Bezig met opslaan…':dirty?'Er is nog niet-opgeslagen invoer':lastSync?`Gedeeld · bijgewerkt ${lastSync.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}`:'Verbinden…';}}
-function accessPage(message='Open de gedeelde beheerlink om verder te gaan.') {
-  root.innerHTML=`<main class="access-page"><a class="brand" href="./"><span class="brand-mark">PQ</span><span>PUBQUIZ<small>Organisator</small></span></a><p class="eyebrow dark">SAMEN DE QUIZ BIJHOUDEN</p><h1>Het beheer van de quiz</h1><p>${esc(message)}</p><p>Je hebt geen account nodig. Vraag de organisator om de volledige beheerlink. Die geeft toegang tot de teams, antwoorden en scores.</p><a class="button outline" href="./">Terug naar de quiz</a></main>`;
+function accessPage(message='De database is tijdelijk niet bereikbaar. Vernieuw de pagina om opnieuw te verbinden.') {
+  root.innerHTML=`<main class="access-page"><a class="brand" href="./"><span class="brand-mark">PQ</span><span>PUBQUIZ<small>Organisator</small></span></a><p class="eyebrow dark">SAMEN DE QUIZ BIJHOUDEN</p><h1>Het beheer van de quiz</h1><p>${esc(message)}</p><p>Het beheer is rechtstreeks toegankelijk zonder account of toegangssleutel.</p><a class="button outline" href="./">Terug naar de quiz</a></main>`;
 }
 function namePage(){
   root.innerHTML=`<main class="access-page"><span class="brand-mark">PQ</span><p class="eyebrow dark">WELKOM BIJ HET QUIZBEHEER</p><h1>Hoe mogen we je noemen?</h1><p>Je naam komt bij je wijzigingen te staan, zodat de andere organisatoren weten wie heeft nagekeken.</p><form id="actor-form"><label for="actor-name">Jouw naam</label><input id="actor-name" name="actor" required maxlength="80" autocomplete="given-name" placeholder="Bijvoorbeeld Thomas"><button class="button primary">Verder naar het beheer →</button></form></main>`;
@@ -87,14 +84,14 @@ async function refresh(force=false) {
     state=next; lastSync=new Date(); loadingError='';
     if(!selectedTeam || !activeTeams().some(team=>team.id===selectedTeam))selectedTeam=activeTeams()[0]?.id || '';
     if(changed || force)render();else saveIndicator();
-  }catch(error){loadingError=error.message;if(!state)accessPage(error.status===401?error.message:'De database is tijdelijk niet bereikbaar. Vernieuw de pagina om opnieuw te verbinden.');saveIndicator();}
+  }catch(error){loadingError=error.message;if(!state)accessPage();saveIndicator();}
   finally{polling=false;}
 }
 function render(){
   if(!state)return;
   if(projection){root.innerHTML=`<main class="projection"><header><span class="brand">PUBQUIZ · T.V. HEYNKENSORT</span><span id="sync-status"></span></header>${standingsView(true)}</main>`; saveIndicator();return;}
   const view=tab==='teams'?teamsView():tab==='nakijken'?gradingView():tab==='model'?modelView():tab==='bingo'?bingoView():tab==='settings'?settingsView():standingsView();
-  root.innerHTML=`<header class="org-header"><a class="brand" href="./"><span class="brand-mark">PQ</span><span>PUBQUIZ<small>Organisator</small></span></a><div class="org-header-right"><span class="actor-badge">${esc(actor)}</span><button class="text-button" data-action="change-actor">Naam wijzigen</button><a class="text-button" href="./" target="_blank" rel="noopener">Quiz openen ↗</a></div></header><div class="org-layout"><aside class="org-sidebar"><p class="eyebrow dark">QUIZADMINISTRATIE</p><nav aria-label="Beheernavigatie">${nav()}</nav><div class="org-sharing"><strong>Samen aan het nakijken</strong><p>Iedereen met de beheerlink werkt in dezelfde database.</p><button class="button outline" data-action="share">Beheerlink kopiëren</button><button class="text-button" data-action="backup">Reservekopie downloaden ↓</button><button class="text-button" data-action="forget">Beheerlink vergeten op dit apparaat</button></div></aside><main class="org-content"><div class="org-sync"><span id="sync-status"></span><button class="text-button" data-action="refresh">Vernieuwen ↻</button></div>${view}</main></div>`;
+  root.innerHTML=`<header class="org-header"><a class="brand" href="./"><span class="brand-mark">PQ</span><span>PUBQUIZ<small>Organisator</small></span></a><div class="org-header-right"><span class="actor-badge">${esc(actor)}</span><button class="text-button" data-action="change-actor">Naam wijzigen</button><a class="text-button" href="./" target="_blank" rel="noopener">Quiz openen ↗</a></div></header><div class="org-layout"><aside class="org-sidebar"><p class="eyebrow dark">QUIZADMINISTRATIE</p><nav aria-label="Beheernavigatie">${nav()}</nav><div class="org-sharing"><strong>Samen aan het nakijken</strong><p>Iedereen met de beheerlink werkt in dezelfde database.</p><button class="button outline" data-action="share">Beheerlink kopiëren</button><button class="text-button" data-action="backup">Reservekopie downloaden ↓</button></div></aside><main class="org-content"><div class="org-sync"><span id="sync-status"></span><button class="text-button" data-action="refresh">Vernieuwen ↻</button></div>${view}</main></div>`;
   saveIndicator();
 }
 function teamsView(){
@@ -239,7 +236,7 @@ root.addEventListener('click',async event=>{
   if(button.dataset.media){
     button.disabled=true;
     try{
-      const response=await fetch(API+'/media/'+button.dataset.media,{headers:{Authorization:`Bearer ${token}`}});
+      const response=await fetch(API+'/media/'+button.dataset.media);
       if(!response.ok)throw new Error('Het bestand kon niet worden geopend.');
       const url=URL.createObjectURL(await response.blob());
       const dialog=document.getElementById('bingo-media');
@@ -280,7 +277,7 @@ root.addEventListener('click',async event=>{
       if(!await confirmAction(round.closed?'Ronde heropenen':'Ronde afsluiten',round.closed?'Alle organisatoren kunnen deze ronde dan weer aanpassen.':'Deze ronde wordt voor alle organisatoren vergrendeld. Dit kan zodra alle actieve teams volledig zijn beoordeeld.',round.closed?'Heropenen':'Afsluiten'))return;
       await mutation('/rounds/status',{id:round.id,version:round.version,closed:!round.closed});await refresh(true);notice(round.closed?'Ronde heropend.':'Ronde afgesloten.');
     }
-    if(action==='share'){await navigator.clipboard.writeText(`${location.origin}${location.pathname}#sleutel=${token}`);notice('Beheerlink gekopieerd. Deel deze alleen met de organisatoren.');}
+    if(action==='share'){await navigator.clipboard.writeText(`${location.origin}${location.pathname}`);notice('Beheerlink gekopieerd. Iedereen met deze link kan de quiz bijhouden.');}
     if(action==='backup'){const backup=await api('/backup');download(`pubquiz-reservekopie-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(backup,null,2),'application/json');notice('Reservekopie gedownload met teams, antwoorden, model en punten.');}
     if(action==='csv'){
       const result=summarize(state,through,includeBonus);
@@ -290,20 +287,10 @@ root.addEventListener('click',async event=>{
     }
     if(action==='project'){window.open(`organisator.html?scherm=stand&ronde=${through}&bonus=${includeBonus?'1':'0'}`,'_blank','noopener');}
     if(action==='change-actor'){if(dirty)return notice('Sla je invoer eerst op.',true);actor='';namePage();}
-    if(action==='forget' && await confirmAction('Beheerlink op dit apparaat vergeten','Je hebt daarna de volledige beheerlink nodig om opnieuw toegang te krijgen. De gegevens in de database blijven bewaard.','Vergeten')){localStorage.removeItem('pubquiz-beheersleutel');token='';accessPage();}
   }catch(error){notice(error.message || 'De actie is niet gelukt.',true);}
 });
 window.addEventListener('beforeunload',event=>{if(dirty || pending){event.preventDefault();event.returnValue='';}});
 window.addEventListener('online',()=>refresh());
 document.getElementById('close-bingo-media').addEventListener('click',()=>document.getElementById('bingo-media').close());
-window.addEventListener('hashchange',()=>{
-  const sharedKey=new URLSearchParams(location.hash.slice(1)).get('sleutel');
-  if(!sharedKey)return;
-  token=sharedKey;
-  try{localStorage.setItem('pubquiz-beheersleutel',token);}catch{}
-  history.replaceState(null,'',location.pathname+location.search);
-  state=undefined;
-  if(actor || projection)refresh(true);else namePage();
-});
-if(!token)accessPage();else if(!actor && !projection)namePage();else refresh(true);
-setInterval(()=>{if(token && (actor || projection) && !document.hidden)refresh();},4000);
+refresh(true);
+setInterval(()=>{if(!document.hidden)refresh();},4000);
