@@ -9,6 +9,8 @@ let slides = [];
 let slideIndex = 0;
 const viewer = byId('viewer');
 byId('header-menu-slot').innerHTML=headerMenu();
+const pageHeader=document.querySelector('.topbar');
+if(pageHeader && typeof ResizeObserver!=='undefined')new ResizeObserver(()=>document.documentElement.style.setProperty('--header-offset',`${Math.ceil(pageHeader.getBoundingClientRect().height)+16}px`)).observe(pageHeader);
 const safe = text => String(text).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 async function init() {
