@@ -2,7 +2,7 @@ import {PDFDocument,StandardFonts,rgb,pushGraphicsState,popGraphicsState,concatT
 import fontkit from './vendor/fontkit.mjs';
 
 const mm=72/25.4;
-export const tableCardAssets=['assets/apres-ski-sfeer-print.jpg','assets/clublogo-render.png','assets/Anton-Regular.ttf'];
+export const tableCardAssets=['assets/apres-ski-sfeer-print.jpg','assets/clublogo-print.png','assets/Anton-Regular.ttf'];
 
 function wrapped(text,font,size,width){
   const words=text.trim().split(/\s+/),lines=[];
