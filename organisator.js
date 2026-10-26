@@ -224,5 +224,14 @@ root.addEventListener('click',async event=>{
 });
 window.addEventListener('beforeunload',event=>{if(dirty || pending){event.preventDefault();event.returnValue='';}});
 window.addEventListener('online',()=>refresh());
+window.addEventListener('hashchange',()=>{
+  const sharedKey=new URLSearchParams(location.hash.slice(1)).get('sleutel');
+  if(!sharedKey)return;
+  token=sharedKey;
+  try{localStorage.setItem('pubquiz-beheersleutel',token);}catch{}
+  history.replaceState(null,'',location.pathname+location.search);
+  state=undefined;
+  if(actor || projection)refresh(true);else namePage();
+});
 if(!token)accessPage();else if(!actor && !projection)namePage();else refresh(true);
 setInterval(()=>{if(token && (actor || projection) && !document.hidden)refresh();},4000);
