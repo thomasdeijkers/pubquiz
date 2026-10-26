@@ -110,3 +110,5 @@ De gedeelde schermachtergrond gebruikt assets/apres-ski-sfeer.webp: een met imag
 De homepage heeft een smalle footerbalk met het verenigingslogo en de quiznaam. De GitHub-beheerlink is verwijderd.
 
 De complete teamset bevat daarnaast een A5-tafelkaart (148 × 210 mm) als elfde A4-knipvel. De teamnaam staat op beide zijden, met het bovenste vlak 180 graden gedraaid en een vouwlijn op 105 mm. Vanuit het printvoorbeeld opent Alleen tafelkaart een zelfstandige A5-afdruk met een benoemde A5-pagina. Print enkelzijdig op 100%; dubbelvouwen geeft een staander van 148 × 105 mm.
+
+Elk printblad heeft onderaan een eigen après-ski-kreet, passend bij de ronde. De tafelkaart heeft een afzonderlijke kreet op beide vouwvlakken.

@@ -8,3 +8,5 @@
 @page teamtent{size:A5 portrait;margin:0}
 @media print{.table-card-sheet{align-items:center;justify-content:center;gap:7mm}.table-card-only .table-card-sheet{page:teamtent;width:148mm;height:210mm;min-height:0;padding:0;margin:0;overflow:hidden}.table-card-only .table-tent{border:0}.table-card-only .table-card-instructions{display:none}.table-tent{print-color-adjust:exact;-webkit-print-color-adjust:exact}.tent-team{color:#13365c}.table-card-sheet .table-tent{break-inside:avoid}}
 @media screen and (max-width:590px){.table-card-only{min-width:0}.table-card-only #sheet-pack{overflow-x:auto}.table-card-only .table-card-sheet{margin:15px auto}.table-card-sheet{overflow-x:auto;align-items:start}.table-card-instructions{max-width:100%}}
+
+.tent-face{position:relative}.tent-face .tent-cheer{position:absolute;bottom:6mm;left:7mm;right:7mm;font-size:8pt;line-height:1.4;letter-spacing:0;font-style:italic}.team-sheet-footer [data-sheet-cheer]{flex:1;min-width:0}.team-sheet-footer>span:last-child{white-space:nowrap}
