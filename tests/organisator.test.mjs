@@ -38,12 +38,12 @@ test('Opslaan gebruikt het team van de gekozen regel en behoudt de concepten van
   assert.equal(app.getAnswer('1','a'),undefined);
 });
 
-test('Inklapstand toont scores per team en onthoudt welke vraag openstaat',()=>{
+test('Inklapstand toont juiste teams en onthoudt welke vraag openstaat',()=>{
   const app=setup();
   const state={rounds:[{id:'1',title:'Ronde',closed:false}],teams:[{id:'a',name:'Alpen',active:true},{id:'b',name:'Bergen',active:true}],questions:[{round_id:'1',id:'1',prompt:'Vraag',correct:'Model',alternatives:[],max_cents:100}],answers:[{team_id:'b',round_id:'1',question_id:'1',points_cents:100}]};
   app.setState(state);
   let html=app.gradingView();
-  assert.match(html,/Stand bij deze vraag/);assert.match(html,/1\/2 nagekeken/);assert.match(html,/data-cup="1"/);
+  assert.match(html,/Goed beantwoord/);assert.match(html,/1\/2 nagekeken/);assert.match(html,/data-cup="1"/);
   assert.doesNotMatch(html,/data-question-fold="1\/1" open/);
   app.listeners.toggle({target:{dataset:{questionFold:'1/1'},open:true}});
   html=app.gradingView();assert.match(html,/data-question-fold="1\/1" open/);
@@ -51,16 +51,21 @@ test('Inklapstand toont scores per team en onthoudt welke vraag openstaat',()=>{
   assert.equal(app.expandedQuestions.size,0);
 });
 
-test('Vraagstand verdeelt gelijke scores over precies drie plekken met één beker per plek',()=>{
+test('Ingeklapt verschijnen alleen volledig goed gerekende teams, geen foute of gedeeltelijke antwoorden',()=>{
   const app=setup();
-  const teams=['Alpen','Bergen','Chalet','Onbeoordeeld'].map((name,index)=>({id:String(index),name,active:true}));
-  app.setState({teams,answers:[{team_id:'0',round_id:'1',question_id:'1',points_cents:100},{team_id:'1',round_id:'1',question_id:'1',points_cents:100},{team_id:'2',round_id:'1',question_id:'1',points_cents:0}]});
-  const html=app.questionStanding({id:'1'},teams);
-  assert.equal((html.match(/class="question-place question-place-/g)||[]).length,3);
-  for(const rank of [1,2,3])assert.equal((html.match(new RegExp('data-cup="'+rank+'"','g'))||[]).length,1);
-  assert.match(html,/Alpen · Bergen/);
-  assert.match(html,/Chalet/);
-  assert.match(html,/0 pt/);
-  assert.match(html,/Nog geen teams/);
-  assert.doesNotMatch(html,/Onbeoordeeld/);
+  const teams=['Alpen','Bergen','Fout','Deels','Onbeoordeeld'].map((name,index)=>({id:String(index),name,active:true}));
+  app.setState({teams,answers:[{team_id:'0',round_id:'1',question_id:'1',points_cents:100},{team_id:'1',round_id:'1',question_id:'1',points_cents:100},{team_id:'2',round_id:'1',question_id:'1',points_cents:0},{team_id:'3',round_id:'1',question_id:'1',points_cents:50}]});
+  const html=app.questionStanding({id:'1',max_cents:100},teams);
+  assert.match(html,/Alpen/);assert.match(html,/Bergen/);
+  assert.doesNotMatch(html,/Fout|Deels|Onbeoordeeld/);
+  assert.equal((html.match(/data-cup=/g)||[]).length,1);
+  assert.match(app.questionStanding({id:'1',max_cents:0},teams),/Nog geen teams goed gerekend/);
+});
+
+test('Ingevuld telt opgeslagen antwoordtekst los van de beoordeling, ook bij foute antwoorden',()=>{
+  const app=setup();
+  const teams=['Goed','Fout','Nog nakijken','Alleen punten','Leeg'].map((name,index)=>({id:String(index),name,active:true}));
+  app.setState({teams,answers:[{team_id:'0',round_id:'1',question_id:'1',answer:'1973',points_cents:100},{team_id:'1',round_id:'1',question_id:'1',answer:'1980',points_cents:0},{team_id:'2',round_id:'1',question_id:'1',answer:'1973',points_cents:null},{team_id:'3',round_id:'1',question_id:'1',answer:'',points_cents:100},{team_id:'4',round_id:'1',question_id:'1',answer:'  ',points_cents:null}]});
+  const html=app.questionCard({id:'1',prompt:'Vraag',correct:'1973',alternatives:[],max_cents:100},teams,false);
+  assert.match(html,/3\/5 ingevuld · 3\/5 nagekeken/);
 });

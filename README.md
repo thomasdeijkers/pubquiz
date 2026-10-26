@@ -81,7 +81,7 @@ Bij Antwoorden & punten staan nu alle actieve teams onder iedere vraag, elk met 
 
 `apres-ski.css` verzorgt één gedeelde schermstijl voor homepage, rondes, scorebord, beheer, projectie en printvoorbeelden. De oorspronkelijke flyer is als openbaar beeld opgenomen. Houten borden met sneeuwranden, een Alpenachtergrond, blauwe kaders en rode vraagnummers sluiten aan op de vraagkaarten. Het verenigingslogo is als transparante 3D-badge uitgewerkt in de oorspronkelijke groen/zalmtinten. De printuitvoer blijft sober en goed leesbaar.
 
-Vragen in de controle zijn inklapbaar. Ingeklapt tonen ze de opgeslagen punten per team voor die vraag en het aantal nagekeken teamantwoorden; uitgeklapt staat een compacte teamlijst met Goed/Fout rechts. De open/dicht-stand blijft behouden bij opslaan en synchroniseren. De top 3 gebruikt gouden, zilveren en bronzen bekers, met dezelfde puntentelling en gedeelde plaatsen.
+Vragen in de controle zijn inklapbaar. Ingeklapt tonen ze alleen goed gerekende teams en tellers voor ingevulde en nagekeken antwoorden; uitgeklapt staat een compacte teamlijst met Goed/Fout rechts. De open/dicht-stand blijft behouden bij opslaan en synchroniseren. De top 3 gebruikt gouden, zilveren en bronzen bekers, met dezelfde puntentelling en gedeelde plaatsen.
 
 Het rondeoverzicht op de homepage is standaard ingeklapt: negen compacte regels met titel, aantal onderdelen, korte koppositie en een direct bereikbare controlelink. Openklappen toont de vraagkaartenknop, uitleg en volledige top 3. Alles inklappen sluit de rondes met één handeling; automatische score-updates behouden de open/dicht-stand.
 
@@ -89,8 +89,10 @@ De navigatie zit op alle schermen rechts in de vaste header onder Menu. Quiz & s
 
 Podia groeperen teams op gedeelde positie: één vak en één beker per plek, met alle bijbehorende teamnamen en één puntentotaal. De bestaande rangschikking blijft behouden (bij twee gedeelde eerste plaatsen volgt plaats 3). Dit geldt voor rondepodiums, totaalstand en projectie.
 
-De ingeklapte vraagstand toont drie even brede vakken. Teams worden per gelijke vraagscore gegroepeerd op de eerste, tweede en derde scorepositie, met één beker en één puntenaantal per vak. Nul punten is een beoordeelde score; nog niet beoordeelde teams blijven buiten deze rangschikking en tellen mee in de voortgang boven de vraag.
+De ingeklapte vraagstand toont een compacte lijst met juiste teams. Nul punten is een beoordeelde score en telt mee bij nagekeken, maar verschijnt niet tussen de juiste teams.
 
 De bonusronde staat als tiende, inklapbare regel (B) onder ronde 9 in het rondeoverzicht, met de bonuskaart, controle en eigen podium. De aparte bonusbanner en het blok De invulbladen zijn verwijderd. Invulbladen blijven per ronde beschikbaar na openklappen. De bonusverwijzing in het menu verwijst naar de bonusregel in het overzicht.
 
 De muziekrondes (3 en 5) verwijzen vanuit het uitgeklapte rondeoverzicht direct naar organisator.html?tab=bingo voor uitleg, Spotify en bingokaarten. Het losse muziekbingo-blok op de homepage is verwijderd; ook het menu, de presentatieverwijzing en de teruglink van geprinte bingokaarten gebruiken deze centrale pagina.
+
+Ingeklapte vragen tonen uitsluitend teams met de volledige maximumscore (bij een maximum groter dan nul). De teller toont afzonderlijk opgeslagen, niet-lege antwoordteksten en nagekeken antwoorden; een beoordeling zonder tekst telt niet als ingevuld. Foute, gedeeltelijke en onbeoordeelde antwoorden worden niet in de lijst met juiste teams getoond.
