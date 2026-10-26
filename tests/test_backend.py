@@ -119,6 +119,63 @@ class QuizTests(unittest.TestCase):
         self.assertEqual(snapshot['answers'][0]['answer'],'Bewaren')
         self.assertEqual(snapshot['revision'],4)
 
+    def scoring(self,maximum,mode='keep',qversion=1):
+        return self.call('/settings/scoring',round_id='1',existing_scores=mode,questions=[{'id':'1','version':qversion,'max_points':maximum}])
+
+    def test_scoring_settings_preserve_scores_and_invalidate_stale_drafts(self):
+        self.save(version=0,answer='Voorbeeld',points=0.5)
+        self.scoring(2)
+        with app.connect() as db:
+            with db.cursor() as cur:
+                snapshot=app.state(cur)
+        self.assertEqual(snapshot['questions'][0]['max_cents'],200)
+        self.assertEqual(snapshot['answers'][0]['points_cents'],50)
+        with self.assertRaises(app.Problem):
+            self.save(version=1,answer='Oude invoer',points=1)
+
+    def test_scoring_settings_scale_partial_scores_and_leave_unreviewed_pending(self):
+        self.save(version=0,answer='Voorbeeld',points=0.25)
+        other=self.call('/teams/add',name='Nog niet nagekeken')['id']
+        self.call('/answers/save',team_id=other,round_id='1',question_id='1',version=0,answer='Concept')
+        self.scoring(2.5,'scale')
+        with app.connect() as db:
+            with db.cursor() as cur:
+                snapshot=app.state(cur)
+        answers={str(answer['team_id']):answer for answer in snapshot['answers']}
+        self.assertEqual(answers[self.tid]['points_cents'],63)
+        self.assertIsNone(answers[other]['points_cents'])
+
+    def test_scoring_settings_cannot_retain_scores_above_new_maximum(self):
+        self.save(version=0,answer='Voorbeeld',points=1)
+        with self.assertRaises(app.Problem):
+            self.scoring(0.5)
+        self.scoring(0.5,'scale')
+        with app.connect() as db:
+            with db.cursor() as cur:
+                self.assertEqual(app.state(cur)['answers'][0]['points_cents'],50)
+
+    def test_scoring_settings_zero_maximum_cannot_be_scaled_after_grading(self):
+        self.scoring(0)
+        self.save(version=0,answer='Voorbeeld',points=0)
+        with self.assertRaises(app.Problem):
+            self.scoring(2,'scale',qversion=2)
+
+    def test_scoring_settings_stale_or_locked_round_is_rejected(self):
+        self.scoring(2)
+        with self.assertRaises(app.Problem):
+            self.scoring(3)
+        self.save(version=0,answer='Voorbeeld',points=2)
+        self.call('/rounds/status',id='1',version=1,closed=True)
+        with self.assertRaises(app.Problem):
+            self.scoring(3,qversion=2)
+
+    def test_scoring_settings_validate_whole_round_before_applying(self):
+        with self.assertRaises(app.Problem):
+            self.call('/settings/scoring',round_id='1',questions=[{'id':'1','version':1,'max_points':4},{'id':'999','version':1,'max_points':2}])
+        with app.connect() as db:
+            with db.cursor() as cur:
+                self.assertEqual(app.state(cur)['questions'][0]['max_cents'],100)
+
     def test_api_authentication_and_origin_boundaries(self):
         server=app.ThreadingHTTPServer(('127.0.0.1',0),app.Handler)
         thread=threading.Thread(target=server.serve_forever,daemon=True)

@@ -238,6 +238,52 @@ def mutate(cur, route, body):
           (text(body.get('prompt'), 3000, True), text(body.get('correct', ''), 3000), Json(alternatives), maximum, rid, qid))
         changed(cur, actor, 'Antwoordmodel aangepast', f'Ronde {rid} · vraag {qid}')
         return {'ok': True}
+    if route == '/settings/scoring':
+        rid = text(body.get('round_id'), 20, True)
+        round_item = open_round(cur, rid)
+        mode = body.get('existing_scores', 'keep')
+        if mode not in ('keep', 'scale'):
+            raise Problem(400, 'Kies hoe bestaande beoordelingen behandeld moeten worden.')
+        items = body.get('questions')
+        if not isinstance(items, list) or not 1 <= len(items) <= 200:
+            raise Problem(400, 'Geef de puntentelling van één ronde op.')
+        cur.execute('SELECT * FROM quiz_questions WHERE round_id=%s FOR UPDATE', (rid,))
+        questions_by_id = {question['id']: question for question in cur.fetchall()}
+        updates, seen = [], set()
+        # Validate the entire round before making any change.
+        for item in items:
+            if not isinstance(item, dict):
+                raise Problem(400, 'Ongeldige vraaginstelling.')
+            qid = text(item.get('id'), 20, True)
+            if qid in seen or qid not in questions_by_id:
+                raise Problem(400, 'Vraag niet gevonden of dubbel opgegeven.')
+            seen.add(qid)
+            question = questions_by_id[qid]
+            if version(item.get('version')) != question['version']:
+                raise Problem(409, 'De puntentelling of het antwoordmodel is gewijzigd door een andere organisator. Vernieuw de instellingen.')
+            maximum = cents(item.get('max_points'))
+            if maximum == question['max_cents']:
+                continue
+            cur.execute('SELECT count(points_cents) AS reviewed,max(points_cents) AS highest FROM quiz_answers WHERE round_id=%s AND question_id=%s', (rid, qid))
+            existing = cur.fetchone()
+            if mode == 'keep' and existing['highest'] is not None and existing['highest'] > maximum:
+                raise Problem(409, f'Vraag {qid} heeft al een beoordeling boven het nieuwe maximum. Kies evenredig herberekenen of corrigeer die beoordeling eerst.')
+            if mode == 'scale' and question['max_cents'] == 0 and existing['reviewed']:
+                raise Problem(409, f'Vraag {qid} stond op 0 punten en is al beoordeeld. Deze beoordelingen kunnen niet naar verhouding worden herberekend. Behoud de bestaande punten of wis de beoordelingen en kijk opnieuw na.')
+            updates.append((question, maximum))
+        for question, maximum in updates:
+            qid = question['id']
+            if mode == 'scale' and question['max_cents']:
+                cur.execute('''UPDATE quiz_answers SET points_cents=round(points_cents::numeric * %s / %s)::integer,
+                    version=version+1,updated_by=%s,updated_at=now() WHERE round_id=%s AND question_id=%s''',
+                    (maximum, question['max_cents'], actor, rid, qid))
+            else:
+                # Also invalidate drafts when retaining scores: another organizer may still have the old maximum in view.
+                cur.execute('UPDATE quiz_answers SET version=version+1 WHERE round_id=%s AND question_id=%s', (rid, qid))
+            cur.execute('UPDATE quiz_questions SET max_cents=%s,version=version+1 WHERE round_id=%s AND id=%s', (maximum, rid, qid))
+        if updates:
+            changed(cur, actor, 'Puntentelling aangepast', f"{round_item['title']} · {len(updates)} vragen · " + ('bestaande punten herberekend' if mode == 'scale' else 'bestaande punten behouden'))
+        return {'ok': True, 'changed': len(updates), 'existing_scores': mode}
     if route == '/rounds/status':
         rid = text(body.get('id'), 20, True)
         item = lock_round(cur, rid)
