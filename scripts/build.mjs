@@ -1,4 +1,4 @@
-import {readFile,writeFile,mkdir,copyFile,cp,rm,stat} from 'node:fs/promises';
+import {readFile,writeFile,mkdir,copyFile,rm,stat} from 'node:fs/promises';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 const root = process.cwd();
@@ -22,6 +22,9 @@ await mkdir(output,{recursive:true});
 for (const file of ['index.html','style.css','app.js','favicon.svg','robots.txt']) await copyFile(file,path.join(output,file));
 await mkdir(path.join(output,'data'));
 await copyFile('data/quiz.json',path.join(output,'data/quiz.json'));
-await cp('assets',path.join(output,'assets'),{recursive:true});
+for (const file of files) {
+  await mkdir(path.dirname(path.join(output,file)),{recursive:true});
+  await copyFile(file,path.join(output,file));
+}
 await writeFile(path.join(output,'.nojekyll'),'');
 console.log(`Website gecontroleerd: 9 rondes, ${files.size} vraagkaarten. Alleen publieke bestanden in _site.`);
