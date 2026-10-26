@@ -92,3 +92,5 @@ Podia groeperen teams op gedeelde positie: één vak en één beker per plek, me
 De ingeklapte vraagstand toont drie even brede vakken. Teams worden per gelijke vraagscore gegroepeerd op de eerste, tweede en derde scorepositie, met één beker en één puntenaantal per vak. Nul punten is een beoordeelde score; nog niet beoordeelde teams blijven buiten deze rangschikking en tellen mee in de voortgang boven de vraag.
 
 De bonusronde staat als tiende, inklapbare regel (B) onder ronde 9 in het rondeoverzicht, met de bonuskaart, controle en eigen podium. De aparte bonusbanner en het blok De invulbladen zijn verwijderd. Invulbladen blijven per ronde beschikbaar na openklappen. De bonusverwijzing in het menu verwijst naar de bonusregel in het overzicht.
+
+De muziekrondes (3 en 5) verwijzen vanuit het uitgeklapte rondeoverzicht direct naar organisator.html?tab=bingo voor uitleg, Spotify en bingokaarten. Het losse muziekbingo-blok op de homepage is verwijderd; ook het menu, de presentatieverwijzing en de teruglink van geprinte bingokaarten gebruiken deze centrale pagina.
