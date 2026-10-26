@@ -142,3 +142,12 @@ body,.organizer-body{background:#e6f3fc url('assets/alpen-achtergrond.svg') cent
 .team-score-question-detail .expected p{margin:3px 0;font-size:13px}
 
 .team-score-reset{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap;margin-top:16px;padding:10px 12px;background:#fffefa;border:1px solid #c8d7e4;border-radius:7px}.team-score-reset small{font-size:11px;color:#627182}.team-score-reset .button{font-size:12px;min-height:40px;color:#a91922;border-color:#cda7a6}
+
+/* De controleknop deelt alleen de kopregel; uitgeklapte inhoud gebruikt alle kolommen. */
+.round-overview-tile{--round-control-width:142px;grid-template-columns:minmax(0,1fr) var(--round-control-width)}
+.round-overview-tile>.round-overview{grid-column:1/-1;grid-row:1;min-width:0}
+.round-overview-tile .round-overview-summary{margin-right:var(--round-control-width)}
+.round-overview-tile>.round-control-link{grid-column:2;grid-row:1;align-self:start;position:relative;z-index:1}
+.round-overview-tile .round-overview-body{width:100%;min-width:0}
+@media(max-width:750px){.round-overview-tile{--round-control-width:118px}}
+@media(max-width:520px){.round-overview-tile{--round-control-width:95px}}
