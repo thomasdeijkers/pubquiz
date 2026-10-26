@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS quiz_teams (
  id uuid PRIMARY KEY, name text NOT NULL, active boolean NOT NULL DEFAULT true,
  version integer NOT NULL DEFAULT 1);
 ALTER TABLE quiz_teams ADD COLUMN IF NOT EXISTS members text NOT NULL DEFAULT '';
+ALTER TABLE quiz_teams ADD COLUMN IF NOT EXISTS bingo_card smallint CHECK(bingo_card BETWEEN 1 AND 3);
 CREATE UNIQUE INDEX IF NOT EXISTS quiz_team_name ON quiz_teams(lower(name));
 CREATE TABLE IF NOT EXISTS quiz_answers (
  team_id uuid REFERENCES quiz_teams(id), round_id text, question_id text,
@@ -68,6 +69,16 @@ def version(value):
     if type(value) is not int or value < 0:
         raise Problem(400, 'Ongeldige wijzigingsversie.')
     return value
+
+
+def bingo_card(value):
+    if value is None or value == '':
+        return None
+    if type(value) is int and value in (1, 2, 3):
+        return value
+    if type(value) is str and value in ('1', '2', '3'):
+        return int(value)
+    raise Problem(400, 'Kies bingokaart K1, K2 of K3.')
 
 
 def cents(value):
@@ -173,11 +184,12 @@ def mutate(cur, route, body):
     if route == '/teams/add':
         name = text(body.get('name'), 80, True)
         members = text(body.get('members', ''), 2000)
+        card = bingo_card(body.get('bingo_card'))
         cur.execute('SELECT count(*) AS total FROM quiz_teams')
         if cur.fetchone()['total'] >= 250:
             raise Problem(400, 'Maximaal 250 teams mogelijk.')
         team_id = str(uuid.uuid4())
-        cur.execute('INSERT INTO quiz_teams(id,name,members) VALUES(%s,%s,%s)', (team_id, name, members))
+        cur.execute('INSERT INTO quiz_teams(id,name,members,bingo_card) VALUES(%s,%s,%s,%s)', (team_id, name, members, card))
         changed(cur, actor, 'Team toegevoegd', name)
         return {'id': team_id}
     if route in ('/teams/update', '/teams/delete'):
@@ -199,10 +211,11 @@ def mutate(cur, route, body):
             return {'ok': True}
         name = text(body.get('name', item['name']), 80, True)
         members = text(body.get('members', item['members']), 2000)
+        card = bingo_card(body.get('bingo_card', item['bingo_card']))
         active = body.get('active', item['active'])
         if type(active) is not bool:
             raise Problem(400, 'Ongeldige teamstatus.')
-        cur.execute('UPDATE quiz_teams SET name=%s,members=%s,active=%s,version=version+1 WHERE id=%s', (name, members, active, team_id))
+        cur.execute('UPDATE quiz_teams SET name=%s,members=%s,bingo_card=%s,active=%s,version=version+1 WHERE id=%s', (name, members, card, active, team_id))
         changed(cur, actor, 'Team bijgewerkt', name)
         return {'ok': True}
     if route == '/answers/save':

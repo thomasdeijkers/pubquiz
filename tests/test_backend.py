@@ -97,6 +97,21 @@ class QuizTests(unittest.TestCase):
         self.assertEqual(len(snapshot['teams']),1)
         self.assertEqual(len(snapshot['answers']),1)
 
+    def test_bingo_card_is_saved_and_preserved_when_updating_other_team_fields(self):
+        target=self.call('/teams/add',name='Bingo team',bingo_card='2')['id']
+        self.call('/teams/update',id=target,version=1,members='Anna')
+        with app.connect() as db:
+            with db.cursor() as cur:
+                snapshot=app.state(cur)
+        item=next(team for team in snapshot['teams'] if str(team['id'])==target)
+        self.assertEqual(item['bingo_card'],2)
+        self.call('/teams/update',id=target,version=2,bingo_card='3')
+        self.call('/teams/update',id=target,version=3,bingo_card='')
+        for bad in [0,4,True,'K1',{}]:
+            with self.subTest(bad=bad):
+                with self.assertRaises(app.Problem):
+                    self.call('/teams/update',id=target,version=4,bingo_card=bad)
+
     def test_fractional_points_and_answer_change_invalidates_old_grade(self):
         first=self.save(version=0,answer='Een antwoord',points=0.5)
         self.assertEqual(first['points_cents'],50)
