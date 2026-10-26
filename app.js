@@ -1,3 +1,4 @@
+import {watchForUpdates} from './updates.mjs';
 import {answerSheetPack,tableCardSheet} from './answer-sheets.mjs';
 import {headerMenu} from './navigation.mjs';
 import {summarize,formatPoints,roundProgress} from './scoring.mjs';
@@ -229,3 +230,5 @@ function initScoreboard(){
   setInterval(loadScoreboard,5000);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadScoreboard();});
 }
+
+watchForUpdates({canReload:()=>!new URLSearchParams(location.search).has('invulblad')});

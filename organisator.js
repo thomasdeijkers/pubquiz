@@ -1,3 +1,4 @@
+import {watchForUpdates} from './updates.mjs';
 import {headerMenu} from './navigation.mjs';
 import {podium,roundPodium,trophy} from './scoreboard.mjs';
 import {summarize,formatPoints} from './scoring.mjs';
@@ -426,3 +427,11 @@ document.getElementById('reset-answers-form').addEventListener('submit',async ev
 });
 refresh(true);
 setInterval(()=>{if(!document.hidden)refresh();},4000);
+
+watchForUpdates({canReload:()=>!dirty && !pending,beforeReload:()=>{
+  const target=new URL(location.href);
+  target.searchParams.set('tab',tab==='settings'?'instellingen':tab);
+  target.searchParams.set('ronde',selectedRound);
+  if(selectedTeam)target.searchParams.set('team',selectedTeam);
+  history.replaceState(null,'',target.href);
+}});
