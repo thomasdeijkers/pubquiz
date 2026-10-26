@@ -1,0 +1,187 @@
+{
+  "title": "Après-ski Pubquiz",
+  "rounds": [
+    {
+      "id": 1,
+      "title": "T.V. Heynkensort",
+      "type": "Clubkennis",
+      "description": "Hoe goed kennen jullie de eigen club?",
+      "summary": "10 vragen",
+      "answerCount": 10,
+      "cards": [
+        {
+          "src": "assets/ronde-1-kaart-1.png",
+          "label": "Vragen 1 t/m 5"
+        },
+        {
+          "src": "assets/ronde-1-kaart-2.png",
+          "label": "Vragen 6 t/m 10"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Algemene kennis",
+      "type": "Kennis",
+      "description": "Van verre landen tot verrassende weetjes.",
+      "summary": "17 vragen",
+      "answerCount": 17,
+      "cards": [
+        {
+          "src": "assets/ronde-2-kaart-1.png",
+          "label": "Vragen 1 t/m 6"
+        },
+        {
+          "src": "assets/ronde-2-kaart-2.png",
+          "label": "Vragen 7 t/m 11"
+        },
+        {
+          "src": "assets/ronde-2-kaart-3.png",
+          "label": "Vragen 12 t/m 17"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Muziekronde",
+      "type": "Volgt nog",
+      "description": "Kijken, luisteren en die ene hit herkennen.",
+      "summary": "10 fragmenten gepland",
+      "answerCount": 10,
+      "cards": [
+        {
+          "src": "assets/ronde-3-kaart-1.png",
+          "label": "Uitleg muziekronde"
+        }
+      ],
+      "pending": true,
+      "note": "De muziekfragmenten worden nog toegevoegd. Voorlopige opzet: 5 clips, 4 achterstevoren afgespeelde nummers en 1 songtekst."
+    },
+    {
+      "id": 4,
+      "title": "Tenniskennis",
+      "type": "Sport",
+      "description": "Van de eerste service tot de Grand Slams.",
+      "summary": "15 vragen",
+      "answerCount": 15,
+      "cards": [
+        {
+          "src": "assets/ronde-4-kaart-1.png",
+          "label": "Vragen 1 t/m 5"
+        },
+        {
+          "src": "assets/ronde-4-kaart-2.png",
+          "label": "Vragen 6 t/m 10"
+        },
+        {
+          "src": "assets/ronde-4-kaart-3.png",
+          "label": "Vragen 11 t/m 15"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Muziekbingo",
+      "type": "Bingo",
+      "description": "Luister, herken en streep af op je kaart.",
+      "summary": "Bingokaarten op papier",
+      "answerCount": 4,
+      "cards": [
+        {
+          "src": "assets/ronde-5-uitleg.svg",
+          "label": "Uitleg muziekbingo"
+        }
+      ],
+      "note": "Speel met de originele bingokaarten en de muziek van de DJ. Dit is de uitlegkaart; de DJ-lijst blijft bij de organisatie."
+    },
+    {
+      "id": 6,
+      "title": "Hoeksche Waard",
+      "type": "Dicht bij huis",
+      "description": "Een rondje kennis uit onze eigen streek.",
+      "summary": "15 vragen",
+      "answerCount": 15,
+      "cards": [
+        {
+          "src": "assets/ronde-6-kaart-1.png",
+          "label": "Vragen 1 t/m 5"
+        },
+        {
+          "src": "assets/ronde-6-kaart-2.png",
+          "label": "Vragen 6 t/m 10"
+        },
+        {
+          "src": "assets/ronde-6-kaart-3.png",
+          "label": "Vragen 11 t/m 15"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Activiteitenronde",
+      "type": "Teamwork",
+      "description": "Bouwen, mikken en samen punten pakken.",
+      "summary": "2 activiteiten + suggestie",
+      "answerCount": 2,
+      "cards": [
+        {
+          "src": "assets/ronde-7-kaart-1.png",
+          "label": "Uitleg activiteiten"
+        }
+      ],
+      "note": "Kaarten bouwen en beerpong zijn de vaste onderdelen. Jodelen is voorlopig een suggestie."
+    },
+    {
+      "id": 8,
+      "title": "Drankenronde",
+      "type": "Aan de bar",
+      "description": "Cocktails, koffie en alles daartussen.",
+      "summary": "22 vragen",
+      "answerCount": 22,
+      "cards": [
+        {
+          "src": "assets/ronde-8-kaart-1.png",
+          "label": "Vragen 1 t/m 5"
+        },
+        {
+          "src": "assets/ronde-8-kaart-2.png",
+          "label": "Vragen 6 t/m 10"
+        },
+        {
+          "src": "assets/ronde-8-kaart-3.png",
+          "label": "Vragen 11 t/m 15"
+        },
+        {
+          "src": "assets/ronde-8-kaart-4.png",
+          "label": "Vragen 16 t/m 22"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "De laatste ronde",
+      "type": "Finale",
+      "description": "Nog even alles geven. Met een knipoog.",
+      "summary": "15 vragen",
+      "answerCount": 15,
+      "cards": [
+        {
+          "src": "assets/ronde-9-kaart-1.png",
+          "label": "Vragen 1 t/m 5"
+        },
+        {
+          "src": "assets/ronde-9-kaart-2.png",
+          "label": "Vragen 6 t/m 10"
+        },
+        {
+          "src": "assets/ronde-9-kaart-3.png",
+          "label": "Vragen 11 t/m 15"
+        }
+      ]
+    }
+  ],
+  "bonus": {
+    "image": "assets/bonus.png",
+    "answerCount": 30
+  }
+}
