@@ -55,7 +55,7 @@ function confirmAction(title,message,label='Doorgaan') {
   return new Promise(resolve=>dialog.addEventListener('close',()=>resolve(dialog.returnValue==='confirm'),{once:true}));
 }
 async function api(path,body) {
-  const response=await fetch(API+path,{method:body?'POST':'GET',headers:body?{'Content-Type':'application/json'}:{},...(body?{body:JSON.stringify({...body,actor})}:{})});
+  const response=await fetch(API+path,{method:body?'POST':'GET',headers:body?{'Content-Type':'application/json'}:{},...(body?{body:JSON.stringify({...body,actor,answers_epoch:state?.answers_epoch ?? 0})}:{})});
   let data;
   try { data=await response.json(); } catch { throw new Error('De server gaf geen geldig antwoord. Probeer opnieuw.'); }
   if(!response.ok) { const error=new Error(data.error || 'De actie kon niet worden uitgevoerd.'); error.status=response.status; error.data=data; throw error; }
@@ -182,7 +182,7 @@ function settingsView(){
     const mode=draft?.mode || 'keep';
     const total=maxima.reduce((sum,value)=>sum+(Number.isFinite(Number(value))?Math.round(Number(value)*100):0),0);
     return `<form class="scoring-form org-panel" data-round="${esc(round.id)}"><div class="scoring-heading"><div><h3>${esc(roundLabel(round))}</h3><p>${list.length} onderdelen · <span data-round-total>maximaal ${formatPoints(total)} punten</span> · ${reviewed} opgeslagen beoordelingen</p></div><span class="tag ${round.closed?'pending':''}">${round.closed?'Afgesloten':'Aanpasbaar'}</span></div>${round.closed?`<p class="info-note">Heropen deze ronde bij Antwoorden & punten om de puntentelling te wijzigen.</p><button type="button" class="text-button" data-action="scoring-round" data-id="${esc(round.id)}">Naar deze ronde →</button>`:''}<fieldset ${round.closed?'disabled':''}><div class="scoring-uniform"><div><label for="uniform-${esc(round.id)}">Punten per goed antwoord in deze ronde</label><input id="uniform-${esc(round.id)}" name="uniform" type="number" min="0" max="1000" step="0.01" value="${esc(uniform)}" placeholder="Verschillende punten per vraag"></div><p class="scoring-uniform-help">Dit puntenaantal wordt direct voor alle onderdelen ingevuld. Klik daarna op Puntentelling opslaan.</p></div><details class="scoring-questions" ${draft?'open':''}><summary>Punten per afzonderlijke vraag of onderdeel</summary>${list.map((q,index)=>`<div class="scoring-question"><label for="score-${esc(round.id)}-${q.id}"><strong>${q.id}.</strong> ${esc(q.prompt)}</label><input id="score-${esc(round.id)}-${q.id}" aria-label="Maximum ronde ${esc(round.id)} vraag ${q.id}" data-scoring-question="${q.id}" name="question-${q.id}" type="number" min="0" max="1000" step="0.01" value="${esc(maxima[index])}" required></div>`).join('')}</details><label for="scoring-mode-${esc(round.id)}">Wat gebeurt er met bestaande beoordelingen?</label><select id="scoring-mode-${esc(round.id)}" name="existing_scores"><option value="keep" ${mode==='keep'?'selected':''}>Bestaande punten behouden</option><option value="scale" ${mode==='scale'?'selected':''}>Punten naar verhouding herberekenen</option></select><p class="scoring-help">Bij herberekenen wordt bijvoorbeeld 0,5 van 1 punt veranderd in 1 van 2 punten. Afronding gebeurt op twee decimalen. Antwoorden die nog niet zijn beoordeeld, blijven open.</p><button class="button primary" type="submit">Puntentelling opslaan</button></fieldset></form>`;
-  }).join('')}`;
+  }).join('')}<section class="org-panel reset-answers-panel"><h2>Antwoorden resetten</h2><p>Wis alle ingevulde antwoorden en toegekende punten om opnieuw te beginnen. Teams, leden, vragen en punteninstellingen blijven bewaard; afgesloten rondes worden heropend.</p><button type="button" class="button primary" data-action="reset-answers">Reset alle antwoorden</button></section>`;
 }
 function captureScoringDraft(form){
   const rid=form.dataset.round;
@@ -342,6 +342,14 @@ root.addEventListener('click',async event=>{
     if(action==='bingo-scores')return navigate(()=>{selectedRound='5';tab='nakijken';});
     if(action==='save-answer'){const row=button.closest('.team-answer-row'),qid=button.dataset.id,field=row.querySelector(`[data-points="${qid}"]`);if(!field.checkValidity())return field.reportValidity();return saveAnswer(qid,field.value===''?undefined:Number(field.value),button,row.dataset.team);}
     if(action==='ungrade')return saveAnswer(button.dataset.id,null,button,button.closest('.team-answer-row').dataset.team);
+    if(action==='reset-answers'){
+      if(dirty || pending)return notice('Sla je invoer eerst op voordat je alle antwoorden reset.',true);
+      document.getElementById('reset-answers-form').reset();
+      document.getElementById('confirm-reset-answers').disabled=true;
+      document.getElementById('reset-answers-error').hidden=true;
+      document.getElementById('reset-answers-dialog').showModal();
+      document.getElementById('reset-password').focus();return;
+    }
     if(action==='delete-team'){
       if(dirty)return notice('Sla je invoer eerst op voordat je een team verwijdert.',true);
       const team=state.teams.find(t=>t.id===button.dataset.id);
@@ -384,5 +392,24 @@ root.addEventListener('click',async event=>{
 window.addEventListener('beforeunload',event=>{if(dirty || pending){event.preventDefault();event.returnValue='';}});
 window.addEventListener('online',()=>refresh());
 document.getElementById('close-bingo-media').addEventListener('click',()=>document.getElementById('bingo-media').close());
+const resetDialog=document.getElementById('reset-answers-dialog');
+const resetPassword=document.getElementById('reset-password');
+const resetSubmit=document.getElementById('confirm-reset-answers');
+resetPassword.addEventListener('input',()=>{resetSubmit.disabled=resetPassword.value!=='pubquiz' || pending>0;});
+document.getElementById('cancel-reset-answers').addEventListener('click',()=>{if(!pending)resetDialog.close();});
+resetDialog.addEventListener('cancel',event=>{if(pending)event.preventDefault();});
+document.getElementById('reset-answers-form').addEventListener('submit',async event=>{
+  event.preventDefault();
+  if(resetPassword.value!=='pubquiz' || pending)return;
+  resetSubmit.disabled=true;
+  const errorNode=document.getElementById('reset-answers-error');errorNode.hidden=true;
+  try{
+    const result=await mutation('/answers/reset',{password:resetPassword.value});
+    resetDialog.close();resetPassword.value='';
+    answerDrafts.clear();expandedQuestions.clear();updateDirty();
+    await refresh(true);notice(`${result.deleted} antwoorden en beoordelingen gewist. Alle rondes zijn weer open.`);
+  }catch(error){errorNode.textContent=error.message;errorNode.hidden=false;}
+  finally{resetSubmit.disabled=resetPassword.value!=='pubquiz';}
+});
 refresh(true);
 setInterval(()=>{if(!document.hidden)refresh();},4000);
