@@ -31,7 +31,7 @@ export async function createAnswerSheetsPdf(quiz,teamName,assets){
     page.drawText(name,{x:M+65,y:H-107,font:titleFont,size:nameSize,color:navy});
     page.drawLine({start:{x:M,y:H-119},end:{x:W-M,y:H-119},color:line,thickness:.5});
     const music=round.id===3,activity=round.id===7;
-    const note=music?'Noteer per fragment de titel en de artiest.':round.id===5?'Streep de herkende nummers af. Bewaar deze kaart voor alle bingo\'s.':activity?'Laat de organisatie het resultaat van de activiteiten invullen.':'Vul het antwoord bij het juiste vraagnummer in.';
+    const note=music?'1-5: clips zonder geluid | 6-9: achterstevoren | 10: voorgelezen songtekst.':round.id===5?'Streep de herkende nummers af. Bewaar deze kaart voor alle bingo\'s.':activity?'Laat de organisatie het resultaat van de activiteiten invullen.':'Vul het antwoord bij het juiste vraagnummer in.';
     page.drawText(note,{x:M,y:H-138,font:textFont,size:9,color:navy});
     const top=H-154;
     if(round.id===5){

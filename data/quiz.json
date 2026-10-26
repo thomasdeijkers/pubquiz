@@ -44,9 +44,9 @@
     {
       "id": 3,
       "title": "Muziekronde",
-      "type": "Volgt nog",
-      "description": "Kijken, luisteren en die ene hit herkennen.",
-      "summary": "10 fragmenten gepland",
+      "type": "Muziek",
+      "description": "5 clips zonder geluid, 4 nummers achterstevoren en 1 voorgelezen Nederlandse songtekst van een Engelse hit. Raad telkens de titel en artiest.",
+      "summary": "10 muziekvragen",
       "answerCount": 10,
       "cards": [
         {
@@ -55,7 +55,7 @@
         }
       ],
       "pending": true,
-      "note": "De muziekfragmenten worden nog toegevoegd. Voorlopige opzet: 5 clips, 4 achterstevoren afgespeelde nummers en 1 songtekst."
+      "note": "Vragen 1-5: clips zonder geluid. Vragen 6-9: nummers achterstevoren. Vraag 10: een voorgelezen Nederlandse songtekst van een Engelse hit. Noteer telkens de titel en artiest. De fragmenten worden nog toegevoegd."
     },
     {
       "id": 4,

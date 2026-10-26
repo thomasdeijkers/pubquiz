@@ -93,7 +93,7 @@ De ingeklapte vraagstand toont een compacte lijst met juiste teams. Nul punten i
 
 De bonusronde staat als tiende, inklapbare regel (B) onder ronde 9 in het rondeoverzicht, met de bonuskaart, controle en eigen podium. De aparte bonusbanner en het blok De invulbladen zijn verwijderd. Invulbladen blijven per ronde beschikbaar na openklappen. De bonusverwijzing in het menu verwijst naar de bonusregel in het overzicht.
 
-De muziekrondes (3 en 5) verwijzen vanuit het uitgeklapte rondeoverzicht direct naar organisator.html?tab=bingo voor uitleg, Spotify en bingokaarten. Het losse muziekbingo-blok op de homepage is verwijderd; ook het menu, de presentatieverwijzing en de teruglink van geprinte bingokaarten gebruiken deze centrale pagina.
+Alleen ronde 5 verwijst vanuit het uitgeklapte rondeoverzicht direct naar organisator.html?tab=bingo voor uitleg, Spotify en bingokaarten. Het losse muziekbingo-blok op de homepage is verwijderd; ook het menu, de presentatieverwijzing en de teruglink van geprinte bingokaarten gebruiken deze centrale pagina.
 
 Ingeklapte vragen tonen uitsluitend teams met de volledige maximumscore (bij een maximum groter dan nul). De teller toont afzonderlijk opgeslagen, niet-lege antwoordteksten en nagekeken antwoorden; een beoordeling zonder tekst telt niet als ingevuld. Foute, gedeeltelijke en onbeoordeelde antwoorden worden niet in de lijst met juiste teams getoond.
 
@@ -130,3 +130,5 @@ De tafelkaart gebruikt een skihutdecor en een besneeuwd houten naambord. Open A5
 Het pdf-voorbeeld wordt met een lokaal meegeleverde PDF.js-renderer op canvas getoond, zodat het ook werkt in browsers zonder ingebouwde pdf-plug-in. Het gedownloade bestand blijft een echte A5-pdf.
 
 De invulbladen hebben een eigen witte voettekst zonder de websitefooter: punten en bladnummer op één regel, daaronder de unieke kreet helemaal onderaan, cursief en grijs. Open complete set als pdf maakt elf echte A4-pagina’s (negen rondes, bonus en A5-tafelkaart op knipvel), zonder browserdatum of webadres. Het ingebouwde pdf-voorbeeld heeft een paginakeuze; afdrukken en downloaden lopen via de pdf.
+
+Ronde 3 is een aparte muziekronde: volgens PubQuiz tennis (definitief).docx vijf clips zonder geluid, vier nummers achterstevoren en een voorgelezen Nederlandse songtekst van een Engelse hit. De tien antwoordvelden blijven titel/ artiest. Homepage, presentatie-uitleg, controle en invulbladen vermelden deze opbouw. De fragmenten ontbreken nog.
