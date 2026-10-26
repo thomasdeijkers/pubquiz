@@ -166,3 +166,5 @@ body,.organizer-body{background:#e6f3fc url('assets/alpen-achtergrond.svg') cent
 @media(max-width:750px){.round-progress{display:table;margin-top:4px;font-size:9px;padding:3px 6px}.round-overview-summary{min-height:76px}.round-overview-tile>.round-control-link{min-height:76px}}
 
 @media screen and (min-width:700px){.header-menu-panel{grid-template-columns:1fr;width:350px}.header-menu-panel .menu-group{border-right:0}}
+
+.question-progress.question-review-complete{color:#306027;background:#e5f3df;border:1px solid #9abb89;border-radius:16px;padding:4px 8px}.question-review-complete>span{font-size:15px;font-weight:700}

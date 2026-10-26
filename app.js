@@ -189,7 +189,7 @@ function drawScoreboard(){
   document.querySelectorAll('[data-round-progress]').forEach(node=>{
     const progress=roundProgress(scoreState,node.dataset.roundProgress);
     node.classList.toggle('complete',progress.complete);
-    node.textContent=progress.complete?`✓ Afgerond · ${progress.reviewed}/${progress.total}`:progress.total?`${progress.reviewed}/${progress.total} ingevuld`:'Nog geen teams of vragen';
+    node.textContent=progress.complete?`✓ Afgerond · ${progress.reviewed}/${progress.total}`:progress.total?`${progress.reviewed}/${progress.total} nagekeken`:'Nog geen teams of vragen';
   });
   const through=byId('public-through').value;
   const result=summarize(scoreState,through,byId('public-bonus').checked);

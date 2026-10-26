@@ -63,12 +63,12 @@ test('Ingeklapt verschijnen alleen volledig goed gerekende teams, geen foute of 
   assert.match(app.questionStanding({id:'1',max_cents:0},teams),/Nog geen teams goed gerekend/);
 });
 
-test('Ingevuld telt opgeslagen antwoordtekst los van de beoordeling, ook bij foute antwoorden',()=>{
+test('Alleen nagekeken telt; foute antwoorden en beoordelingen zonder tekst tellen ook mee',()=>{
   const app=setup();
   const teams=['Goed','Fout','Nog nakijken','Alleen punten','Leeg'].map((name,index)=>({id:String(index),name,active:true}));
   app.setState({teams,answers:[{team_id:'0',round_id:'1',question_id:'1',answer:'1973',points_cents:100},{team_id:'1',round_id:'1',question_id:'1',answer:'1980',points_cents:0},{team_id:'2',round_id:'1',question_id:'1',answer:'1973',points_cents:null},{team_id:'3',round_id:'1',question_id:'1',answer:'',points_cents:100},{team_id:'4',round_id:'1',question_id:'1',answer:'  ',points_cents:null}]});
   const html=app.questionCard({id:'1',prompt:'Vraag',correct:'1973',alternatives:[],max_cents:100},teams,false);
-  assert.match(html,/3\/5 ingevuld · 3\/5 nagekeken/);
+  assert.match(html,/3\/5 nagekeken/);assert.doesNotMatch(html,/3\/5 ingevuld|Volledig nagekeken/);
 });
 
 test('Teamnaam en leden hebben aparte velden en concepten blijven gescheiden',()=>{
@@ -185,4 +185,12 @@ test('Goed of Fout zonder invoerveld behoudt het eerder opgeslagen antwoord',asy
   const button={disabled:false,closest:()=>({querySelector:()=>null})};
   await app.saveAnswer('1',1,button,'b');
   assert.equal(sent.answer,'Bestaand antwoord');assert.equal(sent.points,1);assert.equal(sent.version,4);
+});
+
+test('Een vraag krijgt pas een groen vinkje als alle teams zijn nagekeken',()=>{
+  const app=setup(),teams=[{id:'a',name:'A',active:true},{id:'b',name:'B',active:true}],q={id:'1',prompt:'Vraag',correct:'Model',alternatives:[],max_cents:100};
+  app.setState({teams,answers:[{team_id:'a',round_id:'1',question_id:'1',points_cents:0},{team_id:'b',round_id:'1',question_id:'1',points_cents:100}]});
+  const html=app.questionCard(q,teams,false);
+  assert.match(html,/question-review-complete/);assert.match(html,/aria-label="Volledig nagekeken">✓/);assert.match(html,/2\/2 nagekeken/);
+  app.setState({teams:[],answers:[]});assert.doesNotMatch(app.questionCard(q,[],false),/Volledig nagekeken/);
 });
