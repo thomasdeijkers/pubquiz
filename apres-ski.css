@@ -110,3 +110,7 @@ body,.organizer-body{background:#e6f3fc url('assets/alpen-achtergrond.svg') cent
 .round-overview-actions>p{flex:1;min-width:0}
 @media(max-width:750px){.round-overview-actions .round-questions-button{flex:0 0 210px;min-height:48px;font-size:13px}}
 @media(max-width:520px){.round-overview-actions .round-questions-button{flex:0 0 auto;width:100%;margin-left:0}.round-overview-actions>p{flex-basis:100%}}
+
+/* Ruimte rondom de beoordelingsknoppen in de compacte controle. */
+.team-scoring-page .team-score-entry{padding-right:18px}.team-scoring-page .team-grade-buttons{gap:10px}.team-scoring-page .team-grade-buttons .grade-button{width:auto;flex:1 1 0;min-width:0}
+@media(max-width:750px){.team-scoring-page .team-score-entry{padding-right:10px}.team-scoring-page .team-grade-buttons{gap:8px}}
