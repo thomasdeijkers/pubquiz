@@ -23,10 +23,6 @@ async function init() {
     byId('round-grid').innerHTML = overviewRounds.map(round => `<article class="round-tile round-overview-tile" id="${round.id==='bonus'?'bonus':'ronde-'+round.id}"><details class="round-overview" data-overview="${round.id}"><summary class="round-overview-summary"><span class="round-number">${round.id==='bonus'?'B':String(round.id).padStart(2,'0')}</span><span class="round-overview-title"><strong>${safe(round.title)}</strong><small>${safe(round.summary)}</small></span><span class="round-overview-arrow" aria-hidden="true">⌄</span></summary><div class="round-overview-body"><div class="round-overview-actions"><p>${safe(round.description)}</p>${round.id===5?'<a class="button outline" href="organisator.html?tab=bingo">Uitleg, playlist & bingokaarten →</a>':`<button class="button primary round-questions-button" data-round="${round.id}">Open de vragen <span aria-hidden="true">↗</span></button>`}</div><div data-round-podium="${round.id}"><p class="score-loading">De top 3 wordt geladen…</p></div></div></details><a class="round-control-link" href="organisator.html?tab=nakijken&amp;ronde=${round.id}" aria-label="Open controle ronde ${round.id} · ${safe(round.title)}">Open controle <span aria-hidden="true">→</span></a></article>`).join('');
     byId('collapse-rounds').addEventListener('click',()=>document.querySelectorAll('.round-overview[open]').forEach(round=>{round.open=false;}));
     document.querySelectorAll('[data-round]').forEach(button => button.addEventListener('click', () => button.dataset.round==='bonus'?openBonus():openRound(Number(button.dataset.round))));
-    byId('start').addEventListener('click', () => {
-      slides = quiz.rounds.flatMap(round => round.cards.map(card => ({...card, round: round.title, id: round.id, note: round.note || ''})));
-      showViewer();
-    });
     byId('close-viewer').addEventListener('click', closeViewer);
     byId('previous').addEventListener('click', () => changeSlide(-1));
     byId('next').addEventListener('click', () => changeSlide(1));
