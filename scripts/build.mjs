@@ -1,3 +1,4 @@
+import {createHash} from 'node:crypto';
 import {readFile,writeFile,mkdir,copyFile,rm,stat} from 'node:fs/promises';
 import path from 'node:path';
 import assert from 'node:assert/strict';
@@ -24,6 +25,15 @@ assert.equal(path.dirname(output),root);
 await rm(output,{recursive:true,force:true});
 await mkdir(output,{recursive:true});
 for (const file of ['index.html','style.css','app.js','favicon.svg','robots.txt','organisator.html','organisator.css','organisator.js','scoring.mjs','scoreboard.mjs']) await copyFile(file,path.join(output,file));
+// Give changed browser assets a fresh URL after every publication.
+for (const page of ['index.html','organisator.html']) {
+  let html=await readFile(path.join(output,page),'utf8');
+  for (const asset of ['app.js','style.css','organisator.js','organisator.css']) {
+    const digest=createHash('sha256').update(await readFile(asset)).digest('hex').slice(0,12);
+    html=html.replaceAll(`"${asset}"`,`"${asset}?v=${digest}"`);
+  }
+  await writeFile(path.join(output,page),html);
+}
 await mkdir(path.join(output,'data'));
 await copyFile('data/quiz.json',path.join(output,'data/quiz.json'));
 for (const file of files) {
