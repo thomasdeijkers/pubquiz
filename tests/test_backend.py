@@ -25,7 +25,7 @@ class QuizTests(unittest.TestCase):
         with app.connect() as db:
             with db.cursor() as cur:
                 cur.execute('TRUNCATE quiz_answers,quiz_questions,quiz_rounds,quiz_teams,quiz_changes')
-                cur.execute("UPDATE quiz_meta SET value='0' WHERE key='revision'")
+                cur.execute("UPDATE quiz_meta SET value='0' WHERE key IN ('revision','answers_epoch')")
                 cur.execute("INSERT INTO quiz_rounds(id,sort_order,title) VALUES('1',0,'Test')")
                 cur.execute("INSERT INTO quiz_questions(round_id,id,prompt,correct,alternatives,max_cents) VALUES('1','1','Testvraag','C) Voorbeeld','[\"Ook goed\"]',100)")
         self.tid=self.call('/teams/add',name='Testteam')['id']
@@ -111,6 +111,42 @@ class QuizTests(unittest.TestCase):
             with self.subTest(bad=bad):
                 with self.assertRaises(app.Problem):
                     self.call('/teams/update',id=target,version=4,bingo_card=bad)
+
+    def test_reset_requires_exact_password_and_clears_only_answers(self):
+        self.save(version=0,answer='Voorbeeld',points=1)
+        self.call('/rounds/status',id='1',version=1,closed=True)
+        for password in ['', 'Pubquiz', 'pubquiz ', None]:
+            with self.subTest(password=password):
+                with self.assertRaises(app.Problem):
+                    self.call('/answers/reset',password=password)
+        with app.connect() as db:
+            with db.cursor() as cur:
+                before=app.state(cur)
+        self.assertEqual(len(before['answers']),1)
+        result=self.call('/answers/reset',password='pubquiz')
+        self.assertEqual(result['deleted'],1)
+        with app.connect() as db:
+            with db.cursor() as cur:
+                after=app.state(cur)
+        self.assertEqual(after['answers'],[])
+        self.assertEqual(after['teams'],before['teams'])
+        self.assertEqual(after['questions'],before['questions'])
+        self.assertFalse(after['rounds'][0]['closed'])
+        self.assertGreater(after['rounds'][0]['version'],before['rounds'][0]['version'])
+        self.assertEqual(after['answers_epoch'],1)
+        self.assertEqual(after['changes'][0]['action'],'Alle antwoorden gereset')
+
+    def test_reset_prevents_an_old_blank_draft_from_restoring_answers(self):
+        self.call('/answers/reset',password='pubquiz')
+        with self.assertRaises(app.Problem) as stale:
+            self.save(version=0,answer='Oud concept',points=1)
+        self.assertEqual(stale.exception.status,409)
+        with self.assertRaises(app.Problem):
+            self.call('/answers/match',round_id='1',team_id=self.tid)
+        with self.assertRaises(app.Problem):
+            self.call('/answers/reset',password='pubquiz')
+        saved=self.save(version=0,answer='Nieuwe invoer',points=1,answers_epoch=1)
+        self.assertEqual(saved['points_cents'],100)
 
     def test_fractional_points_and_answer_change_invalidates_old_grade(self):
         first=self.save(version=0,answer='Een antwoord',points=0.5)

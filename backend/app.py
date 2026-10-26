@@ -19,6 +19,7 @@ PREFIX = '/pubquiz-api/v1'
 SCHEMA = '''
 CREATE TABLE IF NOT EXISTS quiz_meta (key text PRIMARY KEY, value text NOT NULL);
 INSERT INTO quiz_meta VALUES ('revision','0') ON CONFLICT DO NOTHING;
+INSERT INTO quiz_meta VALUES ('answers_epoch','0') ON CONFLICT DO NOTHING;
 CREATE TABLE IF NOT EXISTS quiz_rounds (
  id text PRIMARY KEY, sort_order integer NOT NULL, title text NOT NULL,
  closed boolean NOT NULL DEFAULT false, version integer NOT NULL DEFAULT 1);
@@ -150,6 +151,8 @@ def state(cur):
     result = {}
     cur.execute("SELECT value::bigint AS revision FROM quiz_meta WHERE key='revision'")
     result.update(cur.fetchone())
+    cur.execute("SELECT value::bigint AS answers_epoch FROM quiz_meta WHERE key='answers_epoch'")
+    result.update(cur.fetchone())
     for key, sql in [
         ('rounds', 'SELECT * FROM quiz_rounds ORDER BY sort_order'),
         ('questions', 'SELECT * FROM quiz_questions ORDER BY round_id,id::integer'),
@@ -179,8 +182,26 @@ def standings_state(cur):
     return result
 
 
+def check_answers_epoch(cur, body):
+    cur.execute("SELECT value::bigint AS epoch FROM quiz_meta WHERE key='answers_epoch'")
+    if version(body.get('answers_epoch', 0)) != cur.fetchone()['epoch']:
+        raise Problem(409, 'De antwoorden zijn gereset door een organisator. Vernieuw de pagina voordat je verdergaat.')
+
+
 def mutate(cur, route, body):
     actor = text(body.get('actor', ''), 80, True)
+    if route == '/answers/reset':
+        if body.get('password') != 'pubquiz':
+            raise Problem(400, 'Typ pubquiz exact over om alle antwoorden te wissen.')
+        cur.execute('SELECT id FROM quiz_rounds ORDER BY id FOR UPDATE')
+        cur.fetchall()
+        check_answers_epoch(cur, body)
+        cur.execute('DELETE FROM quiz_answers')
+        deleted = cur.rowcount
+        cur.execute('UPDATE quiz_rounds SET closed=false,version=version+1')
+        cur.execute("UPDATE quiz_meta SET value=(value::bigint+1)::text WHERE key='answers_epoch'")
+        changed(cur, actor, 'Alle antwoorden gereset', f'{deleted} antwoorden en beoordelingen gewist; rondes heropend')
+        return {'ok': True, 'deleted': deleted}
     if route == '/teams/add':
         name = text(body.get('name'), 80, True)
         members = text(body.get('members', ''), 2000)
@@ -223,6 +244,7 @@ def mutate(cur, route, body):
         question_id = text(body.get('question_id'), 20, True)
         team_id = text(body.get('team_id'), 40, True)
         open_round(cur, round_id)
+        check_answers_epoch(cur, body)
         team(cur, team_id)
         cur.execute('SELECT * FROM quiz_questions WHERE round_id=%s AND id=%s', (round_id, question_id))
         question = cur.fetchone()
@@ -341,6 +363,7 @@ def mutate(cur, route, body):
     if route == '/answers/match':
         rid, tid = text(body.get('round_id'), 20, True), text(body.get('team_id'), 40, True)
         open_round(cur, rid)
+        check_answers_epoch(cur, body)
         team(cur, tid)
         cur.execute('''SELECT q.*,a.answer,a.version AS answer_version FROM quiz_questions q JOIN quiz_answers a
             ON q.round_id=a.round_id AND q.id=a.question_id WHERE a.team_id=%s AND q.round_id=%s AND a.points_cents IS NULL''', (tid, rid))
