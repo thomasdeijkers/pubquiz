@@ -160,7 +160,7 @@ test('Scores per team toont alleen het gekozen team en telt ronde, totaal en bon
   const app=setup();app.setTeam('b');
   app.setState({rounds:[{id:'1',title:'Club',closed:false},{id:'bonus',title:'Bonus',closed:false}],teams:[{id:'a',name:'Alpen',active:true},{id:'b',name:'Bergen',active:true}],questions:[{round_id:'1',id:'1',prompt:'Vraag',correct:'Model',alternatives:[],max_cents:100},{round_id:'1',id:'2',prompt:'Tweede',correct:'Model',alternatives:[],max_cents:100}],answers:[{team_id:'b',round_id:'1',question_id:'1',points_cents:100},{team_id:'b',round_id:'1',question_id:'2',points_cents:0},{team_id:'b',round_id:'bonus',question_id:'1',points_cents:200},{team_id:'a',round_id:'1',question_id:'1',points_cents:100}]});
   const html=app.teamScoresView();
-  assert.match(html,/id="grading-team"/);assert.match(html,/value="b" selected/);
+  assert.match(html,/id="grading-team"/);assert.match(html,/value="b" selected/);assert.doesNotMatch(html,/team-round-scores/);
   assert.match(html,/data-team="b"/);assert.doesNotMatch(html,/data-team="a"/);
   assert.match(html,/<strong>1<\/strong><span>punten in deze ronde/);
   assert.match(html,/<strong>3<\/strong><span>totaal inclusief bonus/);

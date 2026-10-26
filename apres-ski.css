@@ -93,3 +93,13 @@ body,.organizer-body{background:#e6f3fc url('assets/alpen-achtergrond.svg') cent
 .team-scoring-page .team-score-entry .question-number{width:23px;height:23px;min-width:0;min-height:0;padding:0;font-size:14px}
 .team-scoring-page .team-score-entry .grade-button{height:27px;min-height:0;min-width:0;padding:3px 6px;font-size:11px}
 @media(max-width:750px){.team-scoring-page .team-score-entry{grid-template-columns:20px minmax(0,1fr) 100px;gap:5px}.team-scoring-page .team-score-model{display:none}.team-scoring-page .team-score-prompt{font-size:10px}.team-scoring-page .team-score-entry .grade-button{font-size:10px;padding:3px}.team-scoring-page .grading-summary{gap:10px}.team-scoring-page .grading-summary>div{display:block}.team-scoring-page .grading-summary span{font-size:9px}}
+
+@media(min-width:751px) and (max-width:1180px){
+ .org-content:has(.team-scoring-page){padding:10px 16px 24px}
+ .org-content:has(.team-scoring-page) .org-sync{margin-bottom:10px;padding:6px 10px}
+ .team-scoring-page .team-score-entry{grid-template-columns:24px minmax(0,1fr) minmax(85px,140px) 150px;height:40px;min-height:40px}
+ .team-scoring-page .team-score-entry .grade-button{height:32px;font-size:12px;touch-action:manipulation}
+ .team-scoring-page .team-score-prompt strong{font-size:12px}
+ .team-scoring-page .selector-bar select{height:36px;font-size:14px}
+}
+.team-scoring-page .team-grade-buttons button{touch-action:manipulation}
