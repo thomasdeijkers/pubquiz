@@ -1,3 +1,4 @@
+import {headerMenu} from './navigation.mjs';
 import {podium,roundPodium,trophy} from './scoreboard.mjs';
 import {summarize,formatPoints} from './scoring.mjs';
 const API = 'https://vps.opticore-insights.nl/pubquiz-api/v1';
@@ -14,7 +15,7 @@ if (new URLSearchParams(location.hash.slice(1)).has('sleutel')) {
 }
 let state;
 const routeParams = new URLSearchParams(location.search);
-let tab = ({instellingen:'settings',nakijken:'nakijken',stand:'stand',teams:'teams'})[routeParams.get('tab')] || 'teams';
+let tab = ({instellingen:'settings',nakijken:'nakijken',stand:'stand',teams:'teams',model:'model',bingo:'bingo'})[routeParams.get('tab')] || 'teams';
 let selectedRound = routeParams.get('ronde') || '1';
 let selectedTeam = '';
 let through = '9';
@@ -65,7 +66,7 @@ function questions(){return state.questions.filter(question=>question.round_id==
 function getAnswer(qid,teamId=selectedTeam){return state.answers.find(answer=>answer.team_id===teamId && answer.round_id===selectedRound && answer.question_id===qid);}
 function roundLabel(round){return round.id==='bonus'?'Bonusronde':`Ronde ${round.id} · ${round.title}`;}
 function options(items,selected,label){return items.map(item=>`<option value="${esc(item.id)}" ${item.id===selected?'selected':''}>${esc(label(item))}</option>`).join('');}
-function nav(){return [['teams','Teams'],['nakijken','Antwoorden & punten'],['stand','Tussenstand'],['model','Antwoordmodel'],['bingo','Muziekbingo'],['settings','Instellingen']].map(([id,label])=>`<button class="org-nav-button ${tab===id?'active':''}" data-tab="${id}" ${tab===id?'aria-current="page"':''}>${label}</button>`).join('');}
+
 function saveIndicator(){const node=document.getElementById('sync-status');if(node){node.classList.toggle('unsaved',!!(dirty || pending || loadingError));node.textContent=loadingError?'Verbinding verbroken':pending?'Bezig met opslaan…':dirty?'Er is nog niet-opgeslagen invoer':lastSync?`Gedeeld · bijgewerkt ${lastSync.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}`:'Verbinden…';}}
 function accessPage(message='De database is tijdelijk niet bereikbaar. Vernieuw de pagina om opnieuw te verbinden.') {
   root.innerHTML=`<main class="access-page"><a class="brand" href="./"><img class="club-brand-logo" src="assets/clublogo-render.png" width="64" height="64" alt="Heynkensort"><span>PUBQUIZ<small>Het wedstrijdsecretariaat · après-ski editie</small></span></a><p class="eyebrow dark">SAMEN DE QUIZ BIJHOUDEN</p><h1>Het beheer van de quiz</h1><p>${esc(message)}</p><p>Het beheer is rechtstreeks toegankelijk zonder account of toegangssleutel.</p><a class="button outline" href="./">Terug naar de quiz</a></main>`;
@@ -92,9 +93,9 @@ async function refresh(force=false) {
 }
 function render(){
   if(!state)return;
-  if(projection){root.innerHTML=`<main class="projection"><header><span class="brand"><img class="club-brand-logo" src="assets/clublogo-render.png" width="64" height="64" alt="Heynkensort">PUBQUIZ · T.V. HEYNKENSORT</span><span id="sync-status"></span></header>${standingsView(true)}</main>`; saveIndicator();return;}
+  if(projection){root.innerHTML=`<main class="projection"><header><span class="brand"><img class="club-brand-logo" src="assets/clublogo-render.png" width="64" height="64" alt="Heynkensort">PUBQUIZ · T.V. HEYNKENSORT</span><div class="header-actions"><span id="sync-status"></span>${headerMenu()}</div></header>${standingsView(true)}</main>`; saveIndicator();return;}
   const view=tab==='teams'?teamsView():tab==='nakijken'?gradingView():tab==='model'?modelView():tab==='bingo'?bingoView():tab==='settings'?settingsView():standingsView();
-  root.innerHTML=`<header class="org-header"><a class="brand" href="./"><img class="club-brand-logo" src="assets/clublogo-render.png" width="64" height="64" alt="Heynkensort"><span>PUBQUIZ<small>Het wedstrijdsecretariaat · après-ski editie</small></span></a><div class="org-header-right"><span class="actor-badge">${esc(actor)}</span><button class="text-button" data-action="change-actor">Naam wijzigen</button><a class="text-button" href="./" target="_blank" rel="noopener">Quiz openen ↗</a></div></header><div class="org-layout"><aside class="org-sidebar"><p class="eyebrow dark">QUIZADMINISTRATIE</p><nav aria-label="Beheernavigatie">${nav()}</nav><div class="org-sharing"><strong>Samen aan het nakijken</strong><p>Iedereen met de beheerlink werkt in dezelfde database.</p><button class="button outline" data-action="share">Beheerlink kopiëren</button><button class="text-button" data-action="backup">Reservekopie downloaden ↓</button></div></aside><main class="org-content"><div class="org-sync"><span id="sync-status"></span><button class="text-button" data-action="refresh">Vernieuwen ↻</button></div>${view}</main></div>`;
+  root.innerHTML=`<header class="org-header"><a class="brand" href="./"><img class="club-brand-logo" src="assets/clublogo-render.png" width="64" height="64" alt="Heynkensort"><span>PUBQUIZ<small>Het wedstrijdsecretariaat · après-ski editie</small></span></a><div class="header-actions"><span class="actor-badge">${esc(actor)}</span>${headerMenu({admin:true,active:tab})}</div></header><div class="org-layout"><main class="org-content"><div class="org-sync"><span id="sync-status"></span><button class="text-button" data-action="refresh">Vernieuwen ↻</button></div>${view}</main></div>`;
   saveIndicator();
 }
 function teamsView(){

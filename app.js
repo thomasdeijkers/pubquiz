@@ -1,3 +1,4 @@
+import {headerMenu} from './navigation.mjs';
 import {summarize,summarizeRound,formatPoints} from './scoring.mjs';
 import {podium,roundPodium,standingsTable,trophy} from './scoreboard.mjs';
 'use strict';
@@ -6,6 +7,7 @@ let quiz;
 let slides = [];
 let slideIndex = 0;
 const viewer = byId('viewer');
+byId('header-menu-slot').innerHTML=headerMenu();
 const safe = text => String(text).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 async function init() {

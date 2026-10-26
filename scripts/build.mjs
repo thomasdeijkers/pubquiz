@@ -24,11 +24,11 @@ const output = path.join(root,'_site');
 assert.equal(path.dirname(output),root);
 await rm(output,{recursive:true,force:true});
 await mkdir(output,{recursive:true});
-for (const file of ['index.html','style.css','apres-ski.css','app.js','favicon.svg','robots.txt','organisator.html','organisator.css','organisator.js','scoring.mjs','scoreboard.mjs']) await copyFile(file,path.join(output,file));
+for (const file of ['index.html','style.css','apres-ski.css','app.js','favicon.svg','robots.txt','organisator.html','organisator.css','organisator.js','scoring.mjs','scoreboard.mjs','navigation.mjs']) await copyFile(file,path.join(output,file));
 // Version module dependencies too, so shared podium changes reach existing browsers.
-for (const file of ['scoreboard.mjs','app.js','organisator.js']) {
+for (const file of ['navigation.mjs','scoreboard.mjs','app.js','organisator.js']) {
   let source=await readFile(path.join(output,file),'utf8');
-  for (const dependency of ['scoring.mjs','scoreboard.mjs']) {
+  for (const dependency of ['scoring.mjs','scoreboard.mjs','navigation.mjs']) {
     const hash=createHash('sha256').update(await readFile(path.join(output,dependency))).digest('hex').slice(0,12);
     source=source.replaceAll(`'./${dependency}'`,`'./${dependency}?v=${hash}'`);
   }
