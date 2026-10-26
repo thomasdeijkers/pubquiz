@@ -102,3 +102,5 @@ Het bingobeheer kan een apart, niet-actief playlistvoorstel tonen uit bingo.prop
 Bij Teams opent Invulbladen printen per team een volledige set van tien A4-bladen: de negen rondes en de bonus. De teamnaam staat op ieder blad en kan in het printvoorbeeld worden gewijzigd. Ronde 3 heeft titel- en artiestvelden; ronde 5 bevat een originele bingokaart, standaard afgewisseld tussen K1/K2/K3 op basis van de teamvolgorde en aanpasbaar in het voorbeeld. De overige bladen volgen de aantallen en nummering uit data/quiz.json. Print op werkelijke grootte.
 
 Op de homepage staan Ga naar de rondes, Start presentatie, datum, starttijd/inloop en teamgrootte in de vaste header. Op smalle schermen staat de quizinformatie onder logo en menu; de scrollafstand volgt automatisch de daadwerkelijke headerhoogte.
+
+De homepage begint direct met het rondeoverzicht onder de vaste header. Het grote introductieblok met flyer is verwijderd; de flyer blijft als deelafbeelding beschikbaar.
