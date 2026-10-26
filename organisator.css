@@ -18,3 +18,4 @@
 .team-answer-row.answer-correct{background:#edf7e8}
 .team-answer-row.answer-correct textarea{background:#f2faed;border-color:#76a75d}
 @media(max-width:750px){.team-score-list .team-answer-row{grid-template-columns:1fr}.team-round-scores{grid-template-columns:repeat(3,1fr)}}
+.team-score-list .answer-card{display:block;min-width:0}.team-score-list .question-heading{display:flex;align-items:center;gap:12px}.team-score-list .question-prompt{min-width:0}.team-score-list .answer-body{min-width:0}
