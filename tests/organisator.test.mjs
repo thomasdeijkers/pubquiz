@@ -19,10 +19,10 @@ function row(team,answer){
   const container={dataset:{team},querySelector:selector=>selector.startsWith('[data-answer')?area:points};
   return {area,points,container,button:{disabled:false,closest:()=>container}};
 }
-test('Iedere vraag bevat een eigen antwoordveld en Goed/Fout-knoppen voor alle actieve teams',()=>{
+test('Iedere vraag toont volledige teamnamen en alleen Goed/Fout-knoppen',()=>{
   const app=setup(),html=app.gradingView();
   assert.match(html,/data-team="a"/);assert.match(html,/data-team="b"/);
-  assert.match(html,/id="answer-1-a"/);assert.match(html,/id="answer-1-b"/);
+  assert.match(html,/Alpen/);assert.match(html,/Bergen/);assert.doesNotMatch(html,/<textarea|data-action="save-answer"|team-extra-points/);
   assert.match(html,/Goed Alpen vraag 1/);assert.match(html,/Fout Bergen vraag 1/);
   assert.doesNotMatch(html,/id="grading-team"/);
 });
@@ -177,4 +177,12 @@ test('Een teamvraag klapt open met de volledige vraag en het modelantwoord',()=>
   app.expandedTeamQuestions.add('b/1/1');html=app.teamScoresView();
   assert.match(html,/aria-expanded="true"/);assert.match(html,/id="team-question-b-1" >/);
   assert.match(html,/<p>Vraag een<\/p>/);assert.match(html,/<p>Model<\/p>/);
+});
+
+test('Goed of Fout zonder invoerveld behoudt het eerder opgeslagen antwoord',async()=>{
+  const app=setup();app.setState({rounds:[{id:'1'}],teams:[],questions:[],answers:[{team_id:'b',round_id:'1',question_id:'1',answer:'Bestaand antwoord',points_cents:0,version:4}]});
+  let sent;app.setMutation(async(path,body)=>{sent=body;return {...body,points_cents:100,version:5};});
+  const button={disabled:false,closest:()=>({querySelector:()=>null})};
+  await app.saveAnswer('1',1,button,'b');
+  assert.equal(sent.answer,'Bestaand antwoord');assert.equal(sent.points,1);assert.equal(sent.version,4);
 });
