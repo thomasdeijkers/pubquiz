@@ -188,3 +188,5 @@ body,.organizer-body{background:#e6f3fc url('assets/alpen-achtergrond.svg') cent
 .demo-banner{position:fixed;bottom:0;left:0;right:0;z-index:100;display:flex;justify-content:center;align-items:center;gap:24px;background:#fff2ce;color:#593d13;border-top:2px solid #d89b27;padding:10px 16px;box-shadow:0 -3px 15px #00142b33;font-size:12px}
 .demo-banner strong,.demo-banner span{display:block}.demo-banner span{font-size:10px;margin-top:3px}.demo-banner a{padding:9px 12px;background:#143c63;color:white;border-radius:4px;text-decoration:none;white-space:nowrap;font-size:11px}
 @media(max-width:600px){.demo-banner{gap:10px;padding:8px 10px;font-size:11px}.demo-banner span{max-width:190px}.demo-banner a{font-size:10px;white-space:normal}}
+
+.header-menu-panel .menu-version-links{border-top:1px solid #c8d7e4;margin-top:5px;padding-top:8px}.header-menu .header-menu-panel .menu-version-links .version-active{background:#e8f3e4;color:#315c2c;font-weight:700}.menu-version-links a>span{display:inline-block;font-size:9px;margin-left:9px;padding:2px 5px;border-radius:10px;background:#d4e7cc}
