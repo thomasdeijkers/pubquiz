@@ -1,3 +1,4 @@
+import {answerSheetPack} from './answer-sheets.mjs';
 import {headerMenu} from './navigation.mjs';
 import {summarize,summarizeRound,formatPoints} from './scoring.mjs';
 import {podium,roundPodium,standingsTable,trophy} from './scoreboard.mjs';
@@ -89,8 +90,33 @@ function updateSlide() {
   const next = slides[slideIndex+1];
   if (next) { const preload = new Image(); preload.src = next.src; }
 }
+function renderTeamPack(){
+  const params=new URLSearchParams(location.search);
+  let team=(params.get('team') || '').slice(0,80);
+  const bingo=[1,2,3].includes(Number(params.get('bingokaart')))?Number(params.get('bingokaart')):1;
+  document.body.className='print-pack';
+  document.title=`Invulbladen · ${team || 'Pubquiz'}`;
+  document.body.innerHTML=`<div class="pack-toolbar"><a class="pack-back" href="organisator.html?tab=teams">← Terug naar teams</a><label>Teamnaam<input id="pack-team" maxlength="80" value="${safe(team)}" placeholder="Vul de teamnaam in"></label><label>Bingokaart<select id="pack-bingo">${[1,2,3].map(id=>`<option value="${id}" ${id===bingo?'selected':''}>K${id}</option>`).join('')}</select></label><button class="button primary" id="print-pack">Print complete set (10 bladen) ↗</button><p>Een A4 per ronde, inclusief een bingokaart en het bonusblad. Pas hierboven eventueel de teamnaam of bingokaart aan. Print op 100% / werkelijke grootte.</p></div><main id="sheet-pack">${answerSheetPack(quiz,team,bingo)}</main>`;
+  byId('pack-team').addEventListener('input',event=>{
+    team=event.target.value;
+    document.querySelectorAll('[data-sheet-team]').forEach(label=>{label.textContent=team || '________________________________________________';});
+    document.title=`Invulbladen · ${team || 'Pubquiz'}`;
+  });
+  byId('pack-bingo').addEventListener('change',event=>{
+    const card=event.target.value,image=document.querySelector('[data-pack-bingo]');
+    image.src=`assets/bingo-kaart-${card}.png`;image.alt=`Bingokaart K${card}`;
+    document.querySelector('[data-pack-card-label]').textContent=`Kaart K${card}`;
+  });
+  byId('print-pack').addEventListener('click',async()=>{
+    const button=byId('print-pack');button.disabled=true;
+    try{await document.fonts.ready;await Promise.all([...document.querySelectorAll('#sheet-pack img')].map(image=>image.decode()));window.print();}
+    catch{alert('Een afbeelding kon niet worden geladen. Vernieuw de pagina en probeer opnieuw.');}
+    finally{button.disabled=false;}
+  });
+}
 function renderSheet() {
   const id = new URLSearchParams(location.search).get('invulblad');
+  if(id==='alle')return renderTeamPack();
   const bingoCard = quiz.rounds.find(round=>round.id===5).printables?.find(card=>card.id===id);
   if(bingoCard){
     document.title=bingoCard.title+' · Pubquiz';

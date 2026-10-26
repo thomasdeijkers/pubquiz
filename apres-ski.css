@@ -47,3 +47,5 @@ body,.organizer-body{background:#e6f3fc url('assets/alpen-achtergrond.svg') cent
 @media screen{.question-scoreboard{display:flex;align-items:center;flex-wrap:wrap;gap:5px;width:100%}.question-no-correct{font-size:10px;color:#61798d}.question-scoreboard>.trophy-cup{width:20px;height:23px;margin-right:3px}.question-progress{font-weight:600}}
 
 @media screen{.bingo-proposal{border-color:#719760;background:#f4f9ef}.bingo-proposal .bingo-subtitle{margin-bottom:12px}.bingo-proposal>.button{margin:10px 0}.bingo-proposal-order{margin:14px 0;border-top:1px solid #c8d9bf;padding-top:14px}.bingo-proposal-order>summary{cursor:pointer;font-weight:700;color:#134574}.bingo-proposal p{font-size:12px;line-height:1.8}}
+
+@media screen{.team-print-link{white-space:nowrap;font-size:11px;color:#174c7b;text-decoration:none}.team-print-link:hover{text-decoration:underline}@media(max-width:800px){.team-row{flex-wrap:wrap}.team-rename{flex-basis:calc(100% - 45px)}.team-print-link{margin-left:35px}}}
