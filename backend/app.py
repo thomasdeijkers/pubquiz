@@ -180,7 +180,7 @@ def mutate(cur, route, body):
         cur.execute('INSERT INTO quiz_teams(id,name,members) VALUES(%s,%s,%s)', (team_id, name, members))
         changed(cur, actor, 'Team toegevoegd', name)
         return {'id': team_id}
-    if route == '/teams/update':
+    if route in ('/teams/update', '/teams/delete'):
         team_id = text(body.get('id'), 40, True)
         try:
             uuid.UUID(team_id)
@@ -192,6 +192,11 @@ def mutate(cur, route, body):
             raise Problem(404, 'Team niet gevonden.')
         if item['version'] != version(body.get('version')):
             raise Problem(409, 'Dit team is zojuist gewijzigd door een andere organisator.')
+        if route == '/teams/delete':
+            cur.execute('DELETE FROM quiz_answers WHERE team_id=%s', (team_id,))
+            cur.execute('DELETE FROM quiz_teams WHERE id=%s', (team_id,))
+            changed(cur, actor, 'Team verwijderd', item['name'])
+            return {'ok': True}
         name = text(body.get('name', item['name']), 80, True)
         members = text(body.get('members', item['members']), 2000)
         active = body.get('active', item['active'])

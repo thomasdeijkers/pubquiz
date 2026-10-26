@@ -67,6 +67,36 @@ class QuizTests(unittest.TestCase):
                     self.call('/teams/update',id=self.tid,version=1,members=value)
         self.call('/teams/update',id=self.tid,version=1,members='Geldig lid')
 
+    def test_delete_active_or_excluded_team_removes_only_its_answers(self):
+        self.save(version=0,answer='Bewaard antwoord',points=1)
+        for active in [True,False]:
+            with self.subTest(active=active):
+                target=self.call('/teams/add',name=f'Te verwijderen {active}',members='Een lid')['id']
+                self.call('/answers/save',team_id=target,round_id='1',question_id='1',version=0,answer='Antwoord',points=1)
+                if not active:
+                    self.call('/teams/update',id=target,version=1,active=False)
+                self.call('/teams/delete',id=target,version=1 if active else 2)
+                with app.connect() as db:
+                    with db.cursor() as cur:
+                        snapshot=app.state(cur)
+                self.assertNotIn(target,[str(team['id']) for team in snapshot['teams']])
+                self.assertEqual(len(snapshot['answers']),1)
+                self.assertEqual(str(snapshot['answers'][0]['team_id']),self.tid)
+                self.assertEqual(snapshot['answers'][0]['points_cents'],100)
+                self.assertEqual(snapshot['changes'][0]['action'],'Team verwijderd')
+
+    def test_stale_delete_keeps_team_and_answers(self):
+        self.save(version=0,answer='Behouden',points=1)
+        self.call('/teams/update',id=self.tid,version=1,members='Nieuw lid')
+        with self.assertRaises(app.Problem) as stale:
+            self.call('/teams/delete',id=self.tid,version=1)
+        self.assertEqual(stale.exception.status,409)
+        with app.connect() as db:
+            with db.cursor() as cur:
+                snapshot=app.state(cur)
+        self.assertEqual(len(snapshot['teams']),1)
+        self.assertEqual(len(snapshot['answers']),1)
+
     def test_fractional_points_and_answer_change_invalidates_old_grade(self):
         first=self.save(version=0,answer='Een antwoord',points=0.5)
         self.assertEqual(first['points_cents'],50)
