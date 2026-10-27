@@ -202,3 +202,4 @@ body,.organizer-body{background:#e6f3fc url('assets/alpen-achtergrond.svg') cent
 .menu-question-results small{display:block;color:#58738a;font-size:10px}
 .menu-question-results span{display:block;font-weight:700}
 .question-fold{scroll-margin-top:var(--header-offset,120px)}
+.header-menu .menu-question-results a span{color:#153f69;font-size:13px;letter-spacing:normal;text-transform:none}
