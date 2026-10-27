@@ -8,18 +8,27 @@ export async function createAnswerSheetsPdf(quiz,teamName,assets){
   const name=String(teamName ?? '').replace(/[\x00-\x1f]/g,' ').trim().slice(0,80)||'____________________________';
   const doc=await PDFDocument.create();doc.registerFontkit(fontkit);
   doc.setTitle(`Pubquiz invulbladen - ${name}`);doc.setAuthor('T.V. Heynkensort');
-  const [logo,titleFont,textFont,italic,bingo]=await Promise.all([doc.embedPng(assets[1]),doc.embedFont(assets[2],{subset:true}),doc.embedFont(StandardFonts.Helvetica),doc.embedFont(StandardFonts.HelveticaOblique),doc.embedPng(assets[3])]);
+  const [logo,titleFont,textFont,italic,bingo,bonus]=await Promise.all([doc.embedPng(assets[1]),doc.embedFont(assets[2],{subset:true}),doc.embedFont(StandardFonts.Helvetica),doc.embedFont(StandardFonts.HelveticaOblique),doc.embedPng(assets[3]),doc.embedPng(assets[4])]);
   const W=210*mm,H=297*mm,M=14*mm,navy=rgb(.07,.18,.3),gray=rgb(.49,.49,.49),line=rgb(.65,.7,.74);
-  const rounds=[...quiz.rounds,{id:'bonus',title:'Bonusronde',answerCount:quiz.bonus.answerCount}];
-  function footer(page,cheer,index){
+  const rounds=[...quiz.rounds,{id:'bonus-vragen',title:'Bonusronde - beeldvragen'},{id:'bonus',title:'Bonusronde',answerCount:quiz.bonus.answerCount}];
+  const totalPages=rounds.length+1;
+  function footer(page,cheer,index,showPoints=true){
     page.drawLine({start:{x:M,y:42},end:{x:W-M,y:42},color:rgb(.82,.82,.82),thickness:.4});
-    if(index<=10)page.drawText('Punten: __________________',{x:M,y:51,size:9,font:textFont,color:navy});
-    const count=`Blad ${index} / 11`;
+    if(showPoints)page.drawText('Punten: __________________',{x:M,y:51,size:9,font:textFont,color:navy});
+    const count=`Blad ${index} / ${totalPages}`;
     page.drawText(count,{x:W-M-textFont.widthOfTextAtSize(count,8),y:51,size:8,font:textFont,color:gray});
     page.drawText(cheer,{x:(W-italic.widthOfTextAtSize(cheer,8))/2,y:23,size:8,font:italic,color:gray});
   }
   for(const [index,round] of rounds.entries()){
     const page=doc.addPage([W,H]),title=round.id==='bonus'?'Bonusronde':`Ronde ${round.id} - ${round.title}`;
+    if(round.id==='bonus-vragen'){
+      const scale=Math.min((W-20*mm)/bonus.width,(H-80)/bonus.height);
+      const width=bonus.width*scale,height=bonus.height*scale,x=(W-width)/2,y=H-18-height;
+      page.drawImage(bonus,{x,y,width,height});
+      let size=13;while(titleFont.widthOfTextAtSize(name,size)>width*.30 && size>6)size--;
+      page.drawText(name,{x:x+width*.47,y:y+height*.823,font:titleFont,size,color:navy});
+      footer(page,sheetCheers['bonus-vragen'],index+1,false);continue;
+    }
     page.drawImage(logo,{x:M,y:H-68,width:43,height:43});
     page.drawText('APRÈS-SKI PUBQUIZ - T.V. HEYNKENSORT',{x:M+55,y:H-35,font:textFont,size:8,color:navy});
     let titleSize=22;
@@ -60,6 +69,6 @@ export async function createAnswerSheetsPdf(quiz,teamName,assets){
   const x=(W-tent.width)/2,y=(H-tent.height)/2;
   last.drawPage(tent,{x,y,width:tent.width,height:tent.height});
   last.drawRectangle({x,y,width:tent.width,height:tent.height,borderColor:line,borderWidth:.5});
-  footer(last,sheetCheers.tafelkaart,11);
+  footer(last,sheetCheers.tafelkaart,totalPages,false);
   return doc.save();
 }

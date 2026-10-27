@@ -7,11 +7,12 @@ const quiz=JSON.parse(readFileSync(new URL('../data/quiz.json',import.meta.url),
 test('Een complete set bevat negen rondes en bonus in de bronvolgorde met de juiste aantallen',()=>{
   const html=answerSheetPack(quiz,'Berggeiten',2);
   const pages=html.split('<section ').slice(1);
-  assert.equal(pages.length,11);
-  assert.match(pages[10],/data-table-card/);
-  assert.equal((html.match(/data-sheet-team>Berggeiten/g)||[]).length,10);
-  for(const [index,round] of [...quiz.rounds,{id:'bonus',answerCount:30}].entries()){
+  assert.equal(pages.length,12);
+  assert.match(pages[11],/data-table-card/);
+  assert.equal((html.match(/data-sheet-team>Berggeiten/g)||[]).length,11);
+  for(const [index,round] of [...quiz.rounds,{id:'bonus-vragen',answerCount:0},{id:'bonus',answerCount:30}].entries()){
     assert.match(pages[index],new RegExp('data-sheet-round="'+round.id+'"'));
+    if(round.id==='bonus-vragen'){assert.match(pages[index],/assets\/bonus.png/);continue;}
     if(round.id===5){assert.match(pages[index],/assets\/bingo-kaart-2.png/);continue;}
     assert.equal((pages[index].match(/class="sheet-answer-row"/g)||[]).length,round.id===7?2:round.answerCount);
   }
