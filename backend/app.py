@@ -405,7 +405,7 @@ class Handler(BaseHTTPRequestHandler):
         self.reply(200, {'ok': True})
 
     def reply_image(self, filename):
-        files = {'dj-nieuw.png', 'bingo-broninstructie.png'}
+        files = {'dj-nieuw.png', 'bingo-broninstructie.png', 'pubquiz-presentatie.pdf'}
         if filename not in files:
             raise Problem(404, 'Bestand niet gevonden.')
         file = Path('/var/lib/pubquiz/media') / filename
@@ -413,7 +413,9 @@ class Handler(BaseHTTPRequestHandler):
             raise Problem(404, 'Dit bestand is nog niet beschikbaar.')
         content = file.read_bytes()
         self.send_response(200)
-        self.send_header('Content-Type', 'image/png')
+        self.send_header('Content-Type', 'application/pdf' if filename.endswith('.pdf') else 'image/png')
+        if filename.endswith('.pdf'):
+            self.send_header('Content-Disposition', 'inline; filename="Pubquiz-presentatie.pdf"')
         self.send_header('Content-Length', str(len(content)))
         self.send_header('Cache-Control', 'no-store')
         self.send_header('Connection', 'close')
