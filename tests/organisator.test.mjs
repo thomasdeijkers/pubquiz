@@ -4,10 +4,10 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 const source=readFileSync(new URL('../organisator.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'').replace(/refresh\(true\);\s*setInterval\([\s\S]*$/,'');
-function setup(){
+function setup(search='?tab=nakijken&ronde=1'){
   const listeners={};
   const root={addEventListener:(name,fn)=>listeners[name]=fn,querySelector:()=>{throw new Error('Gebruik de teamregel, geen globale selector');}};
-  const context={document:{getElementById:id=>id==='organizer'?root:id==='sync-status'?null:{addEventListener(){}}},location:{search:'?tab=nakijken&ronde=1',hash:''},localStorage:{getItem(){return null;},removeItem(){}},window:{addEventListener(){}},URLSearchParams,Map,Date,Intl,setTimeout,clearTimeout,formatPoints:c=>String(c/100),roundPodium,trophy:rank=>`<svg data-cup="${rank}"></svg>`};
+  const context={document:{getElementById:id=>id==='organizer'?root:id==='sync-status'?null:{addEventListener(){}}},location:{search,hash:''},localStorage:{getItem(){return null;},removeItem(){}},window:{addEventListener(){}},URLSearchParams,Map,Date,Intl,setTimeout,clearTimeout,formatPoints:c=>String(c/100),roundPodium,trophy:rank=>`<svg data-cup="${rank}"></svg>`};
   vm.runInNewContext(source+`\nthis.harness={listeners:null,setState(value){state=value;},gradingView,teamScoresView,expandedTeamQuestions,setTeam(value){selectedTeam=value;tab='perteam';},teamsView,teamDrafts,bingoWinOrder,setTimingMode(value){bingoTimingMode=value;},questionStanding,questionCard,expandedQuestions,saveAnswer,answerDrafts,getAnswer,answerKey,setConfirmation(accepted){confirmAction=async()=>accepted;},setMutation(fn){mutation=fn;refresh=async()=>{};notice=()=>{};saveIndicator=()=>{};}};`,context);
   const harness=context.harness;
   harness.setState({rounds:[{id:'1',title:'Ronde',closed:false}],teams:[{id:'a',name:'Alpen',active:true},{id:'b',name:'Bergen',active:true}],questions:[{round_id:'1',id:'1',prompt:'Vraag een',correct:'Model',alternatives:[],max_cents:100}],answers:[]});
@@ -193,4 +193,10 @@ test('Een vraag krijgt pas een groen vinkje als alle teams zijn nagekeken',()=>{
   const html=app.questionCard(q,teams,false);
   assert.match(html,/question-review-complete/);assert.match(html,/aria-label="Volledig nagekeken">✓/);assert.match(html,/2\/2 nagekeken/);
   app.setState({teams:[],answers:[]});assert.doesNotMatch(app.questionCard(q,[],false),/Volledig nagekeken/);
+});
+
+test('Een directe vraaglink klapt precies de gevraagde vraag in de geselecteerde ronde open',()=>{
+  const app=setup('?tab=teams&ronde=1&vraag=1');
+  assert.equal(app.expandedQuestions.has('1/1'),true);
+  assert.match(app.gradingView(),/data-question-fold="1\/1" open/);
 });

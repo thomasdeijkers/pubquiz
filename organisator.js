@@ -33,6 +33,8 @@ let toastTimer;
 let loadingError = '';
 const answerDrafts = new Map();
 const expandedQuestions = new Set();
+let linkedQuestion=routeParams.get('vraag');
+if(linkedQuestion){tab='nakijken';expandedQuestions.add(`${selectedRound}/${linkedQuestion}`);}
 const expandedTeamQuestions = new Set();
 const modelDrafts = new Map();
 const teamDrafts = new Map();
@@ -105,6 +107,13 @@ function render(){
   const view=tab==='teams'?teamsView():tab==='nakijken'?gradingView():tab==='perteam'?teamScoresView():tab==='model'?modelView():tab==='bingo'?bingoView():tab==='settings'?settingsView():standingsView();
   root.innerHTML=`<header class="org-header"><a class="brand" href="./"><img class="club-brand-logo" src="assets/clublogo-heynkensort-blauw.png" width="64" height="64" alt="Heynkensort"><span>PUBQUIZ<small>Het wedstrijdsecretariaat · après-ski editie</small></span></a><div class="header-actions"><span class="actor-badge">${esc(actor)}</span><button class="button primary header-score-link" data-tab="perteam">Scores invullen</button>${headerMenu({admin:true,active:tab})}</div></header><div class="org-layout"><main class="org-content">${tab==='perteam'?'':'<div class="org-sync"><span id="sync-status"></span><button class="text-button" data-action="refresh">Vernieuwen ↻</button></div>'}${view}</main></div>`;
   saveIndicator();
+  if(linkedQuestion){
+    const question=[...root.querySelectorAll('.question-fold')].find(node=>node.dataset.question===linkedQuestion);
+    if(question){
+      linkedQuestion=null;
+      requestAnimationFrame(()=>{question.scrollIntoView({block:'start'});question.querySelector('summary')?.focus({preventScroll:true});});
+    }
+  }
 }
 function bingoCardOptions(card){return `<option value="">Nog niet gekoppeld</option>${[1,2,3].map(id=>`<option value="${id}" ${String(card)===String(id)?'selected':''}>K${id}</option>`).join('')}`;}
 function teamsView(){
