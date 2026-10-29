@@ -8,7 +8,7 @@ function setup(search='?tab=nakijken&ronde=1'){
   const listeners={};
   const root={addEventListener:(name,fn)=>listeners[name]=fn,querySelector:()=>{throw new Error('Gebruik de teamregel, geen globale selector');}};
   const context={document:{getElementById:id=>id==='organizer'?root:id==='sync-status'?null:{addEventListener(){}}},location:{search,hash:''},localStorage:{getItem(){return null;},removeItem(){}},window:{addEventListener(){}},URLSearchParams,Map,Date,Intl,setTimeout,clearTimeout,formatPoints:c=>String(c/100),roundPodium,trophy:rank=>`<svg data-cup="${rank}"></svg>`};
-  vm.runInNewContext(source+`\nthis.harness={listeners:null,setState(value){state=value;},gradingView,teamScoresView,expandedTeamQuestions,setRound(value){selectedRound=value;},gradeButtons,setTeam(value){selectedTeam=value;tab='perteam';},teamsView,teamDrafts,bingoWinOrder,bingoView,setTimingMode(value){bingoTimingMode=value;},questionStanding,questionCard,expandedQuestions,saveAnswer,answerDrafts,getAnswer,answerKey,setConfirmation(accepted){confirmAction=async()=>accepted;},setMutation(fn){mutation=fn;refresh=async()=>{};notice=()=>{};saveIndicator=()=>{};}};`,context);
+  vm.runInNewContext(source+`\nthis.harness={listeners:null,setState(value){state=value;},gradingView,teamScoresView,expandedTeamQuestions,setRound(value){selectedRound=value;},gradeButtons,setTeam(value){selectedTeam=value;tab='perteam';},teamsView,teamDrafts,bingoWinOrder,bingoView,questionStanding,questionCard,expandedQuestions,saveAnswer,answerDrafts,getAnswer,answerKey,setConfirmation(accepted){confirmAction=async()=>accepted;},setMutation(fn){mutation=fn;refresh=async()=>{};notice=()=>{};saveIndicator=()=>{};}};`,context);
   const harness=context.harness;
   harness.setState({rounds:[{id:'1',title:'Ronde',closed:false}],teams:[{id:'a',name:'Alpen',active:true},{id:'b',name:'Bergen',active:true}],questions:[{round_id:'1',id:'1',prompt:'Vraag een',correct:'Model',alternatives:[],max_cents:100}],answers:[]});
   return {...harness,listeners};
@@ -132,19 +132,11 @@ test('Afzonderlijke punten blijven behouden na een wijziging op één onderdeel'
   assert.deepEqual(Array.from(f.saved().body.questions,q=>q.max_points),[5,10,10]);
 });
 
-test('Bingo bewaart de oorspronkelijke kaartvolgorde als vergelijking',()=>{
+test('Bingo gebruikt uitsluitend de Spotify-volgorde voor alle gekoppelde teams',()=>{
   const app=setup();
-  app.setState({teams:[{id:'a',name:'Alpen',active:true,bingo_card:2},{id:'b',name:'Bergen',active:true,bingo_card:1}],bingo:{completions:{K1:{first:null,second:40,full:null},K2:{first:54,second:47,full:null},K3:{first:55,second:43,full:null}},proposal:{completions:{K1:{first:58,second:43,full:58},K2:{first:20,second:47,full:59},K3:{first:60,second:40,full:60}}}}});
-  app.setTimingMode('current');
-  let html=app.bingoWinOrder('1');
-  assert.ok(html.indexOf('Kaart K2')<html.indexOf('Kaart K3'));
-  assert.match(html,/Alpen/);assert.match(html,/Vanaf nummer 54/);assert.match(html,/Niet haalbaar/);
-  assert.match(app.bingoWinOrder('2'),/geen afzonderlijke tweede winronde/);
-  assert.match(app.bingoWinOrder('3'),/volle bingokaart niet haalbaar/);
-  app.setTimingMode('proposal');html=app.bingoWinOrder('2');
-  assert.match(html,/gecontroleerde afspeelvolgorde/);assert.match(html,/Vanaf nummer 40/);
-  assert.ok(html.indexOf('Kaart K3')<html.indexOf('Kaart K1'));
-  assert.doesNotMatch(html,/geen afzonderlijke tweede winronde/);
+  app.setState({teams:[{id:'a',name:'Alpen',active:true,bingo_card:2},{id:'b',name:'Bergen',active:true,bingo_card:1}],bingo:{completions:{K2:{first:54}},verified:{completions:{K1:{first:58,second:43,full:58},K2:{first:20,second:47,full:59},K3:{first:60,second:40,full:60}}}}});
+  const html=app.bingoWinOrder('1');assert.match(html,/Spotify-afspeellijst/);assert.match(html,/Alpen/);assert.match(html,/Vanaf nummer 20/);assert.doesNotMatch(html,/Vanaf nummer 54|DJ-kaart/);
+  assert.ok(app.bingoWinOrder('2').indexOf('Kaart K3')<app.bingoWinOrder('2').indexOf('Kaart K1'));
 });
 
 test('Rondecontrole toont het podium op rondepunten met goud, zilver en brons',()=>{
@@ -211,7 +203,7 @@ test('DJ-scherm toont de gecontroleerde volgorde, kaartvermeldingen, winmomenten
   assert.equal((html.match(/class="bingo-win-track"/g)||[]).length,3);
   assert.match(html,/K2 · na nummer 20/);assert.match(html,/K3 · na nummer 40/);assert.match(html,/K1 · na nummer 58/);
   assert.match(html,/href="https:\/\/open.spotify.com\/track\/happy-original"/);
-  assert.match(html,/niet automatisch aangepast/);assert.match(html,/huidige ensembleversie/);
+  assert.match(html,/Spotify-afspeellijst/);assert.doesNotMatch(html,/huidige ensembleversie|DJ-kaart|Eerst #/);
   assert.match(html,/<span>K1<\/span><span>K3<\/span>/);
   assert.doesNotMatch(html,/nieuwe DJ-kaart is leidend|nummering is leidend/);
   const timing=app.bingoWinOrder('1');assert.match(timing,/Vanaf nummer 20/);assert.doesNotMatch(timing,/Niet haalbaar/);
