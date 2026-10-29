@@ -124,16 +124,17 @@ function teamsView(){
 function selectorBar(){return `<div class="selector-bar org-panel"><div><label for="grading-round">Ronde</label><select id="grading-round">${options(state.rounds,selectedRound,roundLabel)}</select></div>${tab==='nakijken'?'<div class="all-teams-note"><strong>Alle teams onder iedere vraag</strong><span>Kies per team de beoordeling of het aantal punten.</span></div>':''}</div>`;}
 function scoreGuide(){
   if(selectedRound==='3')return '<p class="partial-score-guide">Muziek: 1 punt voor de juiste titel + 1 punt voor de juiste artiest. Herkenbare spelling is goed; een ontbrekende gastartiest kost geen punt.</p>';
-  if(selectedRound==='7')return '<p class="partial-score-guide">Beerpong: 3 worpen per team, 2 punten per geraakte beker (0, 2, 4 of 6). Hoogste toren binnen 2 minuten: 10 punten voor de winnaar, overige teams 0.</p>';
+  if(selectedRound==='7')return '<p class="partial-score-guide">Beerpong: 1 punt per beker waarin een balletje komt, maximaal 9 punten (0 t/m 9). Hoogste toren binnen 2 minuten: 10 punten voor de winnaar, overige teams 0.</p>';
   return '';
 }
 function gradeButtons(q,team,score,locked){
   const music=selectedRound==='3' && q.max_cents===200;
-  const beerpong=selectedRound==='7' && String(q.id)==='2' && q.max_cents===600;
-  if(music || beerpong){
-    const values=music?[0,1,2]:[0,2,4,6];
+  const beerpong=selectedRound==='7' && String(q.id)==='2' && q.max_cents===900;
+  if(beerpong)return `<div class="team-grade-buttons beerpong-score-control"><select data-score-select="${q.id}" aria-label="Beerpongpunten ${esc(team.name)} vraag ${q.id}" ${locked?'disabled':''}><option value="" ${score==null?'selected':''} disabled>Score kiezen</option>${Array.from({length:10},(_,value)=>`<option value="${value}" ${score===value*100?'selected':''}>${value} ${value===1?'punt':'punten'}</option>`).join('')}</select></div>`;
+  if(music){
+    const values=[0,1,2];
     return `<div class="team-grade-buttons partial-score-buttons" style="--score-options:${values.length}" role="group" aria-label="Punten ${esc(team.name)} vraag ${q.id}">${values.map(value=>{
-      const hint=music?['Titel en artiest fout','Alleen titel of artiest goed','Titel en artiest goed'][value]:`${value/2} geraakte ${value===2?'beker':'bekers'}`;
+      const hint=['Titel en artiest fout','Alleen titel of artiest goed','Titel en artiest goed'][value];
       return `<button type="button" class="grade-button ${value===0?'wrong':value===q.max_cents/100?'good':'partial'} ${score===value*100?'chosen':''}" data-score="${q.id}" data-value="${value}" aria-label="${value} punten ${esc(team.name)} vraag ${q.id}: ${hint}" aria-pressed="${score===value*100}" title="${hint}" ${locked?'disabled':''}>${value} pt</button>`;
     }).join('')}</div>`;
   }
@@ -297,6 +298,11 @@ root.addEventListener('input',event=>{
   updateDirty();
 });
 root.addEventListener('change',event=>{
+  if(event.target.dataset.scoreSelect!==undefined){
+    const select=event.target,row=select.closest('.team-answer-row');
+    if(select.value!=='')return saveAnswer(select.dataset.scoreSelect,Number(select.value),select,row.dataset.team);
+    return;
+  }
   if(event.target.name==='bingo_card'){
     const form=event.target.closest('form'),id=form.dataset.id || 'new',previous=teamDrafts.get(id),team=state.teams.find(item=>item.id===id);
     teamDrafts.set(id,{name:form.elements.name.value,members:form.elements.members.value,bingo_card:form.elements.bingo_card.value,version:previous?.version ?? team?.version});updateDirty();return;

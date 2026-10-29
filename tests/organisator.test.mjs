@@ -217,15 +217,15 @@ test('DJ-scherm toont de gecontroleerde volgorde, kaartvermeldingen, winmomenten
   const timing=app.bingoWinOrder('1');assert.match(timing,/Vanaf nummer 20/);assert.doesNotMatch(timing,/Niet haalbaar/);
 });
 
-test('Muziek biedt 0, 1 en 2 punten en beerpong biedt 0, 2, 4 en 6; deelscores blijven zichtbaar',()=>{
+test('Muziek biedt 0, 1 en 2 punten en beerpong biedt alle scores van 0 t/m 9',()=>{
   const app=setup(),team={id:'a',name:'Alpen'};
   app.setRound('3');
   let html=app.gradeButtons({id:'1',max_cents:200},team,100,false);
   assert.deepEqual([...html.matchAll(/data-value="(\d+)"/g)].map(m=>Number(m[1])),[0,1,2]);
   assert.match(html,/partial chosen/);assert.match(html,/Alleen titel of artiest goed/);assert.match(html,/aria-pressed="true"/);
-  app.setRound('7');html=app.gradeButtons({id:'2',max_cents:600},team,400,true);
-  assert.deepEqual([...html.matchAll(/data-value="(\d+)"/g)].map(m=>Number(m[1])),[0,2,4,6]);
-  assert.match(html,/2 geraakte bekers/);assert.equal((html.match(/ disabled/g)||[]).length,4);
+  app.setRound('7');html=app.gradeButtons({id:'2',max_cents:900},team,500,true);
+  assert.deepEqual([...html.matchAll(/<option value="(\d+)"/g)].map(m=>Number(m[1])),[0,1,2,3,4,5,6,7,8,9]);
+  assert.match(html,/<option value="5" selected>5 punten/);assert.match(html,/<select[^>]* disabled/);
   html=app.gradeButtons({id:'1',max_cents:1000},team,0,false);
   assert.match(html,/Goed · 10/);assert.doesNotMatch(html,/partial-score-buttons/);
 });
@@ -236,4 +236,12 @@ test('Een muziekdeelbeoordeling en beerpongdeelscore worden voor het juiste team
   assert.equal(sent.round_id,'3');assert.equal(sent.team_id,'a');assert.equal(sent.points,1);assert.equal(app.getAnswer('1','a').points_cents,100);
   app.setRound('7');await app.saveAnswer('2',4,r.button,'a');
   assert.equal(sent.round_id,'7');assert.equal(sent.points,4);assert.equal(app.getAnswer('2','a').points_cents,400);
+});
+
+test('De beerpongkeuze slaat het gekozen aantal bekerpunten direct op zonder een tekstantwoord te wissen',async()=>{
+  const app=setup(),r=row('a','bestaand');let sent;
+  app.setRound('7');app.setMutation(async(path,body)=>{sent=body;return {...body,points_cents:body.points*100,version:1};});
+  const select={dataset:{scoreSelect:'2'},value:'9',closest:()=>r.container,disabled:false};
+  await app.listeners.change({target:select});
+  assert.equal(sent.round_id,'7');assert.equal(sent.question_id,'2');assert.equal(sent.points,9);assert.equal(sent.team_id,'a');assert.equal(sent.answer,'bestaand');
 });

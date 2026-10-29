@@ -210,3 +210,5 @@ body,.organizer-body{background:#e6f3fc url('assets/alpen-achtergrond.svg') cent
 .team-grade-buttons.partial-score-buttons .grade-button{width:100%;min-width:0;padding:5px 2px;font-size:12px}
 .grade-button.partial{color:#83550c;border:1px solid #c8a154;background:#fff4d8}.grade-button.partial.chosen{background:#ac7619;color:white;border-color:#825711}
 @media(max-width:750px){.team-grade-buttons.partial-score-buttons .grade-button{font-size:11px;padding:4px 1px}.team-scoring-page .team-grade-buttons.partial-score-buttons{gap:4px!important}.partial-score-guide{font-size:11px}}
+
+.team-grade-buttons.beerpong-score-control{min-width:0;width:100%}.team-grade-buttons.beerpong-score-control select{width:100%;min-width:0;max-width:100%;min-height:36px;border:1px solid #9db4c6;border-radius:4px;background:#fff;color:#173e65;font-size:12px;padding:4px 6px}.team-scoring-page .team-grade-buttons.beerpong-score-control select{height:36px}
