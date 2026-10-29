@@ -8,7 +8,7 @@ function setup(search='?tab=nakijken&ronde=1'){
   const listeners={};
   const root={addEventListener:(name,fn)=>listeners[name]=fn,querySelector:()=>{throw new Error('Gebruik de teamregel, geen globale selector');}};
   const context={document:{getElementById:id=>id==='organizer'?root:id==='sync-status'?null:{addEventListener(){}}},location:{search,hash:''},localStorage:{getItem(){return null;},removeItem(){}},window:{addEventListener(){}},URLSearchParams,Map,Date,Intl,setTimeout,clearTimeout,formatPoints:c=>String(c/100),roundPodium,trophy:rank=>`<svg data-cup="${rank}"></svg>`};
-  vm.runInNewContext(source+`\nthis.harness={listeners:null,setState(value){state=value;},gradingView,teamScoresView,expandedTeamQuestions,setTeam(value){selectedTeam=value;tab='perteam';},teamsView,teamDrafts,bingoWinOrder,bingoView,setTimingMode(value){bingoTimingMode=value;},questionStanding,questionCard,expandedQuestions,saveAnswer,answerDrafts,getAnswer,answerKey,setConfirmation(accepted){confirmAction=async()=>accepted;},setMutation(fn){mutation=fn;refresh=async()=>{};notice=()=>{};saveIndicator=()=>{};}};`,context);
+  vm.runInNewContext(source+`\nthis.harness={listeners:null,setState(value){state=value;},gradingView,teamScoresView,expandedTeamQuestions,setRound(value){selectedRound=value;},gradeButtons,setTeam(value){selectedTeam=value;tab='perteam';},teamsView,teamDrafts,bingoWinOrder,bingoView,setTimingMode(value){bingoTimingMode=value;},questionStanding,questionCard,expandedQuestions,saveAnswer,answerDrafts,getAnswer,answerKey,setConfirmation(accepted){confirmAction=async()=>accepted;},setMutation(fn){mutation=fn;refresh=async()=>{};notice=()=>{};saveIndicator=()=>{};}};`,context);
   const harness=context.harness;
   harness.setState({rounds:[{id:'1',title:'Ronde',closed:false}],teams:[{id:'a',name:'Alpen',active:true},{id:'b',name:'Bergen',active:true}],questions:[{round_id:'1',id:'1',prompt:'Vraag een',correct:'Model',alternatives:[],max_cents:100}],answers:[]});
   return {...harness,listeners};
@@ -215,4 +215,25 @@ test('DJ-scherm toont de gecontroleerde volgorde, kaartvermeldingen, winmomenten
   assert.match(html,/<span>K1<\/span><span>K3<\/span>/);
   assert.doesNotMatch(html,/nieuwe DJ-kaart is leidend|nummering is leidend/);
   const timing=app.bingoWinOrder('1');assert.match(timing,/Vanaf nummer 20/);assert.doesNotMatch(timing,/Niet haalbaar/);
+});
+
+test('Muziek biedt 0, 1 en 2 punten en beerpong biedt 0, 2, 4 en 6; deelscores blijven zichtbaar',()=>{
+  const app=setup(),team={id:'a',name:'Alpen'};
+  app.setRound('3');
+  let html=app.gradeButtons({id:'1',max_cents:200},team,100,false);
+  assert.deepEqual([...html.matchAll(/data-value="(\d+)"/g)].map(m=>Number(m[1])),[0,1,2]);
+  assert.match(html,/partial chosen/);assert.match(html,/Alleen titel of artiest goed/);assert.match(html,/aria-pressed="true"/);
+  app.setRound('7');html=app.gradeButtons({id:'2',max_cents:600},team,400,true);
+  assert.deepEqual([...html.matchAll(/data-value="(\d+)"/g)].map(m=>Number(m[1])),[0,2,4,6]);
+  assert.match(html,/2 geraakte bekers/);assert.equal((html.match(/ disabled/g)||[]).length,4);
+  html=app.gradeButtons({id:'1',max_cents:1000},team,0,false);
+  assert.match(html,/Goed · 10/);assert.doesNotMatch(html,/partial-score-buttons/);
+});
+test('Een muziekdeelbeoordeling en beerpongdeelscore worden voor het juiste team opgeslagen',async()=>{
+  const app=setup(),r=row('a','');let sent;
+  app.setMutation(async(path,body)=>{sent=body;return {...body,points_cents:body.points*100,version:1};});
+  app.setRound('3');await app.saveAnswer('1',1,r.button,'a');
+  assert.equal(sent.round_id,'3');assert.equal(sent.team_id,'a');assert.equal(sent.points,1);assert.equal(app.getAnswer('1','a').points_cents,100);
+  app.setRound('7');await app.saveAnswer('2',4,r.button,'a');
+  assert.equal(sent.round_id,'7');assert.equal(sent.points,4);assert.equal(app.getAnswer('2','a').points_cents,400);
 });

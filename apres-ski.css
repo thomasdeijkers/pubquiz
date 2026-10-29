@@ -203,3 +203,10 @@ body,.organizer-body{background:#e6f3fc url('assets/alpen-achtergrond.svg') cent
 .menu-question-results span{display:block;font-weight:700}
 .question-fold{scroll-margin-top:var(--header-offset,120px)}
 .header-menu .menu-question-results a span{color:#153f69;font-size:13px;letter-spacing:normal;text-transform:none}
+
+/* Explicit partial scores fit the existing compact grading rows. */
+.partial-score-guide{padding:9px 12px;margin:10px 0;border:1px solid #b7ccdf;border-radius:5px;background:#f0f6fd;color:#173e65;font-size:12px;line-height:1.5}
+.team-grade-buttons.partial-score-buttons{display:grid!important;grid-template-columns:repeat(var(--score-options),minmax(0,1fr));gap:5px!important;min-width:0}
+.team-grade-buttons.partial-score-buttons .grade-button{width:100%;min-width:0;padding:5px 2px;font-size:12px}
+.grade-button.partial{color:#83550c;border:1px solid #c8a154;background:#fff4d8}.grade-button.partial.chosen{background:#ac7619;color:white;border-color:#825711}
+@media(max-width:750px){.team-grade-buttons.partial-score-buttons .grade-button{font-size:11px;padding:4px 1px}.team-scoring-page .team-grade-buttons.partial-score-buttons{gap:4px!important}.partial-score-guide{font-size:11px}}
