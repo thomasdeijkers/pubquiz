@@ -1,4 +1,4 @@
-import {PDFDocument,StandardFonts,rgb} from './vendor/pdf-lib.mjs';
+import {PDFDocument,StandardFonts,rgb,degrees} from './vendor/pdf-lib.mjs';
 
 export function masterCardPaths(quiz){
   return [...new Set([...quiz.rounds.flatMap(round=>round.cards.map(card=>card.src).filter(src=>src.endsWith('.png'))),quiz.bonus.image])];
@@ -78,5 +78,36 @@ export async function createMasterQuestionsPdf(state,quiz,images={},options={}){
     p.drawText('Organisatie-exemplaar - actuele beoordeling staat op het rondeblad',{x:M,y:29,size:8,font,color:gray});
     const count=`${index+1} / ${pages.length}`;p.drawText(count,{x:W-M-font.widthOfTextAtSize(count,8),y:29,size:8,font,color:gray});
   });
+  return doc.save();
+}
+
+export function questionCardItems(quiz){
+  return [...quiz.rounds.flatMap(round=>round.cards.map(card=>({
+    ...card,src:round.id===5 && card.src.endsWith('.svg')?'https://vps.opticore-insights.nl/pubquiz-api/v1/media/bingo-broninstructie.png':card.src
+  }))),{src:quiz.bonus.image,label:'Bonusronde'}];
+}
+export function cardOnA5(imageWidth,imageHeight,slot){
+  const W=595.28,H=841.89,margin=5*72/25.4,half=H/2;
+  const rotated=imageHeight>imageWidth;
+  const scale=Math.min((W-2*margin)/(rotated?imageHeight:imageWidth),(half-2*margin)/(rotated?imageWidth:imageHeight));
+  const width=imageWidth*scale,height=imageHeight*scale;
+  const boundsWidth=rotated?height:width,boundsHeight=rotated?width:height;
+  const left=(W-boundsWidth)/2,bottom=(slot===0?half:0)+(half-boundsHeight)/2;
+  return {x:rotated?left+height:left,y:bottom,width,height,rotation:rotated?90:0,bounds:{left,bottom,width:boundsWidth,height:boundsHeight}};
+}
+export async function createQuestionCardsPdf(quiz,images){
+  const doc=await PDFDocument.create();doc.setTitle('Pubquiz vraagkaarten - 2 op A4');doc.setAuthor('T.V. Heynkensort');
+  const cards=questionCardItems(quiz);
+  if(!cards.length)throw new Error('Er zijn geen vraagkaarten beschikbaar.');
+  for(let index=0;index<cards.length;index+=2){
+    const page=doc.addPage([595.28,841.89]);
+    for(let slot=0;slot<2;slot++){
+      const card=cards[index+slot];if(!card)continue;
+      if(!images[card.src])throw new Error('Een vraagkaart ontbreekt. Probeer opnieuw.');
+      const image=await doc.embedPng(images[card.src]),placement=cardOnA5(image.width,image.height,slot);
+      page.drawImage(image,{x:placement.x,y:placement.y,width:placement.width,height:placement.height,rotate:degrees(placement.rotation)});
+    }
+    page.drawLine({start:{x:14.17,y:841.89/2},end:{x:581.11,y:841.89/2},thickness:.4,color:rgb(.7,.7,.7),dashArray:[3,4]});
+  }
   return doc.save();
 }

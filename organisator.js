@@ -1,6 +1,6 @@
 import {makeDemoState,installDemo} from './demo.mjs';
 import {watchForUpdates} from './updates.mjs';
-import {createMasterQuestionsPdf,masterCardPaths} from './master-questions-pdf.mjs';
+import {createQuestionCardsPdf,questionCardItems} from './master-questions-pdf.mjs';
 import {headerMenu} from './navigation.mjs';
 import {podium,roundPodium,trophy} from './scoreboard.mjs';
 import {summarize,formatPoints} from './scoring.mjs';
@@ -215,8 +215,7 @@ function bingoView(){
   return `<div class="org-title"><div><p class="eyebrow dark">RONDE 5 · MUZIEKBINGO</p><h1>Spotify-afspeellijst</h1><p>${order.tracks.length} nummers · volgorde en kaartvermeldingen gecontroleerd op ${esc(order.checked_date)}</p></div><a class="button primary" href="${esc(bingo.playlist_url)}" target="_blank" rel="noopener noreferrer">Open Spotify ↗</a></div><section class="org-panel"><h2 class="bingo-subtitle">De drie winmomenten</h2><div class="bingo-win-moments">${phases.map(([label,card,after])=>`<div><span>${label}</span><strong>${card} · na nummer ${after}</strong><small>${esc(order.tracks[after-1]?.title || '')}</small></div>`).join('')}</div><p class="table-note">Speel vanaf nummer 1 in de playlistvolgorde, zonder shuffle. Blijf na elk winmoment afstrepen op dezelfde kaart. Teams met dezelfde kaart hebben tegelijk bingo. Volle kaarten: ${Object.entries(order.completions).map(([card,result])=>`${card} na ${result.full}`).join(', ')}.</p></section><section class="org-panel bingo-verified-order"><h2 class="bingo-subtitle">Nummers in Spotify-volgorde</h2><p class="table-note">Deze lijst volgt de gecontroleerde Spotify-playlist. Speel circa 30 seconden per nummer met 3–5 seconden wisseltijd.</p><div class="table-scroll"><table class="bingo-order-table bingo-spotify-table"><thead><tr><th>#</th><th>Nummer / artiest</th><th>Kaarten</th><th>Open</th></tr></thead><tbody>${order.tracks.map(track=>{const win=winAt.get(track.position);return `<tr class="${win?'bingo-win-track':''}" id="bingo-track-${track.position}"><td class="bingo-position">${track.position}</td><th scope="row"><strong>${esc(track.title)}</strong><small>${esc(track.artists)}</small>${win?`<span class="bingo-win-label">${win.card} · ${win.label}</span>`:''}</th><td><span class="bingo-card-tags">${track.cards.map(card=>`<span>${esc(card)}</span>`).join('')}</span></td><td><a href="${esc(track.url)}" target="_blank" rel="noopener noreferrer" aria-label="Open nummer ${track.position}: ${esc(track.title)} op Spotify">Spotify ↗</a></td></tr>`;}).join('')}</tbody></table></div></section><div class="org-panel bingo-material-buttons">${[1,2,3].map(id=>`<a class="button outline" href="./?invulblad=bingo-${id}" target="_blank" rel="noopener">Bingokaart K${id} printen ↗</a>`).join('')}<button class="button primary" data-action="bingo-scores">Bingopunten invullen →</button></div>`;
 }
 function masterPrintView(){
-  const missing=state.questions.filter(q=>!q.correct.trim()).length;
-  return `<div class="org-title"><div><p class="eyebrow dark">VOOR DE PUBQUIZMASTER</p><h1>Alle vragen printen</h1><p>Alle negen rondes en de bonusronde in één A4-pdf, in de juiste volgorde.</p></div></div><section class="org-panel master-print-options"><h2>Printset voor de quizmaster</h2><label class="checkbox"><input id="master-print-answers" type="checkbox" checked> Modelantwoorden en puntentelling meenemen</label><label class="checkbox"><input id="master-print-cards" type="checkbox" checked> Originele vraagkaarten meenemen (antwoordopties en afbeeldingen)</label><p>De vragen en modelantwoorden worden bij het downloaden opnieuw uit de app opgehaald. Originele kaarten zijn bronmateriaal; de actuele beoordeling staat op het rondeblad. De pdf bevat geen webadressen of browserdatum.</p>${missing?`<p class="info-note">Bij ${missing} vragen ontbreekt het modelantwoord nog. Deze worden gemarkeerd als ‘Nog niet aangeleverd’.</p>`:''}<button class="button primary" data-action="master-print-pdf">Download print-PDF ↓</button><p id="master-print-status" role="status"></p></section>`;
+  return `<div class="org-title"><div><p class="eyebrow dark">KNIPPEN EN PLAKKEN OP A5</p><h1>Vraagkaarten printen</h1><p>Alleen de kaarten, twee op één A4, in de volgorde van de rondes inclusief bonus.</p></div></div><section class="org-panel master-print-options"><h2>Twee kaarten op één A4</h2><p>Elke kaart past binnen een liggend A5-vlak met een witte rand om hem op je A5-kaart te plakken. De bonuskaart wordt gedraaid zodat hij op een staande A5-kaart past. Halverwege het A4 staat een subtiele kniplijn.</p><p><strong>Print op A4, 100% / werkelijke grootte, enkelzijdig.</strong> Kies in het printvenster 1 pagina per vel: de pdf bevat al twee kaarten per pagina.</p><button class="button primary" data-action="master-print-pdf">Download kaarten-PDF ↓</button><p id="master-print-status" role="status"></p></section>`;
 }
 function settingsView(){
   return `<div class="org-title"><div><p class="eyebrow dark">DE SPELREGELS VOOR JULLIE QUIZ</p><h1>Instellingen</h1><p>Pas de puntentelling aan en sla iedere ronde apart op. Alle organisatoren gebruiken daarna dezelfde instellingen.</p></div></div><h2 class="settings-title">Puntentelling</h2><div class="info-note">Stel één puntenaantal voor de hele ronde in, of geef afzonderlijke vragen een ander maximum. Kies bij bestaande beoordelingen of je de punten wilt behouden of naar verhouding wilt herberekenen. Afgesloten rondes moet je eerst heropenen.</div>${state.rounds.map(round=>{
@@ -377,18 +376,17 @@ root.addEventListener('click',async event=>{
   try{
     if(action==='master-print-pdf'){
       const status=document.getElementById('master-print-status');
-      const options={answers:document.getElementById('master-print-answers').checked,cards:document.getElementById('master-print-cards').checked};
-      button.disabled=true;status.textContent='Print-PDF maken…';
+      button.disabled=true;status.textContent='Kaarten-PDF maken…';
       try{
-        const [fresh,quizResponse]=await Promise.all([api('/state'),fetch('data/quiz.json')]);
+        const quizResponse=await fetch('data/quiz.json');
         if(!quizResponse.ok)throw new Error('De vraagkaarten konden niet worden geladen.');
         const quiz=await quizResponse.json(),images={};
-        if(options.cards)await Promise.all(masterCardPaths(quiz).map(async path=>{
+        await Promise.all([...new Set(questionCardItems(quiz).map(card=>card.src))].map(async path=>{
           const response=await fetch(path);if(!response.ok)throw new Error('Een vraagkaart kon niet worden geladen. Probeer opnieuw.');
           images[path]=new Uint8Array(await response.arrayBuffer());
         }));
-        const bytes=await createMasterQuestionsPdf(fresh,quiz,images,options);
-        download('Pubquizmaster-alle-vragen.pdf',bytes,'application/pdf');status.textContent='De print-PDF is gedownload. Print op A4.';
+        const bytes=await createQuestionCardsPdf(quiz,images);
+        download('Vraagkaarten-2-per-A4.pdf',bytes,'application/pdf');status.textContent='Kaarten-PDF gedownload: twee kaarten per A4. Print op 100% / werkelijke grootte.';
       }finally{button.disabled=false;}
       return;
     }
