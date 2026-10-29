@@ -1,5 +1,6 @@
 import {makeDemoState,installDemo} from './demo.mjs';
 import {watchForUpdates} from './updates.mjs';
+import {createMasterQuestionsPdf,masterCardPaths} from './master-questions-pdf.mjs';
 import {headerMenu} from './navigation.mjs';
 import {podium,roundPodium,trophy} from './scoreboard.mjs';
 import {summarize,formatPoints} from './scoring.mjs';
@@ -19,7 +20,7 @@ if (new URLSearchParams(location.hash.slice(1)).has('sleutel')) {
 }
 let state;
 const routeParams = new URLSearchParams(location.search);
-let tab = ({instellingen:'settings',nakijken:'nakijken',stand:'stand',teams:'teams',perteam:'perteam',model:'model',bingo:'bingo'})[routeParams.get('tab')] || 'teams';
+let tab = ({masterprint:'masterprint',instellingen:'settings',nakijken:'nakijken',stand:'stand',teams:'teams',perteam:'perteam',model:'model',bingo:'bingo'})[routeParams.get('tab')] || 'teams';
 let selectedRound = routeParams.get('ronde') || '1';
 let selectedTeam = routeParams.get('team') || '';
 let through = '9';
@@ -104,7 +105,7 @@ async function refresh(force=false) {
 function render(){
   if(!state)return;
   if(projection){root.innerHTML=`<main class="projection"><header><span class="brand"><img class="club-brand-logo" src="assets/clublogo-heynkensort-blauw.png" width="64" height="64" alt="Heynkensort">PUBQUIZ · T.V. HEYNKENSORT</span><div class="header-actions"><span id="sync-status"></span>${headerMenu()}</div></header>${standingsView(true)}</main>`; saveIndicator();return;}
-  const view=tab==='teams'?teamsView():tab==='nakijken'?gradingView():tab==='perteam'?teamScoresView():tab==='model'?modelView():tab==='bingo'?bingoView():tab==='settings'?settingsView():standingsView();
+  const view=tab==='masterprint'?masterPrintView():tab==='teams'?teamsView():tab==='nakijken'?gradingView():tab==='perteam'?teamScoresView():tab==='model'?modelView():tab==='bingo'?bingoView():tab==='settings'?settingsView():standingsView();
   root.innerHTML=`<header class="org-header"><a class="brand" href="./"><img class="club-brand-logo" src="assets/clublogo-heynkensort-blauw.png" width="64" height="64" alt="Heynkensort"><span>PUBQUIZ<small>Het wedstrijdsecretariaat · après-ski editie</small></span></a><div class="header-actions"><span class="actor-badge">${esc(actor)}</span><button class="button primary header-score-link" data-tab="perteam">Scores invullen</button>${headerMenu({admin:true,active:tab})}</div></header><div class="org-layout"><main class="org-content">${tab==='perteam'?'':'<div class="org-sync"><span id="sync-status"></span><button class="text-button" data-action="refresh">Vernieuwen ↻</button></div>'}${view}</main></div>`;
   saveIndicator();
   if(linkedQuestion){
@@ -210,6 +211,10 @@ function bingoView(){
   const phases=[['1 · Diagonaal ↘','K2',20],['2 · Diagonaal ↙','K3',40],['3 · Volle kaart','K1',58]];
   const winAt=new Map(phases.map(([label,card,after])=>[after,{label,card}]));
   return `<div class="org-title"><div><p class="eyebrow dark">RONDE 5 · VOOR DE DJ</p><h1>DJ-afspeelvolgorde</h1><p>60 nummers · gecontroleerd met de 108 vakjes op K1, K2 en K3 · ${esc(order.checked_date)}</p></div><a class="button primary" href="${esc(bingo.playlist_url)}" target="_blank" rel="noopener noreferrer">Open Spotify ↗</a></div><section class="org-panel"><h2 class="bingo-subtitle">De drie winmomenten</h2><div class="bingo-win-moments">${phases.map(([label,card,after])=>`<div><span>${label}</span><strong>${card} · na nummer ${after}</strong><small>${esc(order.tracks[after-1].title)}</small></div>`).join('')}</div><p class="table-note">Speel vanaf nummer 1, zonder shuffle. Blijf na elk winmoment afstrepen op dezelfde kaart. Teams met dezelfde kaart hebben tegelijk bingo. Volle kaarten: K1 na 58, K2 na 59 en K3 na 60.</p></section><details class="org-panel bingo-setup"><summary>Spotify klaarzetten</summary><p>Zet de playlist in de onderstaande volgorde. De Spotify-lijst is niet automatisch aangepast. De kolom ‘Eerst #’ toont de positie vóór het herschikken, gecontroleerd op ${esc(order.checked_date)}.</p><p><strong>Vervang Happy door de originele hit van Pharrell Williams.</strong> De huidige ensembleversie met Scott Rogers en Noteservice Wind Ensemble is niet de bedoelde opname. De Spotify-link bij nummer 15 opent de juiste versie.</p><p>Freed From Desire en Levels blijven in de lijst. De afwijkende DJ-vermeldingen Wrecking Ball en ‘Codich’ zijn niet nodig. Speel circa 30 seconden per nummer met 3–5 seconden wisseltijd.</p><button class="button outline" data-action="bingo-proposal-csv">Download afspeelvolgorde (CSV) ↓</button></details><section class="org-panel bingo-verified-order"><h2 class="bingo-subtitle">Speel in deze volgorde</h2><p class="table-note">De kaartvermeldingen zijn gecontroleerd op de gedrukte bingokaarten. Tik op Spotify om het nummer te openen.</p><div class="table-scroll"><table class="bingo-order-table"><thead><tr><th>#</th><th>Nummer / artiest</th><th>Kaarten</th><th>Eerst #</th><th>Open</th></tr></thead><tbody>${order.tracks.map(track=>{const win=winAt.get(track.position);return `<tr class="${win?'bingo-win-track':''}" id="bingo-track-${track.position}"><td class="bingo-position">${track.position}</td><th scope="row"><strong>${esc(track.title)}</strong><small>${esc(track.artists)}</small>${win?`<span class="bingo-win-label">${win.card} · ${win.label}</span>`:''}${track.position===15?'<span class="bingo-version-note">Originele hit · vervang ensembleversie</span>':''}</th><td><span class="bingo-card-tags">${track.cards.map(card=>`<span>${esc(card)}</span>`).join('')}</span></td><td>${track.spotify_position}</td><td><a href="${esc(track.url)}" target="_blank" rel="noopener noreferrer" aria-label="Open nummer ${track.position}: ${esc(track.title)} op Spotify">Spotify ↗</a></td></tr>`;}).join('')}</tbody></table></div></section><div class="org-panel bingo-material-buttons">${[1,2,3].map(id=>`<a class="button outline" href="./?invulblad=bingo-${id}" target="_blank" rel="noopener">Bingokaart K${id} printen ↗</a>`).join('')}<button class="button primary" data-action="bingo-scores">Bingopunten invullen →</button></div><details class="org-panel bingo-source-details"><summary>Oorspronkelijke materialen en afwijkingen</summary><p>De oorspronkelijke DJ-kaart mist Freed From Desire en Levels en bevat verkeerde kaartvermeldingen. Gebruik voor het afspelen de gecontroleerde lijst hierboven.</p><div class="bingo-material-buttons"><button class="button outline" data-media="dj-nieuw.png" data-title="Oorspronkelijke DJ-kaart · bevat afwijkingen">Bekijk oorspronkelijke DJ-kaart</button><button class="button outline" data-media="bingo-broninstructie.png" data-title="Oorspronkelijke speluitleg">Bekijk speluitleg</button></div></details>`;
+}
+function masterPrintView(){
+  const missing=state.questions.filter(q=>!q.correct.trim()).length;
+  return `<div class="org-title"><div><p class="eyebrow dark">VOOR DE PUBQUIZMASTER</p><h1>Alle vragen printen</h1><p>Alle negen rondes en de bonusronde in één A4-pdf, in de juiste volgorde.</p></div></div><section class="org-panel master-print-options"><h2>Printset voor de quizmaster</h2><label class="checkbox"><input id="master-print-answers" type="checkbox" checked> Modelantwoorden en puntentelling meenemen</label><label class="checkbox"><input id="master-print-cards" type="checkbox" checked> Originele vraagkaarten meenemen (antwoordopties en afbeeldingen)</label><p>De vragen en modelantwoorden worden bij het downloaden opnieuw uit de app opgehaald. Originele kaarten zijn bronmateriaal; de actuele beoordeling staat op het rondeblad. De pdf bevat geen webadressen of browserdatum.</p>${missing?`<p class="info-note">Bij ${missing} vragen ontbreekt het modelantwoord nog. Deze worden gemarkeerd als ‘Nog niet aangeleverd’.</p>`:''}<button class="button primary" data-action="master-print-pdf">Download print-PDF ↓</button><p id="master-print-status" role="status"></p></section>`;
 }
 function settingsView(){
   return `<div class="org-title"><div><p class="eyebrow dark">DE SPELREGELS VOOR JULLIE QUIZ</p><h1>Instellingen</h1><p>Pas de puntentelling aan en sla iedere ronde apart op. Alle organisatoren gebruiken daarna dezelfde instellingen.</p></div></div><h2 class="settings-title">Puntentelling</h2><div class="info-note">Stel één puntenaantal voor de hele ronde in, of geef afzonderlijke vragen een ander maximum. Kies bij bestaande beoordelingen of je de punten wilt behouden of naar verhouding wilt herberekenen. Afgesloten rondes moet je eerst heropenen.</div>${state.rounds.map(round=>{
@@ -369,6 +374,23 @@ root.addEventListener('click',async event=>{
   if(button.dataset.score){const row=button.closest('.team-answer-row');return saveAnswer(button.dataset.score,Number(button.dataset.value),button,row.dataset.team);}
   const action=button.dataset.action;if(!action)return;
   try{
+    if(action==='master-print-pdf'){
+      const status=document.getElementById('master-print-status');
+      const options={answers:document.getElementById('master-print-answers').checked,cards:document.getElementById('master-print-cards').checked};
+      button.disabled=true;status.textContent='Print-PDF maken…';
+      try{
+        const [fresh,quizResponse]=await Promise.all([api('/state'),fetch('data/quiz.json')]);
+        if(!quizResponse.ok)throw new Error('De vraagkaarten konden niet worden geladen.');
+        const quiz=await quizResponse.json(),images={};
+        if(options.cards)await Promise.all(masterCardPaths(quiz).map(async path=>{
+          const response=await fetch(path);if(!response.ok)throw new Error('Een vraagkaart kon niet worden geladen. Probeer opnieuw.');
+          images[path]=new Uint8Array(await response.arrayBuffer());
+        }));
+        const bytes=await createMasterQuestionsPdf(fresh,quiz,images,options);
+        download('Pubquizmaster-alle-vragen.pdf',bytes,'application/pdf');status.textContent='De print-PDF is gedownload. Print op A4.';
+      }finally{button.disabled=false;}
+      return;
+    }
     if(action==='scoring-uniform'){
       const form=button.closest('.scoring-form'),field=form.elements.uniform;
       if(field.value==='' || !field.checkValidity()){notice('Vul een geldig puntenaantal tussen 0 en 1000 in.',true);field.focus();return;}
