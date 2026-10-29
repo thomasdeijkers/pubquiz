@@ -36,3 +36,14 @@ test('De tafelkaart toont de teamnaam op twee vouwvlakken en ontsnapt HTML',()=>
   assert.match(html,/Vouw hier/);
   assert.match(tableCardSheet('A'.repeat(80)),/tent-name-long/);
 });
+
+test('Gewone antwoordbladen adviseren de vraag over te schrijven zonder de quizvragen af te drukken',()=>{
+  const pages=answerSheetPack(quiz,'Berggeiten').split('<section ').slice(1);
+  for(const index of [0,1,3,5,7,8]){
+    assert.match(pages[index],/Schrijf de vraag kort over bij het vraagnummer/);
+    assert.match(pages[index],/je antwoord later nog kunt aanpassen/);
+    assert.match(pages[index],/bewust niet bij: een beetje quizchaos hoort erbij/);
+  }
+  assert.match(pages[10],/juiste afbeeldingsnummer/);
+  assert.doesNotMatch(pages[4],/Schrijf de vraag/);
+});

@@ -1,7 +1,7 @@
 import {PDFDocument,StandardFonts,rgb} from './vendor/pdf-lib.mjs';
 import fontkit from './vendor/fontkit.mjs';
 import {createTableCardPdf} from './table-card-pdf.mjs';
-import {sheetCheers} from './answer-sheets.mjs';
+import {sheetCheers,answerWritingAdvice} from './answer-sheets.mjs';
 
 const mm=72/25.4;
 export async function createAnswerSheetsPdf(quiz,teamName,assets){
@@ -40,9 +40,15 @@ export async function createAnswerSheetsPdf(quiz,teamName,assets){
     page.drawText(name,{x:M+65,y:H-107,font:titleFont,size:nameSize,color:navy});
     page.drawLine({start:{x:M,y:H-119},end:{x:W-M,y:H-119},color:line,thickness:.5});
     const music=round.id===3,activity=round.id===7;
-    const note=music?'1-5: clips zonder geluid | 6-9: achterstevoren | 10: voorgelezen songtekst.':round.id===5?'Streep de herkende nummers af. Bewaar deze kaart voor alle bingo\'s.':activity?'Laat de organisatie het resultaat van de activiteiten invullen.':'Vul het antwoord bij het juiste vraagnummer in.';
-    page.drawText(note,{x:M,y:H-138,font:textFont,size:9,color:navy});
-    const top=H-154;
+    const note=music?'1-5: clips zonder geluid | 6-9: achterstevoren | 10: voorgelezen songtekst.':round.id===5?'Streep de herkende nummers af. Bewaar deze kaart voor alle bingo\'s.':activity?'Laat de organisatie het resultaat van de activiteiten invullen.':round.id==='bonus'?'Vul het antwoord bij het juiste afbeeldingsnummer in.':answerWritingAdvice;
+    const noteLines=[];let noteLine='';
+    for(const word of note.split(' ')){
+      const candidate=noteLine?noteLine+' '+word:word;
+      if(textFont.widthOfTextAtSize(candidate,9)>W-M*2 && noteLine){noteLines.push(noteLine);noteLine=word;}else noteLine=candidate;
+    }
+    if(noteLine)noteLines.push(noteLine);
+    noteLines.forEach((line,index)=>page.drawText(line,{x:M,y:H-138-index*13,font:textFont,size:9,color:navy}));
+    const top=H-154-(noteLines.length-1)*13;
     if(round.id===5){
       const scale=Math.min((W-M*2)/bingo.width,(top-72)/bingo.height);
       const width=bingo.width*scale,height=bingo.height*scale;
