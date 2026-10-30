@@ -7,6 +7,9 @@ const quiz = JSON.parse(await readFile('data/quiz.json','utf8'));
 assert.equal(quiz.rounds.length,9,'De quiz heeft negen rondes');
 assert.deepEqual(quiz.rounds.map(r=>r.id),[1,2,3,4,5,6,7,8,9]);
 const files = new Set([quiz.bonus.image,'assets/clublogo-heynkensort-blauw.png','assets/favicon-heynkensort-blauw.png','assets/apple-touch-icon-heynkensort-blauw.png','assets/apres-ski-flyer.png','assets/alpen-achtergrond.svg','assets/apres-ski-sfeer.webp','assets/apres-ski-sfeer-print.jpg','assets/Anton-Regular.ttf','assets/Anton-OFL.txt','assets/clublogo-heynkensort-blauw-print.png','vendor/pdfjs.mjs','vendor/pdf.worker.min.mjs','vendor/pdfjs-LICENSE.txt','vendor/pdf-lib.mjs','vendor/fontkit.mjs','vendor/pdf-lib-LICENSE.md','vendor/fontkit-NOTICE.txt','assets/hout-sneeuw.svg']);
+for(const slug of ['01-slim-team', '02-google-heeft-vrij', '03-wie-appt-die-afdalt', '04-gezelligheid-aan', '05-schermen-uit-brein-aan']){
+  files.add('assets/spelregels/'+slug+'.pdf');files.add('assets/spelregels/'+slug+'.jpg');
+}
 for (const round of quiz.rounds) {
   assert(round.title && round.cards.length && round.answerCount > 0);
   for (const card of round.cards) {
