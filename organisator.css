@@ -47,3 +47,5 @@
 .teams-print-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px}.teams-print-actions .button{font-size:12px;min-height:44px}
 
 .rules-poster-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}.rules-poster{margin:0!important;display:flex;flex-direction:column;align-items:flex-start;padding:18px!important}.rules-poster-preview{display:block;width:100%;background:#edf3f7;text-align:center;border-radius:5px;overflow:hidden}.rules-poster-preview img{display:block;width:100%;height:290px;object-fit:contain}.rules-poster-number{font-size:11px;color:#61798d;margin-top:14px}.rules-poster h2{font:600 20px/1.35 Oswald,sans-serif;color:#173e65;margin:6px 0 15px}.rules-poster .button{margin-top:auto;min-height:44px;font-size:12px}@media(max-width:950px){.rules-poster-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:600px){.rules-poster-grid{grid-template-columns:1fr}.rules-poster-preview img{height:350px}}
+
+.rules-poster-task{color:#536e84;font-size:12px;line-height:1.5;margin:0 0 16px}.rules-poster h2{margin-bottom:7px}
