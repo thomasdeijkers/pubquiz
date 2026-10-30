@@ -65,7 +65,16 @@ export async function createTableCardPdf(teamName,assets){
   }
   face(false);face(true);
   page.drawLine({start:{x:0,y:F},end:{x:W,y:F},color:cream,thickness:1,dashArray:[3,3]});
-  page.drawRectangle({x:W/2-27,y:F-5,width:54,height:10,color:cream});
-  centered('VOUW HIER',F-2,6,small,navy);
+  return doc.save();
+}
+
+export async function createAllTableCardsPdf(teams,assets){
+  const active=teams.filter(team=>team.active);
+  if(!active.length)throw new Error('Er zijn nog geen actieve teams om tafelkaarten voor te printen.');
+  const doc=await PDFDocument.create();doc.setTitle('Alle tafelkaarten - Pubquiz');doc.setAuthor('T.V. Heynkensort');
+  for(const team of active){
+    const source=await PDFDocument.load(await createTableCardPdf(team.name,assets));
+    const [page]=await doc.copyPages(source,[0]);doc.addPage(page);
+  }
   return doc.save();
 }

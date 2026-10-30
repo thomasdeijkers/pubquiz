@@ -33,7 +33,7 @@ test('De tafelkaart toont de teamnaam op twee vouwvlakken en ontsnapt HTML',()=>
   const html=tableCardSheet('Alpen & <Ski>');
   assert.equal((html.match(/class="tent-face"/g)||[]).length,2);
   assert.equal((html.match(/Alpen &amp; &lt;Ski&gt;/g)||[]).length,2);
-  assert.match(html,/Vouw hier/);
+  assert.match(html,/tent-fold-line/);assert.doesNotMatch(html,/vouw hier/i);
   assert.match(tableCardSheet('A'.repeat(80)),/tent-name-long/);
 });
 
