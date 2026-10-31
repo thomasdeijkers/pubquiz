@@ -214,3 +214,6 @@ body,.organizer-body{background:#e6f3fc url('assets/alpen-achtergrond.svg') cent
 .team-grade-buttons.beerpong-score-control{min-width:0;width:100%}.team-grade-buttons.beerpong-score-control select{width:100%;min-width:0;max-width:100%;min-height:36px;border:1px solid #9db4c6;border-radius:4px;background:#fff;color:#173e65;font-size:12px;padding:4px 6px}.team-scoring-page .team-grade-buttons.beerpong-score-control select{height:36px}
 
 @media(max-width:600px){.bingo-order-table.bingo-spotify-table th:nth-child(4),.bingo-order-table.bingo-spotify-table td:nth-child(4){display:table-cell;width:61px}}
+
+/* Scheduled breaks are separate from questions, scores and bonus play. */
+.quiz-break{display:flex;align-items:center;gap:14px;margin:12px 0;padding:17px 20px;border:2px solid #bd955c;border-radius:8px;background:#fff0ce;color:#173c5c}.quiz-break-icon{font-size:29px;flex-shrink:0}.quiz-break strong{font:500 23px/1.3 Oswald,sans-serif;color:#173c5c}.quiz-break p{margin:4px 0 0;font-size:12px;line-height:1.5;color:#4b6170}.quiz-break-duration{margin-left:auto;white-space:nowrap;border-radius:30px;background:#173c5c;color:#fff3d6;padding:9px 13px;font-weight:700;font-size:13px}@media(max-width:600px){.quiz-break{padding:13px 12px;gap:10px}.quiz-break strong{font-size:21px}.quiz-break p{font-size:11px}.quiz-break-duration{display:none}}
