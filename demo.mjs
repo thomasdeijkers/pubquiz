@@ -17,6 +17,7 @@ export function makeDemoState(original){
 export function installDemo(){
   if(document.querySelector('.demo-banner'))return;
   document.body.classList.add('demo-mode');
+  document.querySelectorAll('a[href="narrowcast.html"]').forEach(link=>{link.href='narrowcast.html?demo=1';});
   const original=new URL(location.href);original.searchParams.delete('demo');
   const banner=document.createElement('aside');banner.className='demo-banner';
   banner.innerHTML='<div><strong>DEMO · fictieve resultaten</strong><span>Alle rondes ingevuld · echte quiz blijft bewaard</span></div>';

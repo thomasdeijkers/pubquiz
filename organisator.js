@@ -471,7 +471,7 @@ root.addEventListener('click',async event=>{
       const rows=[['Positie','Team',...result.rounds.map(round=>roundLabel(round)),'Totaal','Beoordeeld'],...result.entries.map(entry=>[entry.rank,entry.name,...result.rounds.map(round=>entry.scores[round.id].reviewed?formatPoints(entry.scores[round.id].points):''),formatPoints(entry.total),`${entry.reviewed}/${entry.questionCount}`])];
       download('pubquiz-tussenstand.csv','\uFEFF'+rows.map(row=>row.map(cell).join(';')).join('\r\n'),'text/csv;charset=utf-8');
     }
-    if(action==='project'){window.open(`organisator.html?scherm=stand&ronde=${through}&bonus=${includeBonus?'1':'0'}`,'_blank','noopener');}
+    if(action==='project'){window.open(`narrowcast.html${demoMode?'?demo=1':''}`,'_blank','noopener');}
     if(action==='change-actor'){if(dirty)return notice('Sla je invoer eerst op.',true);actor='';namePage();}
   }catch(error){notice(error.message || 'De actie is niet gelukt.',true);}
 });

@@ -13,19 +13,25 @@ function draw(){
   const rows=Math.max(4,Math.floor((root.clientHeight-50)/Math.max(42,innerHeight*.055)));
   const tablePages=Math.max(1,Math.ceil(result.entries.length/rows));
   const rounds=state.rounds.map(round=>({round,result:summarizeRound(state,round.id)})).filter(item=>item.result.entries.some(entry=>entry.reviewed>0));
-  const count=tablePages+rounds.length;
+  const screens=[{id:'podium',label:'Erepodium · totaal',result},...Array.from({length:tablePages},(_,index)=>({id:`table-${index}`,label:tablePages>1?`Totaalstand · pagina ${index+1}`:'Totaalstand',index})),...rounds.map(item=>({id:`round-${item.round.id}`,label:item.round.id==='bonus'?'Bonusronde':`Ronde ${item.round.id} · ${item.round.title}`,...item}))];
+  const count=screens.length;
   page%=count;
-  const roundSlide=page>=tablePages?rounds[page-tablePages]:null;
-  document.body.classList.toggle('round-podium-screen',!!roundSlide);
-  if(roundSlide){
-    const {round,result:roundResult}=roundSlide;
-    // Completion follows actual grading, including zero points, rather than a manual close action.
+  const current=screens[page];
+  const picker=document.getElementById('screen-picker');
+  if(picker.dataset.options!==screens.map(item=>item.id+item.label).join('|')){
+    picker.replaceChildren(...screens.map(item=>new Option(item.label,item.id)));
+    picker.dataset.options=screens.map(item=>item.id+item.label).join('|');
+  }
+  picker.value=current.id;
+  document.body.classList.toggle('round-podium-screen',!!current.result);
+  if(current.result){
+    const roundResult=current.result;
     roundResult.provisional=!roundResult.entries.length || roundResult.entries.some(entry=>entry.reviewed<entry.questionCount);
-    document.querySelector('h1').textContent=round.id==='bonus'?'Bonusronde':`Ronde ${round.id} · ${round.title}`;
-    root.innerHTML=podium(roundResult,'De beste teams van deze ronde');
+    document.querySelector('h1').textContent=current.label;
+    root.innerHTML=podium(roundResult,current.round?'De beste teams van deze ronde':'De beste teams van de pubquiz');
   }else{
     document.querySelector('h1').textContent='De tussenstand';
-    root.innerHTML=standingsTable({...result,entries:result.entries.slice(page*rows,(page+1)*rows)});
+    root.innerHTML=standingsTable({...result,entries:result.entries.slice(current.index*rows,(current.index+1)*rows)});
   }
   document.getElementById('pages').textContent=count>1?`Scherm ${page+1} / ${count} · wisselt elke 10 seconden`:`${result.entries.length} teams · alle rondes + bonus`;
 
@@ -44,6 +50,7 @@ async function refresh(){
     document.getElementById('sync').textContent=state?'Verbinding verbroken · laatste stand blijft staan · opnieuw verbinden…':'Scores nog niet bereikbaar · opnieuw verbinden…';
   }finally{busy=false;}
 }
+document.getElementById('screen-picker').addEventListener('change',event=>{page=event.target.selectedIndex;draw();});
 document.getElementById('fullscreen').addEventListener('click',async()=>{
   try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{document.getElementById('fullscreen').textContent='Gebruik volledig scherm van je browser';}
 });
