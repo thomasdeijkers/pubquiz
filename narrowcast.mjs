@@ -27,7 +27,7 @@ function draw(){
     document.querySelector('h1').textContent='De tussenstand';
     root.innerHTML=standingsTable({...result,entries:result.entries.slice(page*rows,(page+1)*rows)});
   }
-  document.getElementById('pages').textContent=count>1?`Scherm ${page+1} / ${count} · wisselt elke 12 seconden`:`${result.entries.length} teams · alle rondes + bonus`;
+  document.getElementById('pages').textContent=count>1?`Scherm ${page+1} / ${count} · wisselt elke 10 seconden`:`${result.entries.length} teams · alle rondes + bonus`;
 
 }
 async function refresh(){
@@ -53,6 +53,6 @@ document.addEventListener('fullscreenchange',()=>{
 });
 addEventListener('resize',draw);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
-setInterval(refresh,5000);
-setInterval(()=>{page++;draw();},12000);
+setInterval(refresh,10000);
+setInterval(()=>{page++;draw();},10000);
 watchForUpdates();refresh();
