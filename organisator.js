@@ -106,7 +106,7 @@ function render(){
   if(!state)return;
   if(projection){root.innerHTML=`<main class="projection"><header><span class="brand"><img class="club-brand-logo" src="assets/clublogo-heynkensort-blauw.png" width="64" height="64" alt="Heynkensort">PUBQUIZ · T.V. HEYNKENSORT</span><div class="header-actions"><span id="sync-status"></span>${headerMenu()}</div></header>${standingsView(true)}</main>`; saveIndicator();return;}
   const view=tab==='spelregels'?rulesPrintView():tab==='masterprint'?masterPrintView():tab==='teams'?teamsView():tab==='nakijken'?gradingView():tab==='perteam'?teamScoresView():tab==='model'?modelView():tab==='bingo'?bingoView():tab==='settings'?settingsView():standingsView();
-  root.innerHTML=`<header class="org-header"><a class="brand" href="./"><img class="club-brand-logo" src="assets/clublogo-heynkensort-blauw.png" width="64" height="64" alt="Heynkensort"><span>PUBQUIZ<small>Het wedstrijdsecretariaat · après-ski editie</small></span></a><div class="header-actions"><span class="actor-badge">${esc(actor)}</span><button class="button primary header-score-link" data-tab="perteam">Scores invullen</button>${headerMenu({admin:true,active:tab})}</div></header><div class="org-layout"><main class="org-content">${tab==='perteam'?'':'<div class="org-sync"><span id="sync-status"></span><button class="text-button" data-action="refresh">Vernieuwen ↻</button></div>'}${view}</main></div>`;
+  root.innerHTML=`<header class="org-header"><a class="brand" href="./"><img class="club-brand-logo" src="assets/clublogo-heynkensort-blauw.png" width="64" height="64" alt="Heynkensort"><span>PUBQUIZ<small>Het wedstrijdsecretariaat · après-ski editie</small></span></a><div class="header-actions"><span class="actor-badge">${esc(actor)}</span><button class="button primary header-score-link" data-tab="perteam">Scores invullen</button>${headerMenu({admin:true,active:tab})}</div></header><div class="org-layout"><main class="org-content">${tab==='perteam'?'':'<div class="org-sync"><span id="sync-status"></span><button class="text-button" data-action="refresh">Vernieuwen ↻</button></div>'}${tab==='settings'?`<section class="org-panel live-round-control"><label for="playing-round-select">We spelen nu<select id="playing-round-select"><option value="">Nog niet gestart</option>${state.rounds.map(r=>`<option value="${esc(r.id)}" ${r.id===state.current_round?'selected':''}>${esc(roundLabel(r))}</option>`).join('')}</select></label><p>Deze ronde verschijnt op de homepage en het narrowcastscherm. Nakijken van andere rondes verandert dit niet.</p></section>`:''}${view}</main></div>`;
   saveIndicator();
   if(linkedQuestion){
     const question=[...root.querySelectorAll('.question-fold')].find(node=>node.dataset.question===linkedQuestion);
@@ -308,7 +308,14 @@ root.addEventListener('input',event=>{
   }
   updateDirty();
 });
-root.addEventListener('change',event=>{
+root.addEventListener('change',async event=>{
+  if(event.target.id==='playing-round-select'){
+    const value=event.target.value;
+    if(demoMode){try{localStorage.setItem('pubquiz-demo-current-round',value);}catch{}state.current_round=value;render();notice('Huidige ronde ingesteld voor deze demo.');return;}
+    event.target.disabled=true;
+    try{await mutation('/rounds/current',{round_id:value});await refresh(true);notice('Huidige ronde bijgewerkt op alle schermen.');}catch(error){notice(error.message,true);render();}
+    return;
+  }
   if(event.target.dataset.scoreSelect!==undefined){
     const select=event.target,row=select.closest('.team-answer-row');
     if(select.value!=='')return saveAnswer(select.dataset.scoreSelect,Number(select.value),select,row.dataset.team);

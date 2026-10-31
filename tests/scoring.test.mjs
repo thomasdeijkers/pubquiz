@@ -52,3 +52,15 @@ test('Een lege of alleen afgesloten ronde wordt niet als volledig ingevuld getoo
   assert.equal(roundProgress(state,'1').complete,false);
   state.teams=[];assert.deepEqual(roundProgress(state,'1'),{reviewed:0,total:0,complete:false});
 });
+
+test('Bekers in overzicht gebruiken rondescores, gedeelde plaatsen en alle teams bij paginering',async()=>{
+  const {roundTrophyRanks,standingsTable}=await import('../scoreboard.mjs');
+  const entries=[{id:'a',name:'A',rank:1,total:900,scores:{'1':{points:0,reviewed:1,total:1}}},{id:'b',name:'B',rank:2,total:500,scores:{'1':{points:100,reviewed:1,total:1}}},{id:'c',name:'C',rank:3,total:400,scores:{'1':{points:100,reviewed:1,total:1}}},{id:'d',name:'D',rank:4,total:300,scores:{'1':{points:50,reviewed:1,total:1}}},{id:'e',name:'E',rank:5,total:0,scores:{'1':{points:0,reviewed:0,total:1}}}];
+  const result={rounds:[{id:'1',title:'Test'}],entries};
+  assert.deepEqual([...roundTrophyRanks(result,'1')],[['b',1],['c',1],['d',3]]);
+  const html=standingsTable({...result,entries:[entries[0]]},{trophies:true,currentRound:'1',rankedEntries:entries});
+  assert.ok(!html.includes('gouden beker'));
+  assert.ok(html.includes('current-round-column'));
+  const bronze=standingsTable({...result,entries:[entries[3]]},{trophies:true,rankedEntries:entries});
+  assert.ok(bronze.includes('bronzen beker'));
+});

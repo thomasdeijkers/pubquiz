@@ -9,6 +9,8 @@ const root=document.getElementById('scores');
 function draw(){
   if(!state)return;
   const result=summarize(state,'9',true);
+  const playing=state.rounds.find(r=>r.id===state.current_round);
+  document.getElementById('playing-round').textContent=playing?`We spelen nu: ${playing.id==='bonus'?'Bonusronde':`ronde ${playing.id}`} · ${playing.title}`:'Huidige ronde nog niet ingesteld';
   // Keep every row readable on televisions; additional teams rotate automatically.
   const rows=Math.max(4,Math.floor((root.clientHeight-50)/Math.max(42,innerHeight*.055)));
   const tablePages=Math.max(1,Math.ceil(result.entries.length/rows));
@@ -31,7 +33,7 @@ function draw(){
     root.innerHTML=podium(roundResult,current.round?'De beste teams van deze ronde':'De beste teams van de pubquiz');
   }else{
     document.querySelector('h1').textContent='De tussenstand';
-    root.innerHTML=standingsTable({...result,entries:result.entries.slice(current.index*rows,(current.index+1)*rows)});
+    root.innerHTML=standingsTable({...result,entries:result.entries.slice(current.index*rows,(current.index+1)*rows)},{trophies:true,currentRound:state.current_round,rankedEntries:result.entries});
   }
   document.getElementById('pages').textContent=count>1?`Scherm ${page+1} / ${count} · wisselt elke 10 seconden`:`${result.entries.length} teams · alle rondes + bonus`;
 

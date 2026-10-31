@@ -1,6 +1,8 @@
 // Fictieve beoordelingen worden uitsluitend in het browsergeheugen gemaakt.
 export function makeDemoState(original){
   const state=structuredClone(original);
+  state.current_round='3';
+  try{state.current_round=localStorage.getItem('pubquiz-demo-current-round') ?? '3';}catch{}
   const teams=state.teams.filter(t=>t.active).sort((a,b)=>a.name.localeCompare(b.name,'nl'));
   const random=seed=>{let n=2166136261;for(const c of seed){n^=c.charCodeAt(0);n=Math.imul(n,16777619);}return (n>>>0)/4294967296;};
   state.rounds.forEach(r=>{r.closed=true;});

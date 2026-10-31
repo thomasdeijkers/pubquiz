@@ -147,8 +147,14 @@ def team(cur, team_id):
     return item
 
 
+def current_round(cur):
+    cur.execute("SELECT value FROM quiz_meta WHERE key='current_round'")
+    row = cur.fetchone()
+    return row['value'] if row else ''
+
+
 def state(cur):
-    result = {}
+    result = {'current_round': current_round(cur)}
     cur.execute("SELECT value::bigint AS revision FROM quiz_meta WHERE key='revision'")
     result.update(cur.fetchone())
     cur.execute("SELECT value::bigint AS answers_epoch FROM quiz_meta WHERE key='answers_epoch'")
@@ -170,7 +176,7 @@ def state(cur):
 
 def standings_state(cur):
     # The public scoreboard needs no model answers, team answers or audit data.
-    result = {}
+    result = {'current_round': current_round(cur)}
     for key, sql in [
         ('rounds', 'SELECT id,sort_order,title,closed FROM quiz_rounds ORDER BY sort_order'),
         ('questions', 'SELECT round_id,id FROM quiz_questions'),
@@ -190,6 +196,15 @@ def check_answers_epoch(cur, body):
 
 def mutate(cur, route, body):
     actor = text(body.get('actor', ''), 80, True)
+    if route == '/rounds/current':
+        rid = text(body.get('round_id', ''), 20)
+        if rid:
+            cur.execute('SELECT id FROM quiz_rounds WHERE id=%s', (rid,))
+            if not cur.fetchone():
+                raise Problem(400, 'Deze ronde bestaat niet.')
+        cur.execute("INSERT INTO quiz_meta(key,value) VALUES('current_round',%s) ON CONFLICT(key) DO UPDATE SET value=excluded.value", (rid,))
+        changed(cur, actor, 'Huidige ronde gewijzigd', rid or 'Nog niet gestart')
+        return {'ok': True, 'current_round': rid}
     if route == '/answers/reset':
         if body.get('password') != 'pubquiz':
             raise Problem(400, 'Typ pubquiz exact over om alle antwoorden te wissen.')

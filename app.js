@@ -189,6 +189,10 @@ let scoreState;
 let scoreBusy=false;
 function drawScoreboard(){
   if(!scoreState)return;
+  const playing=scoreState.rounds.find(r=>r.id===scoreState.current_round);
+  const playingLabel=byId('playing-round-status');playingLabel.hidden=!playing;
+  if(playing)playingLabel.textContent=`We spelen nu: ${playing.id==='bonus'?'Bonusronde':`ronde ${playing.id}`} · ${playing.title}`;
+  document.querySelectorAll('[data-overview]').forEach(node=>node.closest('article').classList.toggle('is-current-round',node.dataset.overview===scoreState.current_round));
   document.querySelectorAll('[data-round-podium]').forEach(node=>{node.innerHTML=roundPodium(scoreState,node.dataset.roundPodium);});
   document.querySelectorAll('[data-round-progress]').forEach(node=>{
     const progress=roundProgress(scoreState,node.dataset.roundProgress);
@@ -201,7 +205,7 @@ function drawScoreboard(){
   const oldTable=byId('public-standings').querySelector('.scoreboard-scroll');
   const horizontal=oldTable?.scrollLeft || 0;
   const focused=oldTable===document.activeElement;
-  byId('public-standings').innerHTML=standingsTable(result);
+  byId('public-standings').innerHTML=standingsTable(result,{trophies:true,currentRound:scoreState.current_round});
   const newTable=byId('public-standings').querySelector('.scoreboard-scroll');
   newTable.scrollLeft=horizontal;
   if(focused)newTable.focus({preventScroll:true});

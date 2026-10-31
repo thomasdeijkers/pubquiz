@@ -24,6 +24,7 @@ class QuizTests(unittest.TestCase):
     def setUp(self):
         with app.connect() as db:
             with db.cursor() as cur:
+                cur.execute("DELETE FROM quiz_meta WHERE key='current_round'")
                 cur.execute('TRUNCATE quiz_answers,quiz_questions,quiz_rounds,quiz_teams,quiz_changes')
                 cur.execute("UPDATE quiz_meta SET value='0' WHERE key IN ('revision','answers_epoch')")
                 cur.execute("INSERT INTO quiz_rounds(id,sort_order,title) VALUES('1',0,'Test')")
@@ -37,6 +38,22 @@ class QuizTests(unittest.TestCase):
 
     def save(self,**kwargs):
         return self.call('/answers/save',team_id=self.tid,round_id='1',question_id='1',**kwargs)
+
+    def test_current_round_shared_without_changing_scores(self):
+        self.save(version=0,answer='Voorbeeld',points=1)
+        self.call('/rounds/current',round_id='1')
+        with app.connect() as db:
+            with db.cursor() as cur:
+                self.assertEqual(app.state(cur)['current_round'],'1')
+                public=app.standings_state(cur)
+                self.assertEqual(public['current_round'],'1')
+                self.assertEqual(public['answers'][0]['points_cents'],100)
+        with self.assertRaises(app.Problem):
+            self.call('/rounds/current',round_id='onbekend')
+        self.call('/rounds/current',round_id='')
+        with app.connect() as db:
+            with db.cursor() as cur:
+                self.assertEqual(app.standings_state(cur)['current_round'],'')
 
     def test_members_are_separate_and_preserved_by_older_team_updates(self):
         added=self.call('/teams/add',name='Berggeiten',members=' Anna\nBram ')
