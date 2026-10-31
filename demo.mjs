@@ -25,7 +25,7 @@ export function installDemo(){
   document.addEventListener('click',event=>{
     const link=event.target.closest('a[href]');if(!link || link.dataset.exitDemo)return;
     const target=new URL(link.href,location.href);
-    if(target.origin===location.origin && /\/(?:index\.html|organisator\.html)?$/.test(target.pathname) && !target.searchParams.has('invulblad')){
+    if(target.origin===location.origin && /\/(?:index\.html|organisator\.html|narrowcast\.html)?$/.test(target.pathname) && !target.searchParams.has('invulblad')){
       target.searchParams.set('demo','1');link.href=target.href;
     }
   },true);

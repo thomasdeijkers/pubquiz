@@ -27,9 +27,9 @@ const output = path.join(root,'_site');
 assert.equal(path.dirname(output),root);
 await rm(output,{recursive:true,force:true});
 await mkdir(output,{recursive:true});
-for (const file of ['index.html','style.css','apres-ski.css','app.js','favicon.svg','robots.txt','organisator.html','organisator.css','organisator.js','scoring.mjs','scoreboard.mjs','navigation.mjs','updates.mjs','demo.mjs','answer-sheets.mjs','answer-sheets.css','table-card-pdf.mjs','answer-sheets-pdf.mjs','master-questions-pdf.mjs']) await copyFile(file,path.join(output,file));
+for (const file of ['narrowcast.html','narrowcast.css','narrowcast.mjs','index.html','style.css','apres-ski.css','app.js','favicon.svg','robots.txt','organisator.html','organisator.css','organisator.js','scoring.mjs','scoreboard.mjs','navigation.mjs','updates.mjs','demo.mjs','answer-sheets.mjs','answer-sheets.css','table-card-pdf.mjs','answer-sheets-pdf.mjs','master-questions-pdf.mjs']) await copyFile(file,path.join(output,file));
 // Version module dependencies too, so shared podium changes reach existing browsers.
-for (const file of ['demo.mjs','updates.mjs','navigation.mjs','scoreboard.mjs','table-card-pdf.mjs','answer-sheets-pdf.mjs','master-questions-pdf.mjs','app.js','organisator.js']) {
+for (const file of ['demo.mjs','narrowcast.mjs','updates.mjs','navigation.mjs','scoreboard.mjs','table-card-pdf.mjs','answer-sheets-pdf.mjs','master-questions-pdf.mjs','app.js','organisator.js']) {
   let source=await readFile(path.join(output,file),'utf8');
   const quizHash=createHash('sha256').update(await readFile('data/quiz.json')).digest('hex').slice(0,12);
   source=source.replaceAll("'data/quiz.json'",`'data/quiz.json?v=${quizHash}'`);
@@ -39,16 +39,16 @@ for (const file of ['demo.mjs','updates.mjs','navigation.mjs','scoreboard.mjs','
   }
   await writeFile(path.join(output,file),source);
 }
-const version=createHash('sha256').update(await Promise.all(['index.html','organisator.html','app.js','organisator.js','style.css','organisator.css','apres-ski.css','navigation.mjs','scoring.mjs','scoreboard.mjs','updates.mjs','demo.mjs'].map(file=>readFile(path.join(output,file)))).then(parts=>Buffer.concat(parts))).digest('hex').slice(0,12);
+const version=createHash('sha256').update(await Promise.all(['narrowcast.html','narrowcast.css','narrowcast.mjs','index.html','organisator.html','app.js','organisator.js','style.css','organisator.css','apres-ski.css','navigation.mjs','scoring.mjs','scoreboard.mjs','updates.mjs','demo.mjs'].map(file=>readFile(path.join(output,file)))).then(parts=>Buffer.concat(parts))).digest('hex').slice(0,12);
 await writeFile(path.join(output,'version.json'),JSON.stringify({version}));
 // Use the same event and flyer preview for shared organizer links.
 const shareMeta=(await readFile('index.html','utf8')).split('\n').filter(line=>/<meta (property="og:|name="twitter:)/.test(line)).join('\n');
 // Give changed browser assets a fresh URL after every publication.
-for (const page of ['index.html','organisator.html']) {
+for (const page of ['index.html','organisator.html','narrowcast.html']) {
   let html=await readFile(path.join(output,page),'utf8');
   html=html.replace('</head>',`<meta name="pubquiz-version" content="${version}"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"></head>`);
   if(page==='organisator.html')html=html.replace('</head>',shareMeta+'\n</head>');
-  for (const asset of ['app.js','style.css','organisator.js','organisator.css','apres-ski.css','answer-sheets.css']) {
+  for (const asset of ['narrowcast.mjs','narrowcast.css','app.js','style.css','organisator.js','organisator.css','apres-ski.css','answer-sheets.css']) {
     const digest=createHash('sha256').update(await readFile(path.join(output,asset))).digest('hex').slice(0,12);
     html=html.replaceAll(`"${asset}"`,`"${asset}?v=${digest}"`);
   }
