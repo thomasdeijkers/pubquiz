@@ -4,21 +4,25 @@ import {makeDemoState} from './demo.mjs';
 import {watchForUpdates} from './updates.mjs';
 
 const demo=new URLSearchParams(location.search).get('demo')==='1';
-let state,busy=false,page=0;
+const params=new URLSearchParams(location.search);
+let state,busy=false,page=0,selectedScreen=params.get('scherm') || 'podium',automatic=params.get('automatisch')==='1',rotationTimer;
+let availableScreens=[];
 const root=document.getElementById('scores');
 function draw(){
   if(!state)return;
   const result=summarize(state,'9',true);
   const playing=state.rounds.find(r=>r.id===state.current_round);
   document.getElementById('playing-round').textContent=playing?`We spelen nu: ${playing.id==='bonus'?'Bonusronde':`ronde ${playing.id}`} · ${playing.title}`:'Huidige ronde nog niet ingesteld';
-  // Keep every row readable on televisions; additional teams rotate automatically.
+  // Keep every row readable; extra pages remain manually selectable unless automatic mode is enabled.
   const rows=Math.max(4,Math.floor((root.clientHeight-50)/Math.max(42,innerHeight*.055)));
   const tablePages=Math.max(1,Math.ceil(result.entries.length/rows));
   const rounds=state.rounds.map(round=>({round,result:summarizeRound(state,round.id)})).filter(item=>item.result.entries.some(entry=>entry.reviewed>0));
   const screens=[{id:'podium',label:'Erepodium · totaal',result},...Array.from({length:tablePages},(_,index)=>({id:`table-${index}`,label:tablePages>1?`Totaalstand · pagina ${index+1}`:'Totaalstand',index})),...rounds.map(item=>({id:`round-${item.round.id}`,label:item.round.id==='bonus'?'Bonusronde':`Ronde ${item.round.id} · ${item.round.title}`,...item}))];
   const count=screens.length;
-  page%=count;
+  availableScreens=screens;
+  page=Math.max(0,screens.findIndex(screen=>screen.id===selectedScreen));
   const current=screens[page];
+  selectedScreen=current.id;
   const picker=document.getElementById('screen-picker');
   if(picker.dataset.options!==screens.map(item=>item.id+item.label).join('|')){
     picker.replaceChildren(...screens.map(item=>new Option(item.label,item.id)));
@@ -35,7 +39,7 @@ function draw(){
     document.querySelector('h1').textContent='De tussenstand';
     root.innerHTML=standingsTable({...result,entries:result.entries.slice(current.index*rows,(current.index+1)*rows)},{trophies:true,currentRound:state.current_round,rankedEntries:result.entries});
   }
-  document.getElementById('pages').textContent=count>1?`Scherm ${page+1} / ${count} · wisselt elke 10 seconden`:`${result.entries.length} teams · alle rondes + bonus`;
+  document.getElementById('pages').textContent=count>1?`Scherm ${page+1} / ${count} · ${automatic?'automatisch · elke 10 seconden':'vast scherm · scores blijven live'}`:`${result.entries.length} teams · alle rondes + bonus`;
 
 }
 async function refresh(){
@@ -52,7 +56,28 @@ async function refresh(){
     document.getElementById('sync').textContent=state?'Verbinding verbroken · laatste stand blijft staan · opnieuw verbinden…':'Scores nog niet bereikbaar · opnieuw verbinden…';
   }finally{busy=false;}
 }
-document.getElementById('screen-picker').addEventListener('change',event=>{page=event.target.selectedIndex;draw();});
+function rememberScreen(){
+  const target=new URL(location.href);
+  target.searchParams.set('scherm',selectedScreen);
+  if(automatic)target.searchParams.set('automatisch','1');else target.searchParams.delete('automatisch');
+  history.replaceState(null,'',target);
+}
+function rotationMode(){
+  clearInterval(rotationTimer);
+  const button=document.getElementById('automatic');
+  button.setAttribute('aria-pressed',String(automatic));
+  button.textContent=automatic?'Automatisch: aan ⏸':'Automatisch: uit ▶';
+  if(automatic)rotationTimer=setInterval(()=>{
+    if(!availableScreens.length)return;
+    const index=availableScreens.findIndex(screen=>screen.id===selectedScreen);
+    selectedScreen=availableScreens[(index+1)%availableScreens.length].id;
+    rememberScreen();draw();
+  },10000);
+}
+document.getElementById('automatic').addEventListener('click',()=>{automatic=!automatic;rotationMode();rememberScreen();draw();});
+document.getElementById('screen-picker').addEventListener('change',event=>{
+  selectedScreen=event.target.value;automatic=false;rotationMode();rememberScreen();draw();
+});
 document.getElementById('fullscreen').addEventListener('click',async()=>{
   try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{document.getElementById('fullscreen').textContent='Gebruik volledig scherm van je browser';}
 });
@@ -63,5 +88,5 @@ document.addEventListener('fullscreenchange',()=>{
 addEventListener('resize',draw);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
 setInterval(refresh,10000);
-setInterval(()=>{page++;draw();},10000);
+rotationMode();
 watchForUpdates();refresh();
